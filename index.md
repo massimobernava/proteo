@@ -5,9 +5,9 @@ Proteo framework is designed to develop **Serious Games** with **Deep Learning**
 - Lua for script
 - SDL for graphics and audio
 - OpenCV for computer vision
-- Enet and ZMQ for 
-- Sqlite and Ejdb for 
-- Tensorflow for
+- Enet and ZMQ for networking
+- Sqlite and Ejdb for database
+- Tensorflow for machine learning
 
 The code is written in C to be massively cross-compatible. Client support five operating systems (Windows, OSX, Linux, iOS, Android). The API is designed to be minimal and easy to grasp.
 
