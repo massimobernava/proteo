@@ -2,12 +2,12 @@
 
 Proteo framework is designed to develop serius games with the use of deep learning, it work as a general purpose glue, and wraps together several commonly used libraries, including:
 
--Lua for script
--SDL for graphics and audio
--OpenCV for computer vision
--Enet and ZMQ for 
--Sqlite and Ejdb for 
--Tensorflow for
+- Lua for script
+- SDL for graphics and audio
+- OpenCV for computer vision
+- Enet and ZMQ for 
+- Sqlite and Ejdb for 
+- Tensorflow for
 
 The code is written in C to be massively cross-compatible. Right now we support five operating systems (Windows, OSX, Linux, iOS, Android). The API is designed to be minimal and easy to grasp.
 
