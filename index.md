@@ -1,6 +1,6 @@
 # Proteo
 
-Proteo framework is designed to develop serious games with the use of deep learning, it work as a general purpose glue, and wraps together several commonly used libraries, including:
+Proteo framework is designed to develop **Serious Games** with **Deep Learning** support, it work as a general purpose glue, and wraps together several commonly used libraries, including:
 
 - Lua for script
 - SDL for graphics and audio
@@ -9,18 +9,18 @@ Proteo framework is designed to develop serious games with the use of deep learn
 - Sqlite and Ejdb for 
 - Tensorflow for
 
-The code is written in C to be massively cross-compatible. Right now we support five operating systems (Windows, OSX, Linux, iOS, Android). The API is designed to be minimal and easy to grasp.
+The code is written in C to be massively cross-compatible. Client support five operating systems (Windows, OSX, Linux, iOS, Android). The API is designed to be minimal and easy to grasp.
 
 Proteo is distributed under the MIT License. This gives everyone the freedoms to use Proteo in any context: commercial or non-commercial, public or private, open or closed source. 
+
+## Installation
+Questa è la procedura per l'installazione del client e per il server per le diverse piattaforme.
 
 ## Server
 
 sudo apt install git cmake lua5.1 liblua5.1-0-dev libssl-dev libcurl4-openssl-dev libsqlite3-dev libmicrohttpd-dev libjson-c-dev libenet-dev
 
 ## Client 
-
-### Installation
-Questa è la procedura per l'installazione del client per le diverse piattaforme.
 
 ### Linux
 Testata su Ubuntu ... Raspberry ...
@@ -32,6 +32,14 @@ Testata su Ubuntu ... Raspberry ...
 E' già presente il file prj, bisogna solo scaricare e linkare SDL
 
 ### Windows
+
+## Folder structure
+
+## API
+
+## Server
+
+## Client 
 
 ### Markdown
 
