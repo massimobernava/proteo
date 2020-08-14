@@ -1,8 +1,41 @@
-## Proteo
+# Proteo
+
+Proteo framework is designed to develop serius games with the use of deep learning, it work as a general purpose glue, and wraps together several commonly used libraries, including:
+
+-Lua for script
+-SDL for graphics and audio
+-OpenCV for computer vision
+-Enet and ZMQ for 
+-Sqlite and Ejdb for 
+-Tensorflow for
+
+The code is written in C to be massively cross-compatible. Right now we support five operating systems (Windows, OSX, Linux, iOS, Android). The API is designed to be minimal and easy to grasp.
+
+Proteo is distributed under the MIT License. This gives everyone the freedoms to use Proteo in any context: commercial or non-commercial, public or private, open or closed source. 
 
 You can use the [editor on GitHub](https://github.com/massimobernava/proteo/edit/gh-pages/index.md) to maintain and preview the content for your website in Markdown files.
 
 Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
+
+## Server
+
+sudo apt install git cmake lua5.1 liblua5.1-0-dev libssl-dev libcurl4-openssl-dev libsqlite3-dev libmicrohttpd-dev libjson-c-dev libenet-dev
+
+## Client 
+
+### Installation
+Questa è la procedura per l'installazione del client per le diverse piattaforme.
+
+### Linux
+Testata su Ubuntu ... Raspberry ...
+
+### OSX
+
+### iOs
+
+E' già presente il file prj, bisogna solo scaricare e linkare SDL
+
+### Windows
 
 ### Markdown
 
