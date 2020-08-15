@@ -37,6 +37,28 @@ E' già presente il file prj, bisogna solo scaricare e linkare SDL
 
 ## API
 
+### System
+```markdown
+
+proteo.system.console() -- CLIENT & SERVER
+
+```
+### Network
+
+### Gui
+
+### Graphics
+
+### OpenCV
+
+### Enet
+
+### ZMQ
+
+### SQLite
+
+### EJDB
+
 ## Server
 
 ## Client 
