@@ -41,42 +41,15 @@ E' già presente il file prj, bisogna solo scaricare e linkare SDL
 
 ## API
 
+[Detail](https://github.com/massimobernava/proteo/wiki/API)
+
 ### System
-
-Function | Client | Server
------------- | ------------- | -------------
-console(string) | X | X
-clock() | X | X
-fileExist() | | 
-readFile() | |
-writeFile() | |
-document() | |
-dir() | |
-isdir() | |
-basename() | |
-getNode() | |
-getName() | |
-login() | |
-loadConfig() | |
-saveConfig() | |
-setConfig() | |
-getPlatform() | |
-createTimer() | |
-startTimer() | |
-stopTimer() | |
-system() | |
-
-
-
-
 
 ```markdown
 
-Exxample:
+Example:
 
 proteo.system.console()
-
-
 
 ```
 ### Network
@@ -99,27 +72,6 @@ proteo.system.console()
 
 ## Client 
 
-### Markdown
-
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
 
 For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
 
