@@ -20,7 +20,7 @@ Proteo is distributed under the MIT License.
 ## Example
 
 ### Server plugin
-```markdown
+```lua
 
 local json=require "json"
 
@@ -39,7 +39,7 @@ proteo.route.get("helloworld/hi",
 ```
 
 ### Client script
-```markdown
+```lua
 
 local json=require "json"
 
@@ -90,7 +90,7 @@ A few examples. For [details] (https://github.com/massimobernava/proteo/wiki/API
 
 ### Example
 
-```markdown
+```lua
 
 --Example Gui
 
@@ -98,7 +98,7 @@ proteo.system.console()
 
 ```
 
-```markdown
+```lua
 
 --Example OpenCV
 
