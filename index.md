@@ -81,12 +81,12 @@ E' già presente il file prj, bisogna solo scaricare e linkare SDL
 
 After installation, you need to configure the config.json file on the server and client.
 
-[Detail] (https://github.com/massimobernava/proteo/wiki/Config-file)
+[Detail](https://github.com/massimobernava/proteo/wiki/Config-file)
 
 
 ## API
 
-A few examples. For [details] (https://github.com/massimobernava/proteo/wiki/API)
+A few examples. For [details](https://github.com/massimobernava/proteo/wiki/API)
 
 ### Example
 
@@ -94,7 +94,11 @@ A few examples. For [details] (https://github.com/massimobernava/proteo/wiki/API
 
 --Example Gui
 
-proteo.system.console()
+function init()
+	form_gui=proteo.gui.newForm("form_gui","SimpleForm",'Helvetica',20,"black","crimson","blanchedalmond",30,proteo.gui.FormType.Normal,"","",MID_X,MID_Y,250,250,"")
+	buttonform_gui=proteo.gui.newButton('buttonform_gui',"form button",'Helvetica',15,"black","cornsilk",1,"crimson",false,20 ,50,100,25,"")
+	proteo.gui.addItem(form_gui,buttonform_gui)
+end
 
 ```
 
@@ -105,6 +109,3 @@ proteo.system.console()
 proteo.system.console()
 
 ```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
