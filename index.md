@@ -17,6 +17,45 @@ Do you want to be a full stack developer? With Proteo you just need a single pro
 
 Proteo is distributed under the MIT License. 
 
+## Example
+
+### Server plugin
+```markdown
+
+local json=require "json"
+
+proteo.route.get("helloworld/hi",
+
+	function(username,permission,data,param) 
+  
+		local data={}
+		data["hello"]="Hi "..username
+
+		return json.encode(info)
+    
+	end
+)
+
+```
+
+### Client script
+```markdown
+
+local json=require "json"
+
+function hi_callback(res,data)
+
+  proteo.system.console(data.hello)
+  
+end
+
+function init()
+
+  proteo.network.proteo_get("/helloworld/hi","hi_callback")
+
+end
+
+```
 ## Installation
 Questa è la procedura per l'installazione del client e per il server per le diverse piattaforme.
 
@@ -37,41 +76,35 @@ E' già presente il file prj, bisogna solo scaricare e linkare SDL
 
 ### Windows
 
-## Folder structure
+
+## Config
+
+After installation, you need to configure the config.json file on the server and client.
+
+[Detail] (https://github.com/massimobernava/proteo/wiki/Config-file)
+
 
 ## API
 
-[Detail](https://github.com/massimobernava/proteo/wiki/API)
+A few examples. For [details] (https://github.com/massimobernava/proteo/wiki/API)
 
-### System
+### Example
 
 ```markdown
 
-Example:
+--Example Gui
 
 proteo.system.console()
 
 ```
-### Network
 
-### Gui
+```markdown
 
-### Graphics
+--Example OpenCV
 
-### OpenCV
+proteo.system.console()
 
-### Enet
-
-### ZMQ
-
-### SQLite
-
-### EJDB
-
-## Server
-
-## Client 
-
+```
 
 For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
 
