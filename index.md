@@ -113,7 +113,10 @@ proteo.system.console()
 ## Flat Themed Gui
 
 ## Jump'n'Bump Porting
+[Wiki](https://en.wikipedia.org/wiki/Jump_%27n_Bump)
+
 ![](jumpnbump.gif)
+
 ## Pose Animator Porting
 
 
