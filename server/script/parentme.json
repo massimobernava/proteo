@@ -1,0 +1,5 @@
+{
+	"version": "0.1",
+	"plugins": ["proteo","parentme"],
+	"libs":["json","video_chat","attenzione_visiva","attenzione_uditiva","giochi_parole","pose_analysis"]
+}

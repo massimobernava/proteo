@@ -1,0 +1,5 @@
+{
+	"version": "0.1",
+	"plugins": ["proteo","game"],
+	"libs":["json","md5"]
+}

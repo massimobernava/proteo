@@ -1,0 +1,13 @@
+[Unit]
+Description=Proteo service
+After=network.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=1
+ExecStart=/usr/local/bin/proteo_server -d -c  /usr/local/etc/proteo/config.json
+
+[Install]
+WantedBy=multi-user.target

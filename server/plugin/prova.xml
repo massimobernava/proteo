@@ -1,0 +1,602 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <variables>
+    <variable id="rYB*47}f#Qi_udV(2%v(">host_enet_test</variable>
+    <variable id="n7Y:;BEK.QWQ9`2HCrY%">zmq_context_test</variable>
+    <variable id="[XZS-=a|tCzZ;B4[:8$?">permissions</variable>
+    <variable id=",/;+ypWwhSj$I9JzVG]p">info</variable>
+    <variable id="8rIB/Fi1N?,ATFrsF~aO">zmq_socket_test</variable>
+    <variable id="$sk_}T:ZPu)d(Q#HH!+K">ret</variable>
+    <variable id="w`tnOn5{ok,pqy-P%PrQ">video_frame</variable>
+    <variable id="/{G}%Ww`c{,liC:SS=?#">img_out</variable>
+    <variable id="]5l0pU;ZVq^LFV0]~4C}">test_timer</variable>
+    <variable id="];=hU5;:--x2Tr8+Nms6">probMap</variable>
+    <variable id=",{7l#^q:Ly9eex#GR,9W">update_event</variable>
+    <variable id="7/Zf*f2[ZC=?SIxyjIK5">dt</variable>
+    <variable id="{ua)V4PXEl!Tt55zbth4">buffer</variable>
+    <variable id="e/GCTM{7x/]dv%%9L[A_">event</variable>
+    <variable id="ZdO7e7Z].HOro^_%`(Kq">data</variable>
+  </variables>
+  <block type="system_local" id="OKxledi{/!?AgqJ4m$24" x="-137" y="38">
+    <field name="NAME" id="rYB*47}f#Qi_udV(2%v(">host_enet_test</field>
+    <value name="to">
+      <block type="logic_null" id="*w1Qt-2|XRq+y]^{a(J{"></block>
+    </value>
+    <next>
+      <block type="variables_set" id="TA[/?/KB-0Li*`bJuU[/">
+        <field name="VAR" id="n7Y:;BEK.QWQ9`2HCrY%">zmq_context_test</field>
+        <value name="VALUE">
+          <block type="logic_null" id="043es}(T).cq:U)=U%7y"></block>
+        </value>
+        <next>
+          <block type="variables_set" id="QTKmH77R[g}N);n;%a`8">
+            <field name="VAR" id="8rIB/Fi1N?,ATFrsF~aO">zmq_socket_test</field>
+            <value name="VALUE">
+              <block type="logic_null" id="q^^Szfgxu?,]_8;Yv2H#"></block>
+            </value>
+            <next>
+              <block type="variables_set" id="H]`q0t00),0FD6bKg#k7">
+                <field name="VAR" id="w`tnOn5{ok,pqy-P%PrQ">video_frame</field>
+                <value name="VALUE">
+                  <block type="opencv_img" id="r@iBD#ag1MK[cmd?;I*L"></block>
+                </value>
+                <next>
+                  <block type="variables_set" id="YKlr)i.5s{Oe?{%0sY3@">
+                    <field name="VAR" id="/{G}%Ww`c{,liC:SS=?#">img_out</field>
+                    <value name="VALUE">
+                      <block type="opencv_img" id="x~jW-v-2J0^$Ddtzu3:C"></block>
+                    </value>
+                    <next>
+                      <block type="variables_set" id="=}@Kk.6Sm#wo1N`kf?Uh">
+                        <field name="VAR" id="];=hU5;:--x2Tr8+Nms6">probMap</field>
+                        <value name="VALUE">
+                          <block type="opencv_img" id="Q@|XW6$2/tbEbcSb?jVD"></block>
+                        </value>
+                        <next>
+                          <block type="variables_set" id="KxN[/om,[9#y}_M0bmBi">
+                            <field name="VAR" id=",{7l#^q:Ly9eex#GR,9W">update_event</field>
+                            <value name="VALUE">
+                              <block type="system_callbacktimer" id="r@KKChAi!Eokevpq?g~1">
+                                <field name="time" id="7/Zf*f2[ZC=?SIxyjIK5">dt</field>
+                                <statement name="function">
+                                  <block type="controls_if" id="_(9/|#LFtXhE:kU7h*!H">
+                                    <value name="IF0">
+                                      <block type="logic_compare" id="Y{)kswI-AnuPkD6.Ojod">
+                                        <field name="OP">NEQ</field>
+                                        <value name="A">
+                                          <block type="variables_get" id="RylGO8ac,W):38tldPl#">
+                                            <field name="VAR" id="n7Y:;BEK.QWQ9`2HCrY%">zmq_context_test</field>
+                                          </block>
+                                        </value>
+                                        <value name="B">
+                                          <block type="logic_null" id="x2-i]hT!=}oG74Su})6m"></block>
+                                        </value>
+                                      </block>
+                                    </value>
+                                    <statement name="DO0">
+                                      <block type="variables_set" id="{8P4~#(Tyw|-bR[l8$)#">
+                                        <field name="VAR" id="{ua)V4PXEl!Tt55zbth4">buffer</field>
+                                        <value name="VALUE">
+                                          <block type="zmq_receive" id="#[TKppQ{1]~a/W$*|Nb.">
+                                            <field name="flag">ZMQ_DONTWAIT</field>
+                                            <value name="from">
+                                              <block type="variables_get" id="v1~2d-=NC~*s{S93u2HD">
+                                                <field name="VAR" id="8rIB/Fi1N?,ATFrsF~aO">zmq_socket_test</field>
+                                              </block>
+                                            </value>
+                                          </block>
+                                        </value>
+                                        <next>
+                                          <block type="controls_if" id="aM!dFRX@]$*F;t3-M*JF">
+                                            <value name="IF0">
+                                              <block type="logic_compare" id="=((JScfu/s_$%}{DL3S~">
+                                                <field name="OP">NEQ</field>
+                                                <value name="A">
+                                                  <block type="variables_get" id="t$.7gef8q|~R1eOZ!;#^">
+                                                    <field name="VAR" id="{ua)V4PXEl!Tt55zbth4">buffer</field>
+                                                  </block>
+                                                </value>
+                                                <value name="B">
+                                                  <block type="logic_null" id="UN@39LhD[Vn[T2(;Sueq"></block>
+                                                </value>
+                                              </block>
+                                            </value>
+                                            <statement name="DO0">
+                                              <block type="zmq_send" id="8OKG#m#(}b`E_-Dqv!6y">
+                                                <field name="flag">ZMQ_DONTWAIT</field>
+                                                <value name="message">
+                                                  <block type="variables_get" id=",U[w,CWno#fJr0/40Nf~">
+                                                    <field name="VAR" id="{ua)V4PXEl!Tt55zbth4">buffer</field>
+                                                  </block>
+                                                </value>
+                                                <value name="to">
+                                                  <block type="variables_get" id=":lS5[;UG(T|/il(uEv3`">
+                                                    <field name="VAR" id="8rIB/Fi1N?,ATFrsF~aO">zmq_socket_test</field>
+                                                  </block>
+                                                </value>
+                                              </block>
+                                            </statement>
+                                          </block>
+                                        </next>
+                                      </block>
+                                    </statement>
+                                    <next>
+                                      <block type="controls_if" id="jY_=@~BkfSIk8za~v^A1">
+                                        <value name="IF0">
+                                          <block type="logic_compare" id="ld{Z(riyxap.Z4i#0?uz">
+                                            <field name="OP">NEQ</field>
+                                            <value name="A">
+                                              <block type="variables_get" id="M(yNk%/K5^H].7Pm,:z[">
+                                                <field name="VAR" id="rYB*47}f#Qi_udV(2%v(">host_enet_test</field>
+                                              </block>
+                                            </value>
+                                            <value name="B">
+                                              <block type="logic_null" id="0i4zNWY7bV8zOMNvw(B^"></block>
+                                            </value>
+                                          </block>
+                                        </value>
+                                        <statement name="DO0">
+                                          <block type="variables_set" id="P47)I9UYS/DSvL`1Nz_z">
+                                            <field name="VAR" id="e/GCTM{7x/]dv%%9L[A_">event</field>
+                                            <value name="VALUE">
+                                              <block type="enet_service" id="+L+`)KSj2mt])v8d#Kq2">
+                                                <field name="host" id="rYB*47}f#Qi_udV(2%v(">host_enet_test</field>
+                                                <field name="timeout">0</field>
+                                              </block>
+                                            </value>
+                                            <next>
+                                              <block type="enet_handleevent" id="M%-8_7+l5)248C+a=#O]">
+                                                <field name="event" id="e/GCTM{7x/]dv%%9L[A_">event</field>
+                                                <statement name="connect">
+                                                  <block type="text_print" id="6i-Vk%zLUX$@HmF7VwqM">
+                                                    <value name="TEXT">
+                                                      <shadow type="text" id="FX4:BF?Zs~8`*O!Fcq?a">
+                                                        <field name="TEXT">abc</field>
+                                                      </shadow>
+                                                      <block type="text" id="h(*`TEy_4F+hudrX)@as">
+                                                        <field name="TEXT">Connected to </field>
+                                                      </block>
+                                                    </value>
+                                                    <next>
+                                                      <block type="text_print" id="#NF^i)yd3HdF6@z]cWTI">
+                                                        <value name="TEXT">
+                                                          <shadow type="text" id="z3hyJViXPFiU=DO]=aGu">
+                                                            <field name="TEXT">abc</field>
+                                                          </shadow>
+                                                          <block type="enet_peer" id=",|O;:8V]b+j8rtcS}Q-9">
+                                                            <field name="event" id="e/GCTM{7x/]dv%%9L[A_">event</field>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </next>
+                                                  </block>
+                                                </statement>
+                                                <statement name="receive">
+                                                  <block type="variables_set" id="%?Nj_GU+arVF=!X_.;Dg">
+                                                    <field name="VAR" id="ZdO7e7Z].HOro^_%`(Kq">data</field>
+                                                    <value name="VALUE">
+                                                      <block type="json" id="4*2Ij$T:/3#F?/NdtKye">
+                                                        <field name="mode">decode</field>
+                                                        <value name="encode">
+                                                          <block type="enet_data" id="L.O8Wuf7K6kML-{39[Pl">
+                                                            <field name="event" id="e/GCTM{7x/]dv%%9L[A_">event</field>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                    <next>
+                                                      <block type="opencv_imdecode" id="}Qn4np{UuX_f;eOPEPWo">
+                                                        <value name="from">
+                                                          <block type="get_dict_element" id="}cl-yqz*^80x$Mc+#k^5">
+                                                            <value name="list">
+                                                              <block type="variables_get" id="UGoz5c4z,h?H9Wx4*D(p">
+                                                                <field name="VAR" id="ZdO7e7Z].HOro^_%`(Kq">data</field>
+                                                              </block>
+                                                            </value>
+                                                            <value name="key">
+                                                              <block type="text" id="xrMl;dylk!h=_*e+7r5(">
+                                                                <field name="TEXT">data</field>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
+                                                        <value name="to">
+                                                          <block type="variables_get" id="|}[h[aU0z/$7CTlGwJs|">
+                                                            <field name="VAR" id="w`tnOn5{ok,pqy-P%PrQ">video_frame</field>
+                                                          </block>
+                                                        </value>
+                                                        <next>
+                                                          <block type="enet_send" id="e$(MT5J9?hMnYCifrXi:">
+                                                            <value name="data">
+                                                              <block type="enet_data" id="yU+4SG0V{JO9N4`WvBH3">
+                                                                <field name="event" id="e/GCTM{7x/]dv%%9L[A_">event</field>
+                                                              </block>
+                                                            </value>
+                                                            <value name="to">
+                                                              <block type="enet_peer" id="Jo^cAb*N=/tcX.^LbUE(">
+                                                                <field name="event" id="e/GCTM{7x/]dv%%9L[A_">event</field>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </next>
+                                                      </block>
+                                                    </next>
+                                                  </block>
+                                                </statement>
+                                              </block>
+                                            </next>
+                                          </block>
+                                        </statement>
+                                      </block>
+                                    </next>
+                                  </block>
+                                </statement>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="system_local" id="$M*DNj6%lolfMQ=D_Ww~">
+                                <field name="NAME" id="]5l0pU;ZVq^LFV0]~4C}">test_timer</field>
+                                <value name="to">
+                                  <block type="system_createtimer" id="b$a*oCenk6%gU.B*^x|X">
+                                    <value name="time">
+                                      <block type="math_number" id="p859sfyr^#85OWO,/)*f">
+                                        <field name="NUM">50</field>
+                                      </block>
+                                    </value>
+                                    <value name="callback">
+                                      <block type="variables_get" id="}iI;Fd*?%nZ0BHcVsi!O">
+                                        <field name="VAR" id=",{7l#^q:Ly9eex#GR,9W">update_event</field>
+                                      </block>
+                                    </value>
+                                  </block>
+                                </value>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </next>
+  </block>
+  <block type="get_route" id="(2}$A~aynWRa7Onj]T?m" x="663" y="88">
+    <field name="path">prova/permissions</field>
+    <statement name="function">
+      <block type="variables_set" id=".@bq!nEp1kCL+kO2(mWe">
+        <field name="VAR" id="[XZS-=a|tCzZ;B4[:8$?">permissions</field>
+        <value name="VALUE">
+          <block type="lists_create_with" id=",w/a,jS9mG_OXFMlW71%">
+            <mutation items="0"></mutation>
+          </block>
+        </value>
+        <next>
+          <block type="add_dict_element" id="P2N{]u*s#xK1$L*l6mK0">
+            <value name="list">
+              <block type="variables_get" id="(KEWp(8v{H*CfOK.y04V">
+                <field name="VAR" id="[XZS-=a|tCzZ;B4[:8$?">permissions</field>
+              </block>
+            </value>
+            <value name="key">
+              <block type="text" id="1:A0:~5j9agon%|*wLTx">
+                <field name="TEXT">permission</field>
+              </block>
+            </value>
+            <value name="value">
+              <block type="lists_create_with" id="KNgfd|!:y%Qv(MG/SuFc">
+                <mutation items="1"></mutation>
+                <value name="ADD0">
+                  <block type="text" id="PTK:zo_MR8p,~T8:s;9!">
+                    <field name="TEXT"> test:starthost</field>
+                  </block>
+                </value>
+              </block>
+            </value>
+          </block>
+        </next>
+      </block>
+    </statement>
+    <value name="return">
+      <block type="json" id="H}O7m])DKNucjdSJ0#9=">
+        <field name="mode">encode</field>
+        <value name="encode">
+          <block type="variables_get" id="mZ-^_#xwr-1nW^#xEBu|">
+            <field name="VAR" id="[XZS-=a|tCzZ;B4[:8$?">permissions</field>
+          </block>
+        </value>
+      </block>
+    </value>
+  </block>
+  <block type="get_route" id="w*Q}A~Cnb;U=i?L5x@/r" x="1337" y="438">
+    <field name="path">prova/info</field>
+    <statement name="function">
+      <block type="variables_set" id="!M@Gv@+cN^c`V~^XGggZ">
+        <field name="VAR" id=",/;+ypWwhSj$I9JzVG]p">info</field>
+        <value name="VALUE">
+          <block type="lists_create_with" id="316dlo=:tH?2N:eh#][c">
+            <mutation items="0"></mutation>
+          </block>
+        </value>
+        <next>
+          <block type="add_dict_element" id="W6SvFb%0!wkG@Z~6aNJ8">
+            <value name="list">
+              <block type="variables_get" id="RqsC02!%)nb]Ln^l6[:1">
+                <field name="VAR" id=",/;+ypWwhSj$I9JzVG]p">info</field>
+              </block>
+            </value>
+            <value name="key">
+              <block type="text" id="KFDck!mOv(~P$mv4%V60">
+                <field name="TEXT">type</field>
+              </block>
+            </value>
+            <value name="value">
+              <block type="text" id="@wO9Rs;.fT]Fvgy{PhVb">
+                <field name="TEXT">INFO</field>
+              </block>
+            </value>
+            <next>
+              <block type="add_dict_element" id="b$=HckD]+eOIX,BIHj)S">
+                <value name="list">
+                  <block type="variables_get" id="(DAdvXZIh.2moL|fzB[4">
+                    <field name="VAR" id=",/;+ypWwhSj$I9JzVG]p">info</field>
+                  </block>
+                </value>
+                <value name="key">
+                  <block type="text" id="cBx~w-PDc/bCSsd/P|Kr">
+                    <field name="TEXT">version</field>
+                  </block>
+                </value>
+                <value name="value">
+                  <block type="text" id="E[9R9IY`h9]-7|`87r@8">
+                    <field name="TEXT">0.1</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="add_dict_element" id="2}QV`(S#5Qex}Ym6`Uvf">
+                    <value name="list">
+                      <block type="variables_get" id=",Lz^@MMSz#n:HD,6/-6p">
+                        <field name="VAR" id=",/;+ypWwhSj$I9JzVG]p">info</field>
+                      </block>
+                    </value>
+                    <value name="key">
+                      <block type="text" id="zqIeAF4o+qj+qrcY=6_z">
+                        <field name="TEXT">ticket</field>
+                      </block>
+                    </value>
+                    <value name="value">
+                      <block type="math_number" id="U38K3@Z?u@zuV#+rtYWQ">
+                        <field name="NUM">10</field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="add_dict_element" id="D*|IQ-ar[TcAJ`56kbrK">
+                        <value name="list">
+                          <block type="variables_get" id="*AZ?B;dr%fDrA[_ZkM^8">
+                            <field name="VAR" id=",/;+ypWwhSj$I9JzVG]p">info</field>
+                          </block>
+                        </value>
+                        <value name="key">
+                          <block type="text" id="Bxyid5ivfN,^RD`eiebD">
+                            <field name="TEXT">result</field>
+                          </block>
+                        </value>
+                        <value name="value">
+                          <block type="text" id="xuIQ#TTh8_VYApZEF!):">
+                            <field name="TEXT">OK</field>
+                          </block>
+                        </value>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+    <value name="return">
+      <block type="json" id="5MT_x9n)KH_A__Kr,X$X">
+        <field name="mode">encode</field>
+        <value name="encode">
+          <block type="variables_get" id="TgXYTKv7HzT$Z{ne2R-^">
+            <field name="VAR" id=",/;+ypWwhSj$I9JzVG]p">info</field>
+          </block>
+        </value>
+      </block>
+    </value>
+  </block>
+  <block type="post_route" id="([1M]=JrxuR1KY0Q9#uJ" x="938" y="963">
+    <field name="path">prova/starthost</field>
+    <statement name="function">
+      <block type="text_print" id="#iQ3*r`Op-,iIz=yol{s">
+        <value name="TEXT">
+          <shadow type="text" id="TVbvSsv_rB+tBA_){rIx">
+            <field name="TEXT">START</field>
+          </shadow>
+        </value>
+        <next>
+          <block type="controls_if" id="{n9vk_A4wpqV7B}Dul1i">
+            <value name="IF0">
+              <block type="logic_compare" id="d0RK2c?XUot]W3L24|Kc">
+                <field name="OP">EQ</field>
+                <value name="A">
+                  <block type="variables_get" id="+I{9yeTg]/txHsg7)1!H">
+                    <field name="VAR" id="rYB*47}f#Qi_udV(2%v(">host_enet_test</field>
+                  </block>
+                </value>
+                <value name="B">
+                  <block type="logic_null" id="O;-,8k%!aqS.t/fGG/`q"></block>
+                </value>
+              </block>
+            </value>
+            <statement name="DO0">
+              <block type="text_print" id="wUSq3P0)A)z4*|F:1rts">
+                <value name="TEXT">
+                  <shadow type="text" id="^?aYqUxR7Gm~r({+CkNV">
+                    <field name="TEXT">CREATE HOST</field>
+                  </shadow>
+                </value>
+                <next>
+                  <block type="variables_set" id="z*9h(xZL:0X!;FdloY@{">
+                    <field name="VAR" id="rYB*47}f#Qi_udV(2%v(">host_enet_test</field>
+                    <value name="VALUE">
+                      <block type="enet_hostcreate" id="(H.)Wyh.Yud7W{l(?m`:">
+                        <value name="host">
+                          <block type="text_join" id="x3xec%qV]TEG?Tl+#j59">
+                            <mutation items="2"></mutation>
+                            <value name="ADD0">
+                              <block type="text" id="Wy|SEX3v1L58@63n{thS">
+                                <field name="TEXT">*:</field>
+                              </block>
+                            </value>
+                            <value name="ADD1">
+                              <block type="network_port" id="9?BuJi+g{hwd(Yo6@=@b"></block>
+                            </value>
+                          </block>
+                        </value>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+            <next>
+              <block type="controls_if" id="b?2@4bC]Ot1TPPf#BZ^Q">
+                <value name="IF0">
+                  <block type="logic_compare" id="O)*D1LS)X?]Xp6mXcARi">
+                    <field name="OP">EQ</field>
+                    <value name="A">
+                      <block type="variables_get" id="O|PR_d7kz~XY*?_.U[DE">
+                        <field name="VAR" id="n7Y:;BEK.QWQ9`2HCrY%">zmq_context_test</field>
+                      </block>
+                    </value>
+                    <value name="B">
+                      <block type="logic_null" id="TKe!wjTx?Zvdl|i.m-P,"></block>
+                    </value>
+                  </block>
+                </value>
+                <statement name="DO0">
+                  <block type="variables_set" id=")%4{nM^NG-u*7UbSm9;h">
+                    <field name="VAR" id="n7Y:;BEK.QWQ9`2HCrY%">zmq_context_test</field>
+                    <value name="VALUE">
+                      <block type="zmq_createcontext" id="x8AK;4t88ZmG=uXKf`2C"></block>
+                    </value>
+                    <next>
+                      <block type="variables_set" id="$h^ov.dn6/^PoMgd0E/i">
+                        <field name="VAR" id="8rIB/Fi1N?,ATFrsF~aO">zmq_socket_test</field>
+                        <value name="VALUE">
+                          <block type="zmq_createsocket" id="cJZ.)K3zffN9~?(*4JTg">
+                            <field name="type">ZMQ_REP</field>
+                            <value name="context">
+                              <block type="variables_get" id="}z~A09babumw[HgF{-MM">
+                                <field name="VAR" id="n7Y:;BEK.QWQ9`2HCrY%">zmq_context_test</field>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="zmq_bindconnect" id="|L.PB%vNxtS]cr|.)klc">
+                            <field name="operation">bind</field>
+                            <value name="socket">
+                              <block type="variables_get" id="aR:VAIe9eQz_TL~Q$#f}">
+                                <field name="VAR" id="8rIB/Fi1N?,ATFrsF~aO">zmq_socket_test</field>
+                              </block>
+                            </value>
+                            <value name="url">
+                              <block type="text" id="m6C7K_{U;SLWo45a?]C(">
+                                <field name="TEXT">tcp://*:5555</field>
+                              </block>
+                            </value>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </statement>
+                <next>
+                  <block type="system_starttimer" id="`ZGy:lZ^}oNYW3Y9+N8m">
+                    <field name="timer" id="]5l0pU;ZVq^LFV0]~4C}">test_timer</field>
+                    <next>
+                      <block type="variables_set" id="6#;71FFcO%jBUF]pR,ml">
+                        <field name="VAR" id="$sk_}T:ZPu)d(Q#HH!+K">ret</field>
+                        <value name="VALUE">
+                          <block type="lists_create_with" id="1O)T*5.m*nN?87bmlqU+">
+                            <mutation items="0"></mutation>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="add_dict_element" id="Y$%.+?xnU?@cvSw.tavl">
+                            <value name="list">
+                              <block type="variables_get" id=":~)2i+%~y!Z$)@xx.(BE">
+                                <field name="VAR" id="$sk_}T:ZPu)d(Q#HH!+K">ret</field>
+                              </block>
+                            </value>
+                            <value name="key">
+                              <block type="text" id="2MlVS-%pEP*DNKCPd[b/">
+                                <field name="TEXT">message</field>
+                              </block>
+                            </value>
+                            <value name="value">
+                              <block type="text" id="MR)MQu/TE+v2SVMTO^)|">
+                                <field name="TEXT">OK</field>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="add_dict_element" id="E,cf1DB1C{}`xyTUtpKv">
+                                <value name="list">
+                                  <block type="variables_get" id="8DH7P7VYM!BH)35DQa%[">
+                                    <field name="VAR" id="$sk_}T:ZPu)d(Q#HH!+K">ret</field>
+                                  </block>
+                                </value>
+                                <value name="key">
+                                  <block type="text" id="x(Dk1QN,]QrFf3}@$3AC">
+                                    <field name="TEXT">url</field>
+                                  </block>
+                                </value>
+                                <value name="value">
+                                  <block type="text_join" id="kAJa.j?Yc?*4Fho)Tkkk">
+                                    <mutation items="3"></mutation>
+                                    <value name="ADD0">
+                                      <block type="network_baseurl" id="vv4l$xL0B;-:SEwWpo@7"></block>
+                                    </value>
+                                    <value name="ADD1">
+                                      <block type="text" id="kRJGCw*ixv`wx7H59/i5">
+                                        <field name="TEXT">:</field>
+                                      </block>
+                                    </value>
+                                    <value name="ADD2">
+                                      <block type="network_port" id="HCNz|0!p$$XDM{.U,KRR"></block>
+                                    </value>
+                                  </block>
+                                </value>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+    <value name="return">
+      <block type="json" id="7GBr{:N5Z,7b~|EJ{a8c">
+        <field name="mode">encode</field>
+        <value name="encode">
+          <block type="variables_get" id="#*r`4te52n{-N(=Ej`D1">
+            <field name="VAR" id="$sk_}T:ZPu)d(Q#HH!+K">ret</field>
+          </block>
+        </value>
+      </block>
+    </value>
+  </block>
+</xml>
