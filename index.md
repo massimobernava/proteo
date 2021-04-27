@@ -31,7 +31,7 @@ proteo.route.get("helloworld/hi",
 		local data={}
 		data["hello"]="Hi "..username
 
-		return json.encode(info)
+		return json.encode(data)
     
 	end
 )
@@ -57,7 +57,7 @@ end
 
 ```
 ## Installation
-Questa è la procedura per l'installazione del client e per il server per le diverse piattaforme.
+
 
 ## Server
 
@@ -66,13 +66,11 @@ sudo apt install git cmake lua5.1 liblua5.1-0-dev libssl-dev libcurl4-openssl-de
 ## Client 
 
 ### Linux
-Testata su Ubuntu ... Raspberry ...
+Test: Ubuntu ... Raspberry ...
 
 ### OSX
 
 ### iOs
-
-E' già presente il file prj, bisogna solo scaricare e linkare SDL
 
 ### Windows
 
