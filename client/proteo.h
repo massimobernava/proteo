@@ -52,6 +52,12 @@
 
     //#include <json-c/json.h>
 
+#ifdef PROTEO_FFMPEG
+    #include <libavutil/imgutils.h>
+    #include <libavcodec/avcodec.h>
+    #include <libswscale/swscale.h>
+#endif //ffmpeg
+
 #endif //emscripten
 
 #ifdef PROTEO_ZMQ
@@ -143,7 +149,7 @@ size_t strlcpy(char       *dst, const char *src, size_t      size)
 #define TRUE  true
 #endif
 
-#ifndef HAVE_FPOINT
+#if SDL_MAJOR_VERSION == 2 && SDL_MINOR_VERSION == 0 && SDL_PATCHLEVEL < 10
 typedef struct SDL_FPoint
 {
     float x;
@@ -177,6 +183,8 @@ int run;
 
 int verbose=FALSE;
 int debug=FALSE;
+int opt_fullscreen=FALSE;
+int opt_remoteconsole=FALSE;
 
 #define LIGHTPROTEOCOMPONENT
 #define LIGHTPROTEOSOUND
@@ -232,6 +240,10 @@ typedef struct icon_name
 
 icon_name nicons[]=
 {
+    {"arrow-12","icons/arrow-12-512.png"},
+    {"arrow-112","icons/arrow-112-512.png"},
+    {"arrow-225","icons/arrow-225-512.png"},
+    {"loop-circular","icons/loop-circular-512.png"},
     {"add_user","icons/add-user-2-512.png"},
     {"power","icons/power-512.png"}
 };
@@ -978,6 +990,8 @@ typedef struct OCVImage
     int  width;
     int  height;
 
+    int type;
+    
     unsigned char *data;
     unsigned long  step;
 
@@ -995,6 +1009,7 @@ int opencv_forward(lua_State* state);
 int opencv_forwardTable(lua_State* state);
 //int opencv_getpoints(lua_State* state);
 int opencv_circle(lua_State* state);
+int opencv_rectangle(lua_State* state);
 int opencv_sliceImg(lua_State* state);
 int opencv_minMaxLoc(lua_State* state);
 int opencv_img(lua_State *state);
@@ -1019,8 +1034,14 @@ int opencv_setFrameSize(lua_State* state);
 int opencv_setBufferSize(lua_State* state);
 int opencv_imencode(lua_State* state);
 int opencv_imdecode(lua_State* state);
+int opencv_convert(lua_State* state);
+int opencv_getaffinetransform(lua_State* state);
+int opencv_warpaffine(lua_State* state);
+int opencv_totable(lua_State* state);
 
 OCVImage getImage(void* mat);
+void toRGB(void* mat);
+void toBGR(void* mat);
 #endif
 //==============================================================================
 //   AUDIO

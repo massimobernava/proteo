@@ -279,8 +279,16 @@ static int socket_recv(lua_State *state) {
      
 }
 
-static int socket_close(lua_State *state) {
-
+static int socket_close(lua_State *state)
+{
+    void** udata = (void**)luaL_checkudata(state, 1, ZMQ_SOCKET);
+    void* socket = *udata;
+    if (socket != NULL)
+    {
+        int rc = zmq_close(socket);
+        socket=NULL;
+    }
+    return 0;
 }
 
 //==============================================================================

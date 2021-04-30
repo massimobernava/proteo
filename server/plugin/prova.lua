@@ -1,5 +1,7 @@
 local json=require "json"
 
+require "tfl_blazeface"
+
 
 local host_enet_test=nil
 zmq_context_test = nil
@@ -11,7 +13,16 @@ update_event = function(dt)
   if zmq_context_test ~= nil then
     buffer = proteo.zmq.recv(zmq_socket_test,proteo.zmq.flag.ZMQ_DONTWAIT)
     if buffer ~= nil then
-      proteo.zmq.send (zmq_socket_test,buffer,proteo.zmq.flag.ZMQ_DONTWAIT)
+      data = json.decode(buffer)
+      proteo.opencv.imdecode(data['data'],video_frame)
+      bbox = invoke_face_detect(video_frame)
+      size = proteo.opencv.size(video_frame)
+      for _, b in ipairs(bbox) do
+        feed_image = generate_face_landmark_input_image(video_frame,b)
+        b['facemesh']=invoke_face_landmark(feed_image)
+      end
+      data['bbox']=bbox
+      proteo.zmq.send (zmq_socket_test,json.encode(data),proteo.zmq.flag.ZMQ_DONTWAIT)
     end
   end
   if host_enet_test ~= nil then
@@ -22,8 +33,6 @@ update_event = function(dt)
       print(event.peer)
 
      elseif event.type == "receive" then
-      data = json.decode(event.data)
-      proteo.opencv.imdecode(data['data'],video_frame)
       event.peer:send(event.data)
 
      end
@@ -72,5 +81,16 @@ proteo.route.post("prova/starthost",
   ret['url']=(table.concat({BASEURL, ':', PORT}))
 
  return json.encode(ret)
+end
+)
+
+proteo.route.post("prova/stophost",
+ function(username,permission,data,param)
+  proteo.system.stopTimer(test_timer)
+  proteo.zmq.socket_close(zmq_socket_test)
+  zmq_socket_test = nil
+  zmq_context_test = nil
+
+ return '{}'
 end
 )

@@ -182,6 +182,25 @@ int initSDL()
 			SDL_SetRenderDrawBlendMode(gRenderer,SDL_BLENDMODE_BLEND);
 
 		}
+        
+        if(opt_fullscreen)
+        {
+            SDL_SetWindowFullscreen(gWindow,SDL_WINDOW_FULLSCREEN_DESKTOP);
+            //SDL_DisplayMode DM;
+            //SDL_GetWindowDisplayMode(gWindow, &DM);
+            SDL_RenderSetLogicalSize(gRenderer,SCREEN_WIDTH,SCREEN_HEIGHT);
+            
+            /*if(((float)DM.w/(float)DM.h) >= RATIO)
+            {
+                gScale = DM.h/(float)SCREEN_HEIGHT;
+            }
+            else
+            {
+                gScale = DM.w/(float)SCREEN_WIDTH;
+            }
+
+            SDL_RenderSetScale(gRenderer,gScale,gScale);*/
+        }
 
 		if(TTF_Init()==-1) {
     		printf("TTF_Init error: %s\n", TTF_GetError());

@@ -802,7 +802,7 @@ static int graphics_setLayer (lua_State *state) {
 
     if(pc!=NULL)
     {
-        if(debug) printf("graphics.setLayer\n");
+        if(verbose) printf("graphics.setLayer\n");
 
         if(value==-1) //TOP
         {

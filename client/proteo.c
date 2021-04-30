@@ -6,7 +6,7 @@
 //=>
 //=> Massimo Bernava
 //=> massimo.bernava@gmail.com
-//=> 2021-03-24
+//=> 2021-04-30
 //==============================================================================
 
 //#if defined(__MINGW32__) || defined(__MINGW64__)
@@ -52,11 +52,9 @@
     
 #endif
 
-#define HAVE_FPOINT //RASPBERRY
-
 #define PROTEO_ZMQ
 #define PROTEO_OPENCV
-
+#define PROTEO_FFMPEG
 
 //TODO
 //#define DLINK_LIST_COMPONENT
@@ -87,9 +85,12 @@
 #include "proteo_enet.c"
 #endif
 #ifdef __EMSCRIPTEN__
-#ifdef PROTEO_OPENCV
-#include "proteo_opencv.c"
+    #ifdef PROTEO_OPENCV
+    #include "proteo_opencv.c"
+    #endif
 #endif
+#ifdef PROTEO_FFMPEG
+#include "proteo_ffmpeg.c"
 #endif
 //==============================================================================
 //   TODO
@@ -697,6 +698,9 @@ LUALIB_API int luaopen_proteo (lua_State *state) {
 	lua_newtable(state);
 	lua_setfield(state, -2, "debug");
 
+    lua_newtable(state);
+    lua_setfield(state, -2, "ffmpeg");
+    
 	lua_setglobal(state,"proteo");
 
 	lua_pushinteger(state, PROTEO_MAJOR_VERSION);
@@ -728,6 +732,10 @@ LUALIB_API int luaopen_proteo (lua_State *state) {
     add_zmq_proteo(state);
     #endif
 
+    #ifdef PROTEO_FFMPEG
+    add_ffmpeg_proteo(state);
+    #endif
+    
   return 1;
 }
 
@@ -802,6 +810,7 @@ int initLUA()
     #endif
     //addFunction_proteo(L,"opencv","getpoints",opencv_getpoints);
     addFunction_proteo(L,"opencv","circle",opencv_circle);
+    addFunction_proteo(L,"opencv","rectangle",opencv_rectangle);
     addFunction_proteo(L,"opencv","sliceImg",opencv_sliceImg);
     addFunction_proteo(L,"opencv","minMaxLoc",opencv_minMaxLoc);
     addFunction_proteo(L,"opencv","img",opencv_img);
@@ -826,7 +835,11 @@ int initLUA()
     addFunction_proteo(L,"opencv","setBufferSize",opencv_setBufferSize);
     addFunction_proteo(L,"opencv","imencode",opencv_imencode);
     addFunction_proteo(L,"opencv","imdecode",opencv_imdecode);
-
+    addFunction_proteo(L,"opencv","convert",opencv_convert);
+    addFunction_proteo(L,"opencv","getAffineTransform",opencv_getaffinetransform);
+    addFunction_proteo(L,"opencv","warpAffine",opencv_warpaffine);
+    addFunction_proteo(L,"opencv","toTable",opencv_totable);
+    
     addTable_proteo(L,"opencv","matType");
     addEnum_proteo(L,"opencv","matType","CV_8U",0);
     addEnum_proteo(L,"opencv","matType","CV_8S",1);
@@ -982,10 +995,36 @@ void eventloop(ProteoComponent* list)
         else if(e.type == SDL_FINGERDOWN)
         {
             if(verbose) printf("SDL_FINGERDOWN\n");
+            
+            lua_getglobal(L,"touch");
+            if(lua_isfunction(L, -1) )
+            {
+                lua_pushinteger(L, e.tfinger.x*SCREEN_WIDTH);
+                lua_pushinteger(L, e.tfinger.y*SCREEN_HEIGHT);
+                int error = lua_pcall(L, 2, 0, 0);
+
+                if (error) {
+                    fprintf(stderr, "ERROR pcall(touch): %s\n", lua_tostring(L, -1));
+                    lua_pop(L, 1);
+                }
+            }
         }
         else if(e.type == SDL_FINGERUP)
         {
             if(verbose) printf("SDL_FINGERUP\n");
+            
+            lua_getglobal(L,"release");
+            if(lua_isfunction(L, -1) )
+            {
+                lua_pushinteger(L, e.tfinger.x*SCREEN_WIDTH);
+                lua_pushinteger(L, e.tfinger.y*SCREEN_HEIGHT);
+                int error = lua_pcall(L, 2, 0, 0);
+
+                if (error) {
+                    fprintf(stderr, "ERROR pcall(touch): %s\n", lua_tostring(L, -1));
+                    lua_pop(L, 1);
+                }
+            }
         }
         else if(e.type == SDL_FINGERMOTION)
         {
@@ -1177,6 +1216,7 @@ int main(int argc,char **argv)
 	int opt_password=FALSE;
 	int opt_script=FALSE;
     int opt_gmode=FALSE;
+   
 	//int opt_appkey=FALSE;
     config=load_config();
     if(config.load_error!=0)
@@ -1253,11 +1293,17 @@ int main(int argc,char **argv)
 
 #else
     int c;
-	while ((c = getopt (argc, argv, "glvhru:p:ds:b:a:c:")) != -1)
+	while ((c = getopt (argc, argv, "efglvhru:p:ds:b:a:c:")) != -1)
     	switch (c)
 		{
             case 'g': //Graphic login
                 opt_gmode=TRUE;
+            break;
+            case 'f': //Fullscreen
+                opt_fullscreen=TRUE;
+            break;
+            case 'e': //REmote Console
+                opt_remoteconsole=TRUE;
             break;
             case 'c': //loadconfig
 
@@ -1317,7 +1363,6 @@ int main(int argc,char **argv)
 			break;*/
 			case 'd'://debug mode
 				debug=TRUE;
-				verbose=TRUE;
 			break;
 
 			case '?':
@@ -1473,6 +1518,13 @@ int main(int argc,char **argv)
 	//pthread_cancel(t_update);
 
 	//free(Appkey);
+    
+    //CLOSE
+    lua_getglobal(L,"close");
+    if(lua_isfunction(L, -1) )
+    {
+        int error = lua_trace_pcall(L,0,0);
+    }
 
     freeaccesspoint();
     freetimers();

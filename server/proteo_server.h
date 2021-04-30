@@ -64,7 +64,14 @@
 
 #include <microhttpd.h>
 #include <sqlite3.h>
-#include <tensorflow/c/c_api.h>
+//#include <tensorflow/c/c_api.h>
+#include <tensorflow/lite/c/c_api.h>
+
+#include <libavutil/imgutils.h>
+#include <libavcodec/avcodec.h>
+#include <libswscale/swscale.h>
+
+//#include <tensorflow/c/c_api.h>
 
 //#include <enet/enet.h>
 #define ENET_IMPLEMENTATION
@@ -153,7 +160,7 @@ size_t strlcpy(char       *dst, const char *src, size_t      size)
 
 int run;
 int paused;
-int toreboot=FALSE;
+int toreboot=-1;
 int verbose=FALSE;
 int debug=FALSE;
 char basedir[50];
@@ -237,6 +244,8 @@ typedef struct OCVImage
     int  width;
     int  height;
     
+    int type;
+    
     unsigned char *data;
     unsigned long  step;
     
@@ -254,6 +263,7 @@ int opencv_forward(lua_State* state);
 int opencv_forwardTable(lua_State* state);
 //int opencv_getpoints(lua_State* state);
 int opencv_circle(lua_State* state);
+int opencv_rectangle(lua_State* state);
 int opencv_sliceImg(lua_State* state);
 int opencv_minMaxLoc(lua_State* state);
 int opencv_img(lua_State *state);
@@ -278,6 +288,13 @@ int opencv_setFrameSize(lua_State* state);
 int opencv_setBufferSize(lua_State* state);
 int opencv_imencode(lua_State* state);
 int opencv_imdecode(lua_State* state);
+int opencv_convert(lua_State* state);
+int opencv_getaffinetransform(lua_State* state);
+int opencv_warpaffine(lua_State* state);
+int opencv_totable(lua_State* state);
 
 OCVImage getImage(void* mat);
+void toRGB(void* mat);
+void toBGR(void* mat);
+
 #endif

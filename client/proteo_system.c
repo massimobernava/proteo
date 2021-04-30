@@ -26,7 +26,23 @@ static int system_system(lua_State *state){
 }
 
 static int system_console (lua_State *state) {
-  printf("%s\n",luaL_checkstring(state,1));
+    if(!opt_remoteconsole)
+        printf("%s\n",luaL_checkstring(state,1));
+    else
+    {
+        char timestamp[100];
+        time_t now = time (0);
+        strftime (timestamp, 100, "%Y-%m-%d %H:%M:%S", localtime (&now));
+        
+        char json[512];
+        sprintf(json,"{"
+                  "\"console\":\"%s\","
+                  "\"timestamp\":\"%s\""
+                  "}",luaL_checkstring(state,1),timestamp);
+        printf("%s\n",json);
+        proteo_post("/proteo/console",PROTEO_APP_KEY,Token,json,NULL,-1);
+        
+    }
   return 0;
 }
 
@@ -71,9 +87,11 @@ static int system_writeFile(lua_State *state) {
     if(verbose) printf("system.writeFile: %s\n",fname);
     if(debug) printf("%s\n",data);
     
-    writefile(fname,(char*)data);
+    int ret=writefile(fname,(char*)data);
     
-    return 0;
+    lua_pushinteger(state, ret);
+    
+  return 1;
 }
 
 static int system_readFile(lua_State *state) {

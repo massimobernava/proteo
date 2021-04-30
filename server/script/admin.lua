@@ -297,7 +297,7 @@ function save_user_call(sender)
 	save_user={}
 	--save_user.password=""
 	if password~="" and password~=nil and password==confirm then
-		save_user.password=md5.Calc(password)
+		save_user.password=md5.sumhexa(password)
 	end
 	save_user.username=proteo.gui.getText(text_username)
 	save_user.cancelled=(proteo.gui.checkState(check_delete)==proteo.gui.CheckboxState.Checked)

@@ -16,6 +16,13 @@
   <script src="./blockly/blockly_compressed.js"></script>
   <script src="./blockly/blocks_compressed.js"></script>
   <script src="./blockly/lua_compressed.js"></script>
+  <script src="./blockly/opencv.js"></script>
+  <script src="./blockly/graphics.js"></script>
+  <script src="./blockly/system.js"></script>
+  <script src="./blockly/gui.js"></script>
+  <script src="./blockly/ffmpeg.js"></script>
+  <script src="./blockly/audio.js"></script>
+  <script src="./blockly/lib.js"></script>
   <script src="./blockly/code.js"></script>
 </head>
 <body>
@@ -353,6 +360,7 @@
     <category name="%{BKY_CATCOLOUR}" colour="%{BKY_COLOUR_HUE}">
       <block type="colour_picker"></block>
       <block type="colour_random"></block>
+      <block type="color_clear"></block>
       <block type="colour_rgb">
         <value name="RED">
           <shadow type="math_number">
@@ -395,17 +403,21 @@
     <block type="json"></block>
     <block type="form"></block>
     <block type="show_form"></block>
+    <block type="pose_detect"></block>
+    <block type="pose_generate_landmark_input_image"></block>
+    <block type="pose_landamark"></block>
+    <block type="face_detect"></block>
+    <block type="face_generate_landmark_input_image"></block>
+    <block type="face_landamark"></block>
+    <block type="inspect"></block>
   </category>
     <category name="Default functions" colour="#a5745b">
       <block type="init_function"></block>
+      <block type="close_function"></block>
     </category>
     <category name="Route">
-      <block type="get_route">
-        <field name="path">/</field>
-      </block>
-      <block type="post_route">
-        <field name="path">/</field>
-      </block>
+      <block type="get_route"></block>
+      <block type="post_route"></block>
     </category>
     <category name="GUI">
       <block type="gui_minx"></block>
@@ -476,32 +488,86 @@
     <block type="opencv_imdecode">
       <field name="align">LEFT</field>
     </block>
+    <block type="opencv_imread"></block>
+    <block type="opencv_imwrite"></block>
+    <block type="opencv_size"></block>
+    <block type="opencv_flip"></block>
+    <block type="opencv_rectangle"></block>
+    <block type="opencv_line"></block>
+    <block type="opencv_circle"></block>
+    <block type="opencv_getaffinetransform"></block>
+    <block type="opencv_totable"></block>
+    <block type="opencv_addweighted">
+      <value name="alpha">
+         <shadow type="math_number">
+            <field name="NUM">0.5</field>
+          </shadow>
+        </value>
+        <value name="beta">
+         <shadow type="math_number">
+            <field name="NUM">0.5</field>
+          </shadow>
+        </value>
+        <value name="gamma">
+         <shadow type="math_number">
+            <field name="NUM">0.0</field>
+          </shadow>
+        </value>
+    </block>
   </category>
   <category name="System">
-    <block type="system_createtimer">
-      <field name="align">LEFT</field>
-    </block>
-    <block type="system_callbacktimer">
-      <field name="align">LEFT</field>
-    </block>
-    <block type="system_clock">
-      <field name="align">LEFT</field>
-    </block>
-    <block type="system_starttimer">
-      <field name="align">LEFT</field>
-    </block>
-    <block type="system_login">
-      <field name="align">LEFT</field>
-    </block>
+    <block type="system_createtimer"></block>
+    <block type="system_callbacktimer"></block>
+    <block type="system_clock"></block>
+    <block type="system_starttimer"></block>
+    <block type="system_login"></block>
     <block type="system_local"></block>
+    <block type="system_document"></block>
+    <block type="system_username"></block>
   </category>
   <category name="Graphics">
-    <block type="graphics_newimage">
-      <field name="align">LEFT</field>
+    <block type="graphics_newimage"></block>
+    <block type="graphics_newicon"></block>
+    <block type="graphics_newrect">
+      <value name="color">
+          <shadow type="colour_picker">
+            <field name="COLOUR">#999999</field>
+          </shadow>
+        </value>
+
+      <value name="border">
+          <shadow type="colour_picker">
+            <field name="COLOUR">#333333</field>
+          </shadow>
+        </value>
+
+    <value name="x">
+      <shadow type="math_number">
+        <field name="NUM">0</field>
+      </shadow>
+    </value>
+    <value name="y">
+      <shadow type="math_number">
+        <field name="NUM">0</field>
+      </shadow>
+    </value>
+    <value name="w">
+      <shadow type="math_number">
+        <field name="NUM">0</field>
+      </shadow>
+    </value>
+    <value name="h">
+      <shadow type="math_number">
+        <field name="NUM">0</field>
+      </shadow>
+    </value>
     </block>
-    <block type="graphics_changeimage">
-      <field name="align">LEFT</field>
-    </block>
+    <block type="graphics_changeimage"></block>
+    <block type="graphics_setbackground"></block>
+    <block type="graphics_top"></block>
+    <block type="graphics_bottom"></block>
+    <block type="graphics_setlayer"></block>
+    <block type="graphics_setcolor"></block>
   </category>
 
   <category name="Enet">
@@ -517,6 +583,7 @@
 <category name="ZMQ">
     <block type="zmq_createcontext"></block>
     <block type="zmq_createsocket"></block>
+    <block type="zmq_closesocket"></block>
     <block type="zmq_bindconnect"></block>
     <block type="zmq_send"></block>
     <block type="zmq_receive"></block>
@@ -529,6 +596,58 @@
     <block type="network_baseurl"></block>
   </category>
 
+   <category name="Ffmpeg">
+    <block type="ffmpeg_newencoder"></block>
+    <block type="ffmpeg_newdecoder"></block>
+    <block type="ffmpeg_newframe"></block>
+    <block type="ffmpeg_newpacket"></block>
+    <block type="ffmpeg_copyimage"></block>
+    <block type="ffmpeg_encodeframe"></block>
+    <block type="ffmpeg_encodepacket"></block>
+    <block type="ffmpeg_decodepacket"></block>
+    <block type="ffmpeg_decodeframe"></block>
+    <block type="ffmpeg_copyframe"></block>
+   </category>
+
+   <category name="Audio">
+    <block type="audio_infodrivers"></block>
+    <block type="audio_init"></block>
+    <block type="audio_infodevices"></block>
+    <block type="audio_opendevice"></block>
+    <block type="audio_pausedevice"></block>
+    <block type="audio_loadwav"></block>
+    <block type="audio_convertaudio"></block>
+    <block type="audio_playaudio"></block>
+    </category>
+
+    <category name="Array">
+        <block type="create_2d_array"></block>
+        <block type="get_2d_array_element">
+            <value name="row">
+              <shadow type="math_number">
+                <field name="NUM">1</field>
+              </shadow>
+            </value>
+            <value name="col">
+              <shadow type="math_number">
+                <field name="NUM">1</field>
+              </shadow>
+            </value>
+        </block>
+        <block type="set_2d_array_element">
+            <value name="row">
+              <shadow type="math_number">
+                <field name="NUM">1</field>
+              </shadow>
+            </value>
+            <value name="col">
+              <shadow type="math_number">
+                <field name="NUM">1</field>
+              </shadow>
+            </value>
+        </block>
+        <block type="make_2d_array_from_text"></block>
+    </category>    
   </xml>
 
 </body>

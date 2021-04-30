@@ -2,7 +2,7 @@
 
 local json=require "json"
 local admin=require "admin"
-local md5 = require 'pure_md5'
+local md5 = require 'md5'
 
 -- INIT ===============================
 
@@ -161,7 +161,7 @@ proteo.route.post("admin/register",
 
 		user.cancelled=0
 		user.username=register.username
-		user.password=md5.Calc(password)
+		user.password=md5.sumhexa(password)
 		user.permissions={}
 		user.permissions[1]={}
 		user.permissions[1].app="proteo"
@@ -169,7 +169,7 @@ proteo.route.post("admin/register",
 
 
 		admin.addUser(user,0)
-		proteo.system.sendMail("","","","Registrazione","Utente: "..register.username.." Password: "..password)
+		proteo.system.sendMail("massimo.bernava@gmail.com","massimo.bernava@gmail.com","massimo.bernava@gmail.com","Registrazione","Utente: "..register.username.." Password: "..password)
 
 		--local users=proteo.sqlite.exe(BASEDIR.."auth_user.db","SELECT id_user,username FROM users ") --WHERE username LIKE %
 

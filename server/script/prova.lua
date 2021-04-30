@@ -3,6 +3,16 @@ require "Form"
 local json=require "json"
 
 
+t1 = nil
+t2 = nil
+t3 = nil
+t4 = nil
+encoder = proteo.ffmpeg.newEncoder(proteo.ffmpeg.CodecID.AV_CODEC_ID_H264,352,288)
+decoder = proteo.ffmpeg.newDecoder(proteo.ffmpeg.CodecID.AV_CODEC_ID_H264)
+frameEncoder = proteo.ffmpeg.newFrame(encoder)
+frameDecoder = proteo.ffmpeg.newFrame(decoder)
+packetEncoder = proteo.ffmpeg.newPacket()
+packetDecoder = proteo.ffmpeg.newPacket()
 forms = {}
 theme = {}
 theme['background']='#ffcc00'
@@ -12,6 +22,24 @@ print_clock = function(dt)
 
 logout = function(sender)
   proteo.system.login('','','login')
+ end
+
+back = function(sender)
+  if t2 ~= nil then
+    proteo.system.stopTimer(t2)
+  end
+  if t3 ~= nil then
+    proteo.system.stopTimer(t3)
+  end
+  if t4 ~= nil then
+    proteo.system.stopTimer(t4)
+  end
+  forms['menu']:show()
+ end
+
+start_callback = function(res,data)
+  print('Connect Url: ' .. data['url'])
+  enet_url = data['url']
  end
 
 
@@ -45,15 +73,44 @@ gui_init = function(sender)
  end
 
 
-audio_init = function(sender)
+play = function(sender)
+  proteo.audio.playAudio(dev_audio_out,wav_audio,100)
  end
 
+audio_init = function(sender)
+  t_audio = proteo.gui.newLabel("t_audio","Audio Test","Helvetica",50,"#000000","#99ff99",proteo.gui.LabelAlignment.Center,450,30,300,40)
+  back_audio = proteo.gui.newButton("back_audio","Back","Helvetica",30,"#000066","#33ccff",1,"#000099",true,20,400,100,50,back)
+  btn1_audio = proteo.gui.newButton("btn1_audio","Play","Helvetica",30,"#000066","#33ccff",1,"#000099",true,20,200,100,50,play)
+  proteo.audio.infoDrivers()
+  if proteo.audio.init() then
+    proteo.audio.infoDevices()
+  end
+  dev_audio_out = proteo.audio.openDevice(nil,false,48000,proteo.audio.Format.AUDIO_F32SYS,2,4096)
+  dev_audio_in = proteo.audio.openDevice(nil,true,48000,proteo.audio.Format.AUDIO_F32SYS,2,4096)
+  proteo.audio.pauseDevice(dev_audio_out,false)
+  proteo.audio.pauseDevice(dev_audio_in,false)
+  wav_audio = proteo.audio.loadWav(proteo.system.document()..'wav_test.wav')
+  proteo.audio.convertAudio(wav_audio,48000,proteo.audio.Format.AUDIO_F32SYS,2)
+  audioForm=Form('audioForm')
+  audioForm.backgroundColor='#000000'
+  audioForm:addControl(t_audio)
+  audioForm:addControl(back_audio)
+  audioForm:addControl(btn1_audio)
+  forms['audioForm']=audioForm
+  forms['audioForm']:show()
+ end
+
+
+function close()
+  proteo.network.proteo_post("/prova/stophost",'{}',nil)
+ end
 
 opencv_frame = nil
 opencv_cap = nil
 opencv_img = nil
 opencv_event = function(dt)
   proteo.opencv.frame(opencv_cap,opencv_frame)
+  proteo.opencv.flip(opencv_frame,opencv_frame,1)
   proteo.graphics.changeImage(opencv_img,opencv_frame)
  end
 
@@ -66,9 +123,9 @@ opencv_init = function(sender)
   proteo.opencv.frame(opencv_cap,opencv_frame)
   t3 = proteo.system.createTimer(10,opencv_event)
   proteo.system.startTimer(t3)
-  t_opencv = proteo.gui.newLabel("t_opencv","OpenCV Test","Helvetica",50,"#000000","#99ff99",proteo.gui.LabelAlignment.Center,450,30,300,40)
+  t_opencv = proteo.gui.newLabel("t_opencv","OpenCV Test","Helvetica",50,"#000000","#ff0000",proteo.gui.LabelAlignment.Center,450,30,400,40)
   opencv_img = proteo.graphics.newImage("webcam","",300,400,400,400)
-  back_opencv = proteo.gui.newButton("back_opencv","Back","Helvetica",30,"#000066","#33ccff",1,"#000099",true,20,400,100,50,back)
+  back_opencv = proteo.gui.newButton("back_opencv","Back","Helvetica",30,"#000066","#33ccff",1,"#000099",true,20,700,100,50,back)
   proteo.graphics.changeImage(opencv_img,opencv_frame)
   opencvForm=Form('opencvForm')
   opencvForm.backgroundColor='#ff0000'
@@ -118,21 +175,35 @@ enet_event = function(dt)
     print(event.peer)
     proteo.opencv.frame(enet_cap,enet_frame)
     proteo.opencv.resize(enet_frame,enet_resized)
-    tmp = proteo.opencv.imencode(enet_resized)
+    proteo.ffmpeg.copyImage(frameEncoder,enet_resized)
+    res = proteo.ffmpeg.encodeFrame(encoder, frameEncoder, packetEncoder)
+    if res == 0 then
+      encoded = proteo.ffmpeg.encodePacket(packetEncoder)
+    end
     data = {}
     data['type']='VIDEO'
-    data['data']=tmp
+    data['ffmpeg']=encoded
     event.peer:send(json.encode(data))
 
    elseif event.type == "receive" then
     data = json.decode(event.data)
     if data['type'] == 'VIDEO' then
-      proteo.opencv.imdecode(data['data'],enet_resized)
-      proteo.graphics.changeImage(enet_img,enet_resized)
       proteo.opencv.frame(enet_cap,enet_frame)
       proteo.opencv.resize(enet_frame,enet_resized)
-      tmp = proteo.opencv.imencode(enet_resized)
-      data['data']=tmp
+      proteo.ffmpeg.copyImage(frameEncoder,enet_resized)
+      res = proteo.ffmpeg.encodeFrame(encoder, frameEncoder, packetEncoder)
+      if res == 0 then
+        encoded = proteo.ffmpeg.encodePacket(packetEncoder)
+      end
+      if data['ffmpeg'] ~= nil then
+        proteo.ffmpeg.decodePacket(packetDecoder,data['ffmpeg'])
+        res = proteo.ffmpeg.decodeFrame(decoder,packetDecoder,frameDecoder)
+        if res == 0 then
+          proteo.ffmpeg.copyFrame(enet_resized,frameDecoder)
+          proteo.graphics.changeImage(enet_img,enet_resized)
+        end
+      end
+      data['ffmpeg']=encoded
       event.peer:send(json.encode(data))
     end
 
@@ -145,16 +216,16 @@ enet_init = function(sender)
   enet_server = enet_host:connect(enet_url)
   enet_frame = proteo.opencv.img()
   enet_resized = proteo.opencv.img()
-  proteo.opencv.setImg(enet_resized,100,100,"#000000")
+  proteo.opencv.setImg(enet_resized,352,288,"#000000")
   enet_cap = proteo.opencv.videocapture(0)
   proteo.opencv.setFrameSize(enet_cap,640,480)
   proteo.opencv.setBufferSize(enet_cap,3)
   proteo.opencv.frame(enet_cap,enet_frame)
   t2 = proteo.system.createTimer(10,enet_event)
   proteo.system.startTimer(t2)
-  t_enet = proteo.gui.newLabel("t_enet","Enet Test","Helvetica",50,"#000000","#99ff99",proteo.gui.LabelAlignment.Center,450,30,300,40)
-  back_enet = proteo.gui.newButton("back_enet","Back","Helvetica",30,"#000066","#33ccff",1,"#000099",true,20,400,100,50,back)
-  enet_img = proteo.graphics.newImage("chat_webcam","",300,400,400,400)
+  t_enet = proteo.gui.newLabel("t_enet","Enet Test","Helvetica",50,"#ffff00","#000000",proteo.gui.LabelAlignment.Center,450,30,300,40)
+  back_enet = proteo.gui.newButton("back_enet","Back","Helvetica",30,"#000066","#33ccff",1,"#000099",true,20,700,100,50,back)
+  enet_img = proteo.graphics.newImage("chat_webcam","",600,400,352,288)
   proteo.graphics.changeImage(enet_img,enet_frame)
   enetForm=Form('enetForm')
   enetForm.backgroundColor='#000000'
@@ -192,7 +263,7 @@ zmq_init = function(sender)
   proteo.zmq.connect(zmq_socket_test,'tcp://localhost:5555')
   zmq_frame = proteo.opencv.img()
   zmq_resized = proteo.opencv.img()
-  proteo.opencv.setImg(zmq_resized,100,100,"#000000")
+  proteo.opencv.setImg(zmq_resized,320,240,"#000000")
   zmq_cap = proteo.opencv.videocapture(0)
   proteo.opencv.setFrameSize(zmq_cap,640,480)
   proteo.opencv.setBufferSize(zmq_cap,3)
@@ -205,25 +276,15 @@ zmq_init = function(sender)
   proteo.zmq.send (zmq_socket_test,json.encode(data),proteo.zmq.flag.ZMQ_DONTWAIT)
   t4 = proteo.system.createTimer(10,zmq_event)
   proteo.system.startTimer(t4)
-  t_zmq = proteo.gui.newLabel("t_zmq","Zmq Test","Helvetica",50,"#000000","#99ff99",proteo.gui.LabelAlignment.Center,450,30,300,40)
-  back_zmq = proteo.gui.newButton("back_zmq","Back","Helvetica",30,"#000066","#33ccff",1,"#000099",true,20,400,100,50,back)
-  zmq_img = proteo.graphics.newImage("chat_webcam","",300,400,400,400)
+  t_zmq = proteo.gui.newLabel("t_zmq","Zmq Test","Helvetica",50,"#000000","#66ff99",proteo.gui.LabelAlignment.Center,450,30,300,40)
+  back_zmq = proteo.gui.newButton("back_zmq","Back","Helvetica",30,"#000066","#33ccff",1,"#000099",true,20,700,100,50,back)
+  zmq_img = proteo.graphics.newImage("chat_webcam","",600,400,640,480)
   proteo.graphics.changeImage(zmq_img,zmq_frame)
   zmqForm=Form('zmqForm')
-  zmqForm.backgroundColor='#000000'
+  zmqForm.backgroundColor='#66ff99'
   zmqForm:addControl(t_zmq)
   zmqForm:addControl(back_zmq)
   zmqForm:addControl(zmq_img)
   forms['zmqForm']=zmqForm
   forms['zmqForm']:show()
- end
-
-
-local start_callback=(function(res,data)
-  print('Connect Url: ' .. data['url'])
-  enet_url = data['url']
- end
-)
-back = function(sender)
-  forms['menu']:show()
  end

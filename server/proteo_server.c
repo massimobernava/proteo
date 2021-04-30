@@ -5,7 +5,7 @@
 //=>
 //=> Massimo Bernava
 //=> massimo.bernava@gmail.com
-//=> 2021-03-24
+//=> 2021-04-30
 //==============================================================================
 
 #define PROTEO_OPENCV
@@ -23,6 +23,8 @@
 #include "proteo_enet.c"
 #include "proteo_admin.c"
 #include "proteo_zmq.c"
+#include "proteo_ffmpeg.c"
+#include "proteo_tensorflow.c"
 
 //==============================================================================
 //   TODO
@@ -378,11 +380,19 @@ LUALIB_API int luaopen_proteo (lua_State *state) {
 	lua_newtable(state);
 	lua_setfield(state, -2, "ejdb");
 	
+    lua_newtable(state);
+    lua_setfield(state, -2, "ffmpeg");
+    
+    lua_newtable(state);
+    lua_setfield(state, -2, "tflite");
+    
 	lua_setglobal(state,"proteo");
 
 	add_system_proteo(state);
     add_zmq_proteo(state);
-	
+    add_ffmpeg_proteo(state);
+    add_tensorflow_proteo(state);
+    
   return 1;
 }
 
@@ -452,6 +462,7 @@ int initLUA()
         addFunction_proteo(L,"opencv","forwardTable",opencv_forwardTable);
         //addFunction_proteo(L,"opencv","getpoints",opencv_getpoints);
         addFunction_proteo(L,"opencv","circle",opencv_circle);
+        addFunction_proteo(L,"opencv","rectangle",opencv_rectangle);
         addFunction_proteo(L,"opencv","sliceImg",opencv_sliceImg);
         addFunction_proteo(L,"opencv","minMaxLoc",opencv_minMaxLoc);
         addFunction_proteo(L,"opencv","img",opencv_img);
@@ -476,6 +487,10 @@ int initLUA()
         addFunction_proteo(L,"opencv","setBufferSize",opencv_setBufferSize);
         addFunction_proteo(L,"opencv","imencode",opencv_imencode);
         addFunction_proteo(L,"opencv","imdecode",opencv_imdecode);
+        addFunction_proteo(L,"opencv","convert",opencv_convert);
+        addFunction_proteo(L,"opencv","getAffineTransform",opencv_getaffinetransform);
+        addFunction_proteo(L,"opencv","warpAffine",opencv_warpaffine);
+        addFunction_proteo(L,"opencv","toTable",opencv_totable);
     
         addTable_proteo(L,"opencv","matType");
         addEnum_proteo(L,"opencv","matType","CV_8U",0);
@@ -636,7 +651,11 @@ const char* app_call(int type,const char* url,char* data,char* permissions,char*
 	//lua_pop(L, 1);
     sem_post(lua_sem);
     
-    if(toreboot) system_reboot(L); //Reboot after finish current call
+    if(paused && toreboot>=0)
+    {
+        if(debug) printf("<<<<<<< Reboot (app_call) \n");
+        system_reboot(L); //Reboot after finish current call
+    }
     
 	return ret;
 }
@@ -1088,7 +1107,6 @@ int main(int argc,char **argv)
 			
 			case 'd': //debug mode
 				debug=TRUE;
-				verbose=TRUE;
 			break;
 			
 			case 'c':
@@ -1165,7 +1183,8 @@ int main(int argc,char **argv)
     printf("%s\n",LUA_VERSION);
 #endif
 	printf("JSON v.%s\n",JSON_C_VERSION);
-	
+    printf("TensorFlowLite v.%s\n", TfLiteVersion());
+    
 	MHD_set_panic_func(&panicCallback, NULL);
 
 	struct MHD_Daemon *daemon;
@@ -1182,8 +1201,8 @@ int main(int argc,char **argv)
   	}
   	else
   	{
-  		key_pem = loadfile (config.ssl_key);
-  		cert_pem = loadfile (config.ssl_cert);
+        loaddatafile (config.ssl_key,&key_pem);
+  		loaddatafile (config.ssl_cert,&cert_pem);
 
   		if(verbose) printf("KEY: \n%s\n",key_pem);
   		if(verbose) printf("CERT: \n%s\n",cert_pem);
@@ -1232,6 +1251,12 @@ int main(int argc,char **argv)
 		double n=now.tv_sec*1000;
 		n=n+(now.tv_nsec/1000000.0);
 		
+        if(paused && toreboot>=0)
+        {
+            if(debug) printf("<<<<<<< Reboot (timer) \n");
+            system_reboot(L);
+        }
+        
         ProteoTimer* timer=timers;
         double min=1000;
 		while(timer!=NULL)
@@ -1241,6 +1266,8 @@ int main(int argc,char **argv)
                 //TODO se sono tutti disabilitati si può sospendere questo while fino al prossimo "timer.start"
                 if(timer->time<=(n-timer->last))
                 {
+                    if(paused) continue;
+                    
                     sem_wait(lua_sem);
                     if(timer->callback!=NULL)
                         lua_getglobal(L,timer->callback);

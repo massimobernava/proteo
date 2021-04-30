@@ -1,9 +1,19 @@
 
-local ffmpeg = require('my_ffmpeg')
 local json=require "json"
 local host_enet_test=nil
 local zmq_context_test=nil
 local zmq_socket_test=nil
+
+--proteo.ffmpeg.avcodec_register_all()
+--local codec=proteo.ffmpeg.avcodec_find_encoder(proteo.ffmpeg.CodecID.AV_CODEC_ID_H264)
+--local context=proteo.ffmpeg.avcodec_alloc_context(codec)
+--proteo.ffmpeg.setparam
+--proteo.ffmpeg.avcodec_open(context, codec)
+--local frame=proteo.ffmpeg.avcodec_alloc_frame()
+--proteo.opencv.frame(cap,image)
+--proteo.ffmpeg.copyImage(frame,image)
+--local ret,pkt=proteo.ffmpeg.avcodec_encode_video(context, frame)
+
 
 video_frame=proteo.opencv.img()
 img_out=proteo.opencv.img()

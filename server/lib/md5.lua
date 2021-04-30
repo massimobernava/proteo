@@ -34,10 +34,16 @@ local char, byte, format, rep, sub =
   string.char, string.byte, string.format, string.rep, string.sub
 local bit_or, bit_and, bit_not, bit_xor, bit_rshift, bit_lshift
 
-local ok, bit = pcall(require, 'bit')
+if local_require==nil then --Proteo server side don't have local_require
+ local_require=require
+end 
+
+local ok, bit = pcall(local_require, 'bit') --Proteo client use "local_require" as standard require and "require" as remote require
 if ok then
+  print("LOAD BIT")
   bit_or, bit_and, bit_not, bit_xor, bit_rshift, bit_lshift = bit.bor, bit.band, bit.bnot, bit.bxor, bit.rshift, bit.lshift
 else
+  print("LOAD BIT32")
   ok, bit = pcall(require, 'bit32')
 
   if ok then

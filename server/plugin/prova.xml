@@ -4,17 +4,21 @@
     <variable id="n7Y:;BEK.QWQ9`2HCrY%">zmq_context_test</variable>
     <variable id="[XZS-=a|tCzZ;B4[:8$?">permissions</variable>
     <variable id=",/;+ypWwhSj$I9JzVG]p">info</variable>
+    <variable id="]5l0pU;ZVq^LFV0]~4C}">test_timer</variable>
     <variable id="8rIB/Fi1N?,ATFrsF~aO">zmq_socket_test</variable>
     <variable id="$sk_}T:ZPu)d(Q#HH!+K">ret</variable>
     <variable id="w`tnOn5{ok,pqy-P%PrQ">video_frame</variable>
     <variable id="/{G}%Ww`c{,liC:SS=?#">img_out</variable>
-    <variable id="]5l0pU;ZVq^LFV0]~4C}">test_timer</variable>
     <variable id="];=hU5;:--x2Tr8+Nms6">probMap</variable>
     <variable id=",{7l#^q:Ly9eex#GR,9W">update_event</variable>
     <variable id="7/Zf*f2[ZC=?SIxyjIK5">dt</variable>
     <variable id="{ua)V4PXEl!Tt55zbth4">buffer</variable>
     <variable id="e/GCTM{7x/]dv%%9L[A_">event</variable>
     <variable id="ZdO7e7Z].HOro^_%`(Kq">data</variable>
+    <variable id="1W+J!?-w*k*CSE{pWUOo">bbox</variable>
+    <variable id="vei,$no:yL.2pwrp()I`">size</variable>
+    <variable id="FC9+g#m5[g}RHRdSc$-;">b</variable>
+    <variable id="PS^arM8={:,0Dk]EM(SP">feed_image</variable>
   </variables>
   <block type="system_local" id="OKxledi{/!?AgqJ4m$24" x="-137" y="38">
     <field name="NAME" id="rYB*47}f#Qi_udV(2%v(">host_enet_test</field>
@@ -101,18 +105,162 @@
                                               </block>
                                             </value>
                                             <statement name="DO0">
-                                              <block type="zmq_send" id="8OKG#m#(}b`E_-Dqv!6y">
-                                                <field name="flag">ZMQ_DONTWAIT</field>
-                                                <value name="message">
-                                                  <block type="variables_get" id=",U[w,CWno#fJr0/40Nf~">
-                                                    <field name="VAR" id="{ua)V4PXEl!Tt55zbth4">buffer</field>
+                                              <block type="variables_set" id="_y0MU9_To}W0B.ft4w%a">
+                                                <field name="VAR" id="ZdO7e7Z].HOro^_%`(Kq">data</field>
+                                                <value name="VALUE">
+                                                  <block type="json" id="j7Xj4^byv{p*=7a$zZqB">
+                                                    <field name="mode">decode</field>
+                                                    <value name="encode">
+                                                      <block type="variables_get" id="h8GcsVngIveU?NwgnhJ9">
+                                                        <field name="VAR" id="{ua)V4PXEl!Tt55zbth4">buffer</field>
+                                                      </block>
+                                                    </value>
                                                   </block>
                                                 </value>
-                                                <value name="to">
-                                                  <block type="variables_get" id=":lS5[;UG(T|/il(uEv3`">
-                                                    <field name="VAR" id="8rIB/Fi1N?,ATFrsF~aO">zmq_socket_test</field>
+                                                <next>
+                                                  <block type="opencv_imdecode" id="B!oO6BFlnnIFJHD-R-J-">
+                                                    <value name="from">
+                                                      <block type="get_dict_element" id="b/`={-Q,=a(W#J0Hn`+o">
+                                                        <value name="list">
+                                                          <block type="variables_get" id="a0pv/Yv$pQSK`$:kdqXL">
+                                                            <field name="VAR" id="ZdO7e7Z].HOro^_%`(Kq">data</field>
+                                                          </block>
+                                                        </value>
+                                                        <value name="key">
+                                                          <block type="text" id="+O0[s63PO|}@Cv@FjH6.">
+                                                            <field name="TEXT">data</field>
+                                                          </block>
+                                                        </value>
+                                                      </block>
+                                                    </value>
+                                                    <value name="to">
+                                                      <block type="variables_get" id="0#gc#by=sOew$x50^^4_">
+                                                        <field name="VAR" id="w`tnOn5{ok,pqy-P%PrQ">video_frame</field>
+                                                      </block>
+                                                    </value>
+                                                    <next>
+                                                      <block type="variables_set" id=":j*AGGyPR8F[?MiyC=m7">
+                                                        <field name="VAR" id="1W+J!?-w*k*CSE{pWUOo">bbox</field>
+                                                        <value name="VALUE">
+                                                          <block type="face_detect" id="n$na*2o#uY#A{u0CyB2f">
+                                                            <field name="mode">tfl_blazeface</field>
+                                                            <value name="img">
+                                                              <block type="variables_get" id="|@kiG0$S;2_?#2{nQ=ZH">
+                                                                <field name="VAR" id="w`tnOn5{ok,pqy-P%PrQ">video_frame</field>
+                                                              </block>
+                                                            </value>
+                                                          </block>
+                                                        </value>
+                                                        <next>
+                                                          <block type="variables_set" id="jeTn6wT8En/YxO%+V6_:">
+                                                            <field name="VAR" id="vei,$no:yL.2pwrp()I`">size</field>
+                                                            <value name="VALUE">
+                                                              <block type="opencv_size" id="4X5;_I^7DzD~{hbqo#Yp">
+                                                                <value name="from">
+                                                                  <block type="variables_get" id="*0!w2*hff[L@F)G]O=Ya">
+                                                                    <field name="VAR" id="w`tnOn5{ok,pqy-P%PrQ">video_frame</field>
+                                                                  </block>
+                                                                </value>
+                                                              </block>
+                                                            </value>
+                                                            <next>
+                                                              <block type="controls_forEach" id="753KDZF+q3-JQdDsI2L6">
+                                                                <field name="VAR" id="FC9+g#m5[g}RHRdSc$-;">b</field>
+                                                                <value name="LIST">
+                                                                  <block type="variables_get" id="j~3NV:cftvq[x.ft#|R)">
+                                                                    <field name="VAR" id="1W+J!?-w*k*CSE{pWUOo">bbox</field>
+                                                                  </block>
+                                                                </value>
+                                                                <statement name="DO">
+                                                                  <block type="variables_set" id="6Rez#=_I#tk0#]-zcp(7">
+                                                                    <field name="VAR" id="PS^arM8={:,0Dk]EM(SP">feed_image</field>
+                                                                    <value name="VALUE">
+                                                                      <block type="face_generate_landmark_input_image" id="]:^`lbe6fK=7r#3y4f2L">
+                                                                        <value name="img">
+                                                                          <block type="variables_get" id="4?mt^4$Vyq9jwR~?z^5.">
+                                                                            <field name="VAR" id="w`tnOn5{ok,pqy-P%PrQ">video_frame</field>
+                                                                          </block>
+                                                                        </value>
+                                                                        <value name="bbox">
+                                                                          <block type="variables_get" id="Sk_wRHRY7pg~eF*X;*a(">
+                                                                            <field name="VAR" id="FC9+g#m5[g}RHRdSc$-;">b</field>
+                                                                          </block>
+                                                                        </value>
+                                                                      </block>
+                                                                    </value>
+                                                                    <next>
+                                                                      <block type="add_dict_element" id="r}4C?=M-[w7w.X-1xCxX">
+                                                                        <value name="list">
+                                                                          <block type="variables_get" id="+*/OCoolm4e5C,.udj(_">
+                                                                            <field name="VAR" id="FC9+g#m5[g}RHRdSc$-;">b</field>
+                                                                          </block>
+                                                                        </value>
+                                                                        <value name="key">
+                                                                          <block type="text" id="_knt:}oUlzLLRlg,*|oK">
+                                                                            <field name="TEXT">facemesh</field>
+                                                                          </block>
+                                                                        </value>
+                                                                        <value name="value">
+                                                                          <block type="face_landamark" id="_ND4v!#m8dDBsXSU_+DP">
+                                                                            <field name="mode">tfl_blazeface</field>
+                                                                            <value name="img">
+                                                                              <block type="variables_get" id="b{jxj]nF*Hv2$FQmp~`}">
+                                                                                <field name="VAR" id="PS^arM8={:,0Dk]EM(SP">feed_image</field>
+                                                                              </block>
+                                                                            </value>
+                                                                          </block>
+                                                                        </value>
+                                                                      </block>
+                                                                    </next>
+                                                                  </block>
+                                                                </statement>
+                                                                <next>
+                                                                  <block type="add_dict_element" id="TJufHGK/.lO5N_2fRDqY">
+                                                                    <value name="list">
+                                                                      <block type="variables_get" id="pYbFfr^/}k~9K2wiljh%">
+                                                                        <field name="VAR" id="ZdO7e7Z].HOro^_%`(Kq">data</field>
+                                                                      </block>
+                                                                    </value>
+                                                                    <value name="key">
+                                                                      <block type="text" id="lskgC#?o#5#P|:+gL7NQ">
+                                                                        <field name="TEXT">bbox</field>
+                                                                      </block>
+                                                                    </value>
+                                                                    <value name="value">
+                                                                      <block type="variables_get" id="ofW=*:Uo%mDYQVvJ,P?h">
+                                                                        <field name="VAR" id="1W+J!?-w*k*CSE{pWUOo">bbox</field>
+                                                                      </block>
+                                                                    </value>
+                                                                    <next>
+                                                                      <block type="zmq_send" id="8OKG#m#(}b`E_-Dqv!6y">
+                                                                        <field name="flag">ZMQ_DONTWAIT</field>
+                                                                        <value name="message">
+                                                                          <block type="json" id="pQKIZTL|`@r$pN!NgrIt">
+                                                                            <field name="mode">encode</field>
+                                                                            <value name="encode">
+                                                                              <block type="variables_get" id="u^c;HYFEsO]VrgBh.1mM">
+                                                                                <field name="VAR" id="ZdO7e7Z].HOro^_%`(Kq">data</field>
+                                                                              </block>
+                                                                            </value>
+                                                                          </block>
+                                                                        </value>
+                                                                        <value name="to">
+                                                                          <block type="variables_get" id=":lS5[;UG(T|/il(uEv3`">
+                                                                            <field name="VAR" id="8rIB/Fi1N?,ATFrsF~aO">zmq_socket_test</field>
+                                                                          </block>
+                                                                        </value>
+                                                                      </block>
+                                                                    </next>
+                                                                  </block>
+                                                                </next>
+                                                              </block>
+                                                            </next>
+                                                          </block>
+                                                        </next>
+                                                      </block>
+                                                    </next>
                                                   </block>
-                                                </value>
+                                                </next>
                                               </block>
                                             </statement>
                                           </block>
@@ -171,7 +319,7 @@
                                                   </block>
                                                 </statement>
                                                 <statement name="receive">
-                                                  <block type="variables_set" id="%?Nj_GU+arVF=!X_.;Dg">
+                                                  <block type="variables_set" id="%?Nj_GU+arVF=!X_.;Dg" disabled="true">
                                                     <field name="VAR" id="ZdO7e7Z].HOro^_%`(Kq">data</field>
                                                     <value name="VALUE">
                                                       <block type="json" id="4*2Ij$T:/3#F?/NdtKye">
@@ -184,7 +332,7 @@
                                                       </block>
                                                     </value>
                                                     <next>
-                                                      <block type="opencv_imdecode" id="}Qn4np{UuX_f;eOPEPWo">
+                                                      <block type="opencv_imdecode" id="}Qn4np{UuX_f;eOPEPWo" disabled="true">
                                                         <value name="from">
                                                           <block type="get_dict_element" id="}cl-yqz*^80x$Mc+#k^5">
                                                             <value name="list">
@@ -520,6 +668,7 @@
                 </statement>
                 <next>
                   <block type="system_starttimer" id="`ZGy:lZ^}oNYW3Y9+N8m">
+                    <field name="mode">start</field>
                     <field name="timer" id="]5l0pU;ZVq^LFV0]~4C}">test_timer</field>
                     <next>
                       <block type="variables_set" id="6#;71FFcO%jBUF]pR,ml">
@@ -596,6 +745,45 @@
             <field name="VAR" id="$sk_}T:ZPu)d(Q#HH!+K">ret</field>
           </block>
         </value>
+      </block>
+    </value>
+  </block>
+  <block type="post_route" id="Zo1ND7=hxR-Pa2hT+rVz" x="1687" y="963">
+    <field name="path">prova/stophost</field>
+    <statement name="function">
+      <block type="system_starttimer" id="!V$+)PDfe+na0X)]tN)Y">
+        <field name="mode">stop</field>
+        <field name="timer" id="]5l0pU;ZVq^LFV0]~4C}">test_timer</field>
+        <next>
+          <block type="zmq_closesocket" id="u}OTAeH]fWdq/(k$$u@y">
+            <value name="context">
+              <block type="variables_get" id="@=9I..6@QI(J_=07[eE(">
+                <field name="VAR" id="8rIB/Fi1N?,ATFrsF~aO">zmq_socket_test</field>
+              </block>
+            </value>
+            <next>
+              <block type="variables_set" id="VVB!KyF?yP3)KPKo3pIi">
+                <field name="VAR" id="8rIB/Fi1N?,ATFrsF~aO">zmq_socket_test</field>
+                <value name="VALUE">
+                  <block type="logic_null" id="CmP9jl7kVB;l.6J8.7NA"></block>
+                </value>
+                <next>
+                  <block type="variables_set" id="uXLj~GGW7tP~Uz1NRL*W">
+                    <field name="VAR" id="n7Y:;BEK.QWQ9`2HCrY%">zmq_context_test</field>
+                    <value name="VALUE">
+                      <block type="logic_null" id="#/my9kK}dU6fUEBUGKn*"></block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+    <value name="return">
+      <block type="text" id="Tz:kbi-3f^7n%vi0D*7Y">
+        <field name="TEXT">{}</field>
       </block>
     </value>
   </block>

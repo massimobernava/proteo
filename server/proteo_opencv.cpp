@@ -38,10 +38,32 @@ typedef struct OCVImage
     int  width;
     int  height;
     
+    int type;
+    
     unsigned char *data;
     unsigned long  step;
     
 } OCVImage;
+
+const char* type2str(int type) {
+  const char* r;
+
+  uchar depth = type & CV_MAT_DEPTH_MASK;
+  //uchar chans = 1 + (type >> CV_CN_SHIFT);
+
+  switch ( depth ) {
+    case CV_8U:  r = "8U"; break;
+    case CV_8S:  r = "8S"; break;
+    case CV_16U: r = "16U"; break;
+    case CV_16S: r = "16S"; break;
+    case CV_32S: r = "32S"; break;
+    case CV_32F: r = "32F"; break;
+    case CV_64F: r = "64F"; break;
+    default:     r = "User"; break;
+  }
+
+  return r;
+}
 
 //==============================================================================
 //   CHECK
@@ -274,6 +296,8 @@ int opencv_imwrite(lua_State* state)
 int opencv_imencode(lua_State* state)
 {
     UMat *img=checkMat(state,1);
+
+    printf("imencode type %s\n",type2str(img->type()));
     
     if(img->rows+img->cols==0)
     {
@@ -429,8 +453,8 @@ int opencv_frame(lua_State* state)
 int opencv_setImg(lua_State* state)
 {
     UMat *ret=checkMat(state,1);
-    int rows=luaL_checkinteger(state, 2);
-    int cols=luaL_checkinteger(state, 3);
+    int cols=luaL_checkinteger(state, 2);//MOD
+    int rows=luaL_checkinteger(state, 3);
     const char* color=luaL_checkstring(state,4);
     int type=luaL_optinteger(state, 5, -1);
     
@@ -447,7 +471,7 @@ int opencv_setImg(lua_State* state)
     if(type==-1)
         ret->create(rows, cols, CV_8UC3);
     else
-        ret->create(rows, cols, type);
+        ret->create(rows, cols, CV_MAKETYPE(type,(3)));
     ret->setTo(Scalar((value >> 0) & 0xff,(value >> 8) & 0xff,(value >> 16) & 0xff));
     
     return 0;
@@ -457,24 +481,60 @@ int opencv_resize(lua_State* state)
 {
     UMat *in=checkMat(state,1);
     UMat *out=checkMat(state,2);
-    int rows=luaL_optinteger(state, 3, -1);
-    int cols=luaL_optinteger(state, 4, -1);
+    int cols=luaL_optinteger(state, 3, -1);//MOD
+    int rows=luaL_optinteger(state, 4, -1);
 
     if(in->empty()) return 0;
     
     if(rows==-1 || cols==-1)
-        resize(*in, *out,out->size());
-    else
-        resize(*in, *out,Size(rows,cols));
+    {
+        cols=out->cols;
+        rows=out->rows;
+        //resize(*in, *out,out->size());
+    }
+    //else
+    //    resize(*in, *out,Size(rows,cols));
     
+    double h1 = cols * (in->rows/(double)in->cols);
+    double w2 = rows * (in->cols/(double)in->rows);
+        if( h1 <= rows) {
+            cv::resize( *in, *out, cv::Size(cols, h1));
+        } else {
+            cv::resize( *in, *out, cv::Size(w2, rows));
+        }
+
+        int top = (rows - out->rows) / 2;
+        int down = (rows - out->rows+1) / 2;
+        int left = (cols - out->cols) / 2;
+        int right = (cols - out->cols+1) / 2;
+
+        cv::copyMakeBorder(*out, *out, top, down, left, right, cv::BORDER_CONSTANT, 0 );
+    
+    return 0;
+}
+
+int opencv_convert(lua_State* state)
+{
+    
+    UMat *in=checkMat(state,1);
+    UMat *out=checkMat(state,2);
+    int depth=luaL_checkinteger(state, 3);
+    int channel=luaL_optinteger(state, 4, 3);
+    
+    int type=CV_MAKETYPE(depth,channel);
+    
+    //printf("convert type %s to type %s \n",type2str(in->type()),type2str(type));
+        
+    in->convertTo(*out,type);
+
     return 0;
 }
 
 int opencv_setSize(lua_State* state)
 {
     UMat *ret=checkMat(state,1);
-    int rows=luaL_checkinteger(state, 2);
-    int cols=luaL_checkinteger(state, 3);
+    int cols=luaL_checkinteger(state, 2);//MOD
+    int rows=luaL_checkinteger(state, 3);
     int type=luaL_optinteger(state, 5, -1);
     
     if(type==-1)
@@ -523,6 +583,14 @@ int opencv_mul(lua_State* state)
 int opencv_add(lua_State* state)
 {
     UMat *in=checkMat(state,1);
+    if(lua_isnumber(state, 2))
+    {
+        float num=luaL_checknumber(state, 2);
+        UMat *out=checkMat(state,3);
+        cv::add(*in, num, *out);
+        return 0;
+    }
+        
     UMat *add=checkMat(state,2);
     UMat *out=checkMat(state,3);
     
@@ -884,6 +952,24 @@ int opencv_minMaxLoc(lua_State* state)
 
 int opencv_putText(lua_State* state)
 {
+    UMat* img=checkMat(state,1);
+    const char* txt=luaL_checkstring(state,2);
+    int x = luaL_checkint(state, 3);
+    int y = luaL_checkint(state, 4);
+    double scale=luaL_checknumber(state, 5);
+    const char* color=luaL_checkstring(state,6);
+
+    char col[8];
+
+    if (color[0] == '#')
+    {
+        strcpy(col,color);
+        col[0]='0';
+    }
+
+    unsigned long value = strtoul(col, NULL, 16);
+
+    putText(*img, txt, cv::Point((int)x, (int)y), cv::FONT_HERSHEY_TRIPLEX, scale, Scalar((value >> 0) & 0xff,(value >> 8) & 0xff,(value >> 16) & 0xff));
     
     return 0;
 }
@@ -909,6 +995,30 @@ int opencv_line(lua_State* state)
     unsigned long value = strtoul(col, NULL, 16);
     
     line(*img, cv::Point((int)ax, (int)ay), cv::Point((int)bx, (int)by), Scalar((value >> 0) & 0xff,(value >> 8) & 0xff,(value >> 16) & 0xff), w);
+    return 0;
+}
+
+int opencv_rectangle(lua_State* state)
+{
+    UMat* img=checkMat(state,1);
+    int x1 = luaL_checkint(state, 2);
+    int y1 = luaL_checkint(state, 3);
+    int x2 = luaL_checkint(state, 4);
+    int y2 = luaL_checkint(state, 5);
+    int w = luaL_checkint(state, 6);
+    const char* color=luaL_checkstring(state,7);
+
+    char col[8];
+
+    if (color[0] == '#')
+    {
+        strcpy(col,color);
+        col[0]='0';
+    }
+
+    unsigned long value = strtoul(col, NULL, 16);
+
+    rectangle(*img, cv::Point((int)x1, (int)y1), cv::Point((int)x2, (int)y2), Scalar((value >> 0) & 0xff,(value >> 8) & 0xff,(value >> 16) & 0xff), w);
     return 0;
 }
 
@@ -938,26 +1048,6 @@ int opencv_circle(lua_State* state)
     circle(*img, cv::Point((int)x, (int)y), r, Scalar((value >> 0) & 0xff,(value >> 8) & 0xff,(value >> 16) & 0xff), -1);
     
     return 0;
-}
-
-const char* type2str(int type) {
-  const char* r;
-
-  uchar depth = type & CV_MAT_DEPTH_MASK;
-  //uchar chans = 1 + (type >> CV_CN_SHIFT);
-
-  switch ( depth ) {
-    case CV_8U:  r = "8U"; break;
-    case CV_8S:  r = "8S"; break;
-    case CV_16U: r = "16U"; break;
-    case CV_16S: r = "16S"; break;
-    case CV_32S: r = "32S"; break;
-    case CV_32F: r = "32F"; break;
-    case CV_64F: r = "64F"; break;
-    default:     r = "User"; break;
-  }
-
-  return r;
 }
 
 int opencv_infoImg(lua_State* state)
@@ -1014,20 +1104,103 @@ int opencv_size(lua_State* state)
     return 1;
 }
 
+int opencv_getaffinetransform(lua_State* state)
+{
+    float x1=luaL_checknumber(state, 1);
+    float y1=luaL_checknumber(state, 2);
+    
+    float x2=luaL_checknumber(state, 3);
+    float y2=luaL_checknumber(state, 4);
+    
+    float x3=luaL_checknumber(state, 5);
+    float y3=luaL_checknumber(state, 6);
+    
+    float x4=luaL_checknumber(state, 7);
+    float y4=luaL_checknumber(state, 8);
+    
+    float x5=luaL_checknumber(state, 9);
+    float y5=luaL_checknumber(state, 10);
+    
+    float x6=luaL_checknumber(state, 11);
+    float y6=luaL_checknumber(state, 12);
+    
+    UMat *ret=pushMat(state);
+    
+    cv::Point2f mat_src[] = { cv::Point2f(x1, y1),cv::Point2f(x2, y2), cv::Point2f(x3, y3) };
+    cv::Point2f mat_dst[] = { cv::Point2f(x4, y4),cv::Point2f(x5, y5), cv::Point2f(x6, y6) };
+    
+    cv::Mat mat =cv::getAffineTransform(mat_src,mat_dst);
+    
+    mat.copyTo(*ret);
+    
+    return 1;
+}
+
+int opencv_warpaffine(lua_State* state)
+{
+    UMat* in=checkMat(state,1);
+    UMat* out=checkMat(state,2);
+    UMat* mat=checkMat(state,3);
+    
+    cv::warpAffine(*in, *out, *mat, out->size());
+    
+    return 0;
+}
+
+int opencv_totable(lua_State* state)
+{
+    UMat* in=checkMat(state,1);
+    Mat mat=in->getMat(ACCESS_READ);
+    lua_newtable(state);
+    
+    for (int r = 0; r < mat.rows; r++) {
+        lua_pushinteger(state, r+1);
+        lua_newtable(state);
+        for (int c = 0; c < mat.cols; c++) {
+            lua_pushinteger(state, c+1);
+            lua_pushnumber(state,mat.at<float>(r, c));
+            lua_settable(state,-3);
+        }
+        lua_settable(state,-3);
+    }
+
+    return 1;
+}
+
+void toRGB(void* mat)
+{
+    cv::cvtColor(*(UMat*)mat, *(UMat*)mat, cv::COLOR_BGR2RGB);
+}
+
+void toBGR(void* mat)
+{
+    cv::cvtColor(*(UMat*)mat, *(UMat*)mat, cv::COLOR_RGB2BGR);
+}
+
 OCVImage getImage(void* mat)
 {
     //IplImage  img = (IplImage)(*(UMat*)mat).getMat(ACCESS_READ);
     Mat img=((UMat*)mat)->getMat(ACCESS_READ);
+
+    //cv::cvtColor(img, img, cv::COLOR_BGR2RGB);
     
     OCVImage ret;
-    if(img.depth()==CV_8U)
-        ret.depth=8;
+    int depth=img.depth();
+    if(depth==CV_8U||depth==CV_8S) ret.depth=8;
+    else if(depth==CV_16U||depth==CV_16S||depth==CV_16F) ret.depth=16;
+    else if(depth==CV_32S||depth==CV_32F) ret.depth=32;
+    else if(depth==CV_64F) ret.depth=64;
+    
     ret.size=img.total()*img.elemSize();
     ret.data=img.data;//imageData;
     ret.height=img.size().height;//height;
     ret.channels=img.channels();//nChannels;
     ret.width=img.size().width;//width;
     ret.step=img.step;//img.widthStep;
+    ret.type=img.type();
+
+    //printf("Img type: %s\n",type2str(ret.type));
+
     
     return ret;
 }
@@ -1062,7 +1235,7 @@ OCVImage getImage(void* mat)
      return surface;
  }
  */
-void imread_c(const char* path)
+/*void imread_c(const char* path)
 {
 	const int POSE_PAIRS[14][2] = 
 	{   
@@ -1144,7 +1317,7 @@ void imread_c(const char* path)
    		imwrite("Output-Skeleton.jpg", frame);
 
     }
-}
+}*/
 
 
 //#ifdef __cplusplus

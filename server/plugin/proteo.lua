@@ -15,12 +15,12 @@ libs["statemachine"]="lib/statemachine.lua"
 libs["LCS"]="lib/LCS.lua"
 libs["json"]="lib/json.lua"
 libs["room"]="lib/room.lua"
-libs["md5"]="lib/pure_md5.lua"
+libs["md5"]="lib/md5.lua"
 libs["bit"]="lib/numberlua.lua"
 libs["matrix"]="lib/matrix.lua"
 libs["base64"]="lib/base64.lua"
 libs["aeslua"]="lib/aeslua.lua"
-libs["ffmpeg"]="lib/my_ffmpeg.lua"
+libs["tfl_utility"]="lib/tfl_utility.lua"
 
 libs["video_chat"]="lib/video_chat.lua"
 libs["attenzione_visiva"]="lib/attenzione_visiva.lua"
@@ -182,6 +182,17 @@ proteo.route.put("proteo/script/:script",
 
 	function(username,permission,data,param) 
 
+	end
+)
+
+proteo.route.post("proteo/console",
+
+	function(username,permission,data,param) 
+
+		local tmp=json.decode(data)
+
+		print(username.."["..tmp["timestamp"].."]: "..tmp["console"])
+		return "{}"
 	end
 )
 

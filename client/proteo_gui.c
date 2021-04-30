@@ -194,6 +194,33 @@ static int gui_getText (lua_State *state) {
   return 1;
 }
 
+static int gui_getId (lua_State *state) {
+
+  ProteoComponent* pc=toProteoComponent(state,1);
+  if(verbose) printf("gui.getId\n");
+
+  lua_pushlstring(state,pc->id,strlen(pc->id));
+
+  return 1;
+}
+
+static int gui_getValue (lua_State *state) {
+
+  ProteoComponent* pc=toProteoComponent(state,1);
+  if(verbose) printf("gui.getValue\n");
+
+    if(pc->type==DropDown)
+    {
+        if(pc->component.dropdown.selected_child==NULL)
+            lua_pushnil(state);
+        else
+            lua_pushlightuserdata(state, pc->component.dropdown.selected_child);
+    }
+    else return 0;//TODO
+
+  return 1;
+}
+
 static int gui_setText (lua_State *state) {
 
     ProteoComponent* pc=toProteoComponent(state,1);
@@ -386,8 +413,16 @@ static int gui_linkCheckbox (lua_State *state) {
 static int gui_checkState (lua_State *state) {
 
   ProteoComponent* pc=toProteoComponent(state,1);
-
-    lua_pushinteger(state,pc->component.checkbox.state);
+    if(pc->type==Checkbox)
+        lua_pushinteger(state,pc->component.checkbox.state);
+    else if(pc->type==DropDown)
+        lua_pushinteger(state,pc->component.dropdown.state);
+    else if(pc->type==TextField)
+        lua_pushinteger(state,pc->component.textfield.mode);
+    else if(pc->type==Form)
+        lua_pushinteger(state,pc->component.form.state);
+    else return 0;
+    
   return 1;
 }
 
@@ -826,6 +861,7 @@ static int gui_newLabel (lua_State *state) {
 
 static int gui_eventTextField (lua_State *state,ProteoComponent* textfield,SDL_Event e,SDL_Renderer* renderer)
 {
+    
     SDL_Rect textfield_rect=textfield->rect;
 
     if(textfield->parent!=NULL)
@@ -833,13 +869,25 @@ static int gui_eventTextField (lua_State *state,ProteoComponent* textfield,SDL_E
         textfield_rect.x+=textfield->parent->rect.x;
         textfield_rect.y+=textfield->parent->rect.y;
     }
-
-  if(e.type == SDL_MOUSEBUTTONDOWN)
+    
+    
+  if(e.type == SDL_MOUSEBUTTONDOWN || e.type == SDL_FINGERDOWN)
   {
-    SDL_Point point={e.button.x/gScale,e.button.y/gScale};
-
-    if(SDL_PointInRect(&point,&textfield_rect))
-    {
+    
+      SDL_Point point;
+      if(e.type == SDL_MOUSEBUTTONDOWN)
+      {
+          point.x=e.button.x/gScale;
+          point.y=e.button.y/gScale;
+          
+      }else if(e.type == SDL_FINGERDOWN)
+      {
+          point.x=e.tfinger.x*SCREEN_WIDTH;
+          point.y=e.tfinger.y*SCREEN_HEIGHT;
+      }
+      
+      if(SDL_PointInRect(&point,&textfield_rect))
+      {
         selected=textfield;
         textfield->component.textfield.cursor_position=strlen(textfield->txt);
         if(debug) printf("Select: %s\n",textfield->id);
@@ -849,6 +897,7 @@ static int gui_eventTextField (lua_State *state,ProteoComponent* textfield,SDL_E
         return TRUE;
     }
   }
+    
   else if(e.type == SDL_TEXTINPUT)
   {
 	if(selected==textfield)
@@ -1106,17 +1155,26 @@ static int gui_newTextField (lua_State *state) {
 
 static int gui_eventButton (lua_State *state,ProteoComponent* button,SDL_Event e,SDL_Renderer* renderer)
 {
-  if(e.type == SDL_MOUSEBUTTONDOWN)
-  {
-      SDL_Rect button_rect=button->rect;
-
-      if(button->parent!=NULL)
-      {
-          button_rect.x+=button->parent->rect.x;
-          button_rect.y+=button->parent->rect.y;
-      }
-
-    SDL_Point point={e.button.x/gScale,e.button.y/gScale};
+    SDL_Rect button_rect=button->rect;
+    
+    if(button->parent!=NULL)
+    {
+        button_rect.x+=button->parent->rect.x;
+        button_rect.y+=button->parent->rect.y;
+    }
+    
+    SDL_Point point;
+    if(e.type == SDL_MOUSEBUTTONDOWN)
+    {
+        point.x=e.button.x/gScale;
+        point.y=e.button.y/gScale;
+    }else if(e.type == SDL_FINGERDOWN)
+    {
+        point.x=e.tfinger.x*SCREEN_WIDTH;
+        point.y=e.tfinger.y*SCREEN_HEIGHT;
+    }
+    else return FALSE;
+    
     if(SDL_PointInRect(&point,&button_rect))
     {
       //printf("callback: %s",current->callback);
@@ -1134,7 +1192,7 @@ static int gui_eventButton (lua_State *state,ProteoComponent* button,SDL_Event e
 
       return TRUE;
     }
-  }
+  
   return FALSE;
 }
 
@@ -1676,7 +1734,19 @@ static int gui_eventDropDown (lua_State *state,ProteoComponent* dropdown,SDL_Eve
             {
 
                 if(debug) printf("Selected item: %s\n",current->txt);
-                //TODO callback
+    
+                if(dropdown->callback!=NULL)
+                    lua_getglobal(state,dropdown->callback);
+                else if(dropdown->ref_callback!=-1)
+                    lua_getref(state,dropdown->ref_callback);
+              lua_pushlightuserdata(state, dropdown);
+              int error = lua_pcall(state, 1, 0, 0);
+
+              if (error) {
+                fprintf(stderr, "ERROR pcall(%s): %s\n",dropdown->callback, lua_tostring(state, -1));
+                lua_pop(state, 1);
+              }
+                
                 dropdown->component.dropdown.selected_child=current;
                 dropdown->component.dropdown.state=0;
                 return TRUE;
@@ -2281,7 +2351,7 @@ void add_gui_proteo(lua_State* state)
     addFunction_proteo(state,"gui","newDropDownItem",gui_newDropDownItem);
     addFunction_proteo(state,"gui","newForm",gui_newForm);
     addFunction_proteo(state,"gui","newContainer",gui_newContainer);
-    //addFunction_proteo(state,"gui","newProgressBar",gui_newProgressBar); TODO
+    //addFunction_proteo(state,"gui","newProgressBar",gui_newProgressBar); //TODO
 
 	addFunction_proteo(state,"gui","linkCheckbox",gui_linkCheckbox);
 	addFunction_proteo(state,"gui","suspendDrawing",gui_suspendDrawing);
@@ -2297,7 +2367,8 @@ void add_gui_proteo(lua_State* state)
     addFunction_proteo(state,"gui","infoComponent",gui_infoComponent); //TODO
     addFunction_proteo(state,"gui","setPosition",gui_setPosition);
     //addFunction_proteo(state,"gui","getPosition",gui_getPosition); //TODO
-    //addFunction_proteo(state,"gui","getValue",gui_getValue); //TODO
+    addFunction_proteo(state,"gui","getValue",gui_getValue);
+    addFunction_proteo(state,"gui","getId",gui_getId);
     //addFunction_proteo(state,"gui","setFontColor",gui_setFontColor); //TODO
 
 	addTable_proteo(state,"gui","LabelAlignment");

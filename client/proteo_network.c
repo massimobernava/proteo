@@ -3,7 +3,6 @@
 //==============================================================================
 char Token[1000];
 
-
 typedef struct AccessPoint
 {
 	char app[32];
@@ -249,7 +248,9 @@ void json_to_table/*json_object_to_table*/(json_object * jobj)
 	}
 	else if(t==json_type_boolean)
 	{
+        json_bool bvalue=json_object_get_boolean(jobj);
 		if(verbose) printf(" bool \n");
+        lua_pushboolean(L, bvalue);
 	}
 	else if(t==json_type_double)
 	{

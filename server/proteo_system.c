@@ -85,9 +85,11 @@ static int system_writeFile(lua_State *state) {
     if(verbose) printf("system.writeFile: %s\n",fname);
     //if(debug) printf("%s\n",data);
         
-    writefile(fname,(char*)data);
+    int ret=writefile(fname,(char*)data);
     
-  return 0;
+    lua_pushinteger(state, ret);
+    
+  return 1;
 }
 
 static int system_dir(lua_State *state){
@@ -121,15 +123,23 @@ static int system_reboot(lua_State *state) {
 
     paused=TRUE;
     
-    if(toreboot) //Reboot after finish current call
+    if(debug) printf(">>>>>>>Reboot %d\n",toreboot);
+    
+    if(toreboot==-1)
+    {
+        toreboot=1;//timer & app call
+        if(timers==NULL) toreboot=0;
+    }
+    else if(toreboot==0) //Reboot after finish current call and fired all timer
     {
         closeLUA();
+        freetimers();
         initLUA();
     
         paused=FALSE;
-        toreboot=FALSE;
+        toreboot=-1;
     }
-    else toreboot=TRUE;
+    else toreboot--;
     
     return 0;
 }
@@ -309,7 +319,7 @@ void sendMail(const char* to_mail, const char* from_mail, const char* cc_mail, c
     
     curl = curl_easy_init();
     if(curl) {
-        /* TODO Set username and password */
+        /* Set username and password */
         curl_easy_setopt(curl, CURLOPT_USERNAME, "");
         curl_easy_setopt(curl, CURLOPT_PASSWORD, "");
      
