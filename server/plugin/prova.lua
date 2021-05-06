@@ -87,9 +87,11 @@ end
 proteo.route.post("prova/stophost",
  function(username,permission,data,param)
   proteo.system.stopTimer(test_timer)
-  proteo.zmq.socket_close(zmq_socket_test)
-  zmq_socket_test = nil
-  zmq_context_test = nil
+  if zmq_socket_test == nil then
+    proteo.zmq.socket_close(zmq_socket_test)
+    zmq_socket_test = nil
+    zmq_context_test = nil
+  end
 
  return '{}'
 end

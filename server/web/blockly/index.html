@@ -23,6 +23,7 @@
   <script src="./blockly/ffmpeg.js"></script>
   <script src="./blockly/audio.js"></script>
   <script src="./blockly/lib.js"></script>
+  <script src="./blockly/demo.js"></script>
   <script src="./blockly/code.js"></script>
 </head>
 <body>
@@ -399,7 +400,7 @@
     <sep></sep>
     <category name="%{BKY_CATVARIABLES}" colour="%{BKY_VARIABLES_HUE}" custom="VARIABLE"></category>
     <category name="%{BKY_CATFUNCTIONS}" colour="%{BKY_PROCEDURES_HUE}" custom="PROCEDURE"></category>
-    <category name="Lib">
+    <category name="Lib" toolboxitemid="proteo_lib">
     <block type="json"></block>
     <block type="form"></block>
     <block type="show_form"></block>
@@ -409,17 +410,23 @@
     <block type="face_detect"></block>
     <block type="face_generate_landmark_input_image"></block>
     <block type="face_landamark"></block>
+    <block type="pose_showlandmark"></block>
+    <block type="pose_showpose"></block>
+    <block type="face_showfacemesh"></block>
+    <block type="shape_svg2shape"></block>
+    <block type="skl_json2skl"></block>
+
     <block type="inspect"></block>
   </category>
-    <category name="Default functions" colour="#a5745b">
+    <category name="Default functions" toolboxitemid="proteo_default" colour="#a5745b">
       <block type="init_function"></block>
       <block type="close_function"></block>
     </category>
-    <category name="Route">
+    <category name="Route" toolboxitemid="proteo_route">
       <block type="get_route"></block>
       <block type="post_route"></block>
     </category>
-    <category name="GUI">
+    <category name="GUI" toolboxitemid="proteo_gui">
       <block type="gui_minx"></block>
       <block type="gui_midx"></block>
       <block type="gui_maxx"></block>
@@ -460,7 +467,7 @@
       <field name="align">LEFT</field>
     </block>
   </category>
-  <category name="OpenCV">
+  <category name="OpenCV" toolboxitemid="proteo_opencv">
     <block type="opencv_img">
       <field name="align">LEFT</field>
     </block>
@@ -515,7 +522,7 @@
         </value>
     </block>
   </category>
-  <category name="System">
+  <category name="System" toolboxitemid="proteo_system">
     <block type="system_createtimer"></block>
     <block type="system_callbacktimer"></block>
     <block type="system_clock"></block>
@@ -523,11 +530,49 @@
     <block type="system_login"></block>
     <block type="system_local"></block>
     <block type="system_document"></block>
+    <block type="system_readfile"></block>
+    <block type="system_callbackreadfile"></block>
     <block type="system_username"></block>
   </category>
-  <category name="Graphics">
+
+  <category name="Graphics" toolboxitemid="proteo_graphics">
     <block type="graphics_newimage"></block>
     <block type="graphics_newicon"></block>
+    <block type="graphics_newsprite">
+      <value name="file">
+        <shadow type="text">
+          <field name="TEXT">path</field>
+        </shadow>
+      </value>
+
+          <value name="x">
+      <shadow type="math_number">
+        <field name="NUM">0</field>
+      </shadow>
+    </value>
+    <value name="y">
+      <shadow type="math_number">
+        <field name="NUM">0</field>
+      </shadow>
+    </value>
+    <value name="w">
+      <shadow type="math_number">
+        <field name="NUM">0</field>
+      </shadow>
+    </value>
+    <value name="h">
+      <shadow type="math_number">
+        <field name="NUM">0</field>
+      </shadow>
+    </value>
+
+    </block>
+    <block type="graphics_newshape"></block>
+    <block type="graphics_newskeleton"></block>
+    <block type="graphics_bindskeleton"></block>
+    <block type="graphics_updateskeleton"></block>
+    <block type="graphics_addframe"></block>
+    <block type="graphics_setframe"></block>
     <block type="graphics_newrect">
       <value name="color">
           <shadow type="colour_picker">
@@ -568,9 +613,13 @@
     <block type="graphics_bottom"></block>
     <block type="graphics_setlayer"></block>
     <block type="graphics_setcolor"></block>
+    <block type="graphics_setposition"></block>
+    <block type="graphics_fliph"></block>
+    <block type="graphics_flipv"></block>
+    <block type="graphics_loadsvg"></block>
   </category>
 
-  <category name="Enet">
+  <category name="Enet" toolboxitemid="proteo_enet">
     <block type="enet_hostcreate"></block>
     <block type="enet_connect"></block>
     <block type="enet_service"></block>
@@ -580,7 +629,7 @@
     <block type="enet_send"></block>
   </category>
 
-<category name="ZMQ">
+<category name="ZMQ" toolboxitemid="proteo_zmq">
     <block type="zmq_createcontext"></block>
     <block type="zmq_createsocket"></block>
     <block type="zmq_closesocket"></block>
@@ -589,14 +638,14 @@
     <block type="zmq_receive"></block>
   </category>
 
-  <category name="Network">
+  <category name="Network" toolboxitemid="proteo_network">
     <block type="network_callback"></block>
     <block type="network_proteopost"></block>
     <block type="network_port"></block>
     <block type="network_baseurl"></block>
   </category>
 
-   <category name="Ffmpeg">
+   <category name="Ffmpeg" toolboxitemid="proteo_ffmpeg">
     <block type="ffmpeg_newencoder"></block>
     <block type="ffmpeg_newdecoder"></block>
     <block type="ffmpeg_newframe"></block>
@@ -609,7 +658,7 @@
     <block type="ffmpeg_copyframe"></block>
    </category>
 
-   <category name="Audio">
+   <category name="Audio" toolboxitemid="proteo_audio">
     <block type="audio_infodrivers"></block>
     <block type="audio_init"></block>
     <block type="audio_infodevices"></block>
@@ -620,7 +669,7 @@
     <block type="audio_playaudio"></block>
     </category>
 
-    <category name="Array">
+    <category name="Array" toolboxitemid="proteo_array">
         <block type="create_2d_array"></block>
         <block type="get_2d_array_element">
             <value name="row">
@@ -647,7 +696,19 @@
             </value>
         </block>
         <block type="make_2d_array_from_text"></block>
-    </category>    
+    </category>  
+
+     <category name="Demo" toolboxitemid="proteo_demo">
+        <block type="sequences_createpage"></block>
+        <block type="sequences_showpage"></block>
+        <block type="sequences_createavatar"></block>
+        <block type="sequences_loadsound"></block>
+        <block type="sequences_playsound"></block>
+        <block type="sequences_facedetect"></block>
+        <block type="sequences_createinfopage"></block>
+        <block type="sequences_txtfield"></block>
+        <block type="sequences_saveall"></block>
+     </category> 
   </xml>
 
 </body>

@@ -1,4 +1,3 @@
-
 unsigned char *serverkey = (unsigned char *)"01234567890123456789012345678901"; //TODO va nel config
 unsigned char *clientkey = (unsigned char *)"1234567890123456789012"; //TODO va nel config
 
@@ -131,8 +130,15 @@ int createTokenAndTicket(const char* username,const char* scriptId, char* token,
 
 	char* json_info=loadfile(path);
 	//printf("JSON info: %s\n",json_info);
-	if(json_info==NULL) return 1;
-
+	if(json_info==NULL)
+    {
+        if(debug) printf("The file %s.json does not exist\n",scriptId);
+        char* fake_json="{\"version\": \"0.0\",\"plugins\": [],\"libs\":[]}\0";
+        json_info=malloc(strlen(fake_json) * sizeof(char));
+        strcpy(json_info, fake_json);
+        //return 1;
+    }
+    
 	json_object * jobj = json_tokener_parse(json_info);
 	struct json_object *version;
 	json_object_object_get_ex(jobj, "version", &version);

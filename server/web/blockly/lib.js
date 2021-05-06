@@ -356,6 +356,152 @@ Blockly.Lua['face_landamark'] = function(block) {
   return [code, Blockly.Lua.ORDER_ATOMIC];
 };
 
+Blockly.Blocks['pose_showlandmark'] = {
+  init: function() {
+    this.appendValueInput("bbox")
+        .setCheck(null)
+        .appendField("draw bbox");
+    this.appendValueInput("landmark")
+        .setCheck(null)
+        .appendField("and landmarks");
+    this.appendValueInput("img")
+        .setCheck("opencv_img")
+        .appendField("to image");
+    this.setInputsInline(true);
+    this.setOutput(true, null);
+    this.setColour(330);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Lua['pose_showlandmark'] = function(block) {
+  var value_bbox = Blockly.Lua.valueToCode(block, 'bbox', Blockly.Lua.ORDER_ATOMIC);
+  var value_landmark = Blockly.Lua.valueToCode(block, 'landmark', Blockly.Lua.ORDER_ATOMIC);
+  var value_img = Blockly.Lua.valueToCode(block, 'img', Blockly.Lua.ORDER_ATOMIC);
+  
+  var tfl_utility = Blockly.Lua.provideFunction_(
+      'req_tfl_utility',
+      [ 'require "tfl_utility"']);
+
+    code = "show_landmark("+value_bbox+","+value_img+","+value_landmark+")";
+
+
+  return [code, Blockly.Lua.ORDER_NONE];
+};
+
+Blockly.Blocks['pose_showpose'] = {
+  init: function() {
+    this.appendValueInput("pose")
+        .setCheck(null)
+        .appendField("draw pose");
+    this.appendValueInput("img")
+        .setCheck("opencv_img")
+        .appendField("to image");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(330);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Lua['pose_showpose'] = function(block) {
+  var value_pose = Blockly.Lua.valueToCode(block, 'pose', Blockly.Lua.ORDER_ATOMIC);
+  var value_img = Blockly.Lua.valueToCode(block, 'img', Blockly.Lua.ORDER_ATOMIC);
+  // TODO: Assemble Lua into code variable.
+  var code = 'show_pose('+value_pose+','+value_img+')\n';
+  return code;
+};
+
+Blockly.Blocks['face_showfacemesh'] = {
+  init: function() {
+    this.appendValueInput("pose")
+        .setCheck(null)
+        .appendField("draw facemesh");
+    this.appendValueInput("img")
+        .setCheck("opencv_img")
+        .appendField("to image");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(330);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Lua['face_showfacemesh'] = function(block) {
+  var value_pose = Blockly.Lua.valueToCode(block, 'pose', Blockly.Lua.ORDER_ATOMIC);
+  var value_img = Blockly.Lua.valueToCode(block, 'img', Blockly.Lua.ORDER_ATOMIC);
+  // TODO: Assemble Lua into code variable.
+  var code = 'show_facemesh('+value_pose+','+value_img+')\n';
+  return code;
+};
+
+Blockly.Blocks['shape_svg2shape'] = {
+  init: function() {
+    this.appendValueInput("svg")
+        .setCheck(null)
+        .appendField("insert svg shape");
+    this.appendValueInput("shape")
+        .setCheck(null)
+        .appendField("into");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(330);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Lua['shape_svg2shape'] = function(block) {
+  var value_svg = Blockly.Lua.valueToCode(block, 'svg', Blockly.Lua.ORDER_ATOMIC);
+  var value_shape = Blockly.Lua.valueToCode(block, 'shape', Blockly.Lua.ORDER_ATOMIC);
+ 
+  var skl_utility = Blockly.Lua.provideFunction_(
+      'req_skl_utility',
+      [ 'require "skl_utility"']);
+
+    code = "svg2shape("+value_svg+","+value_shape+")\n";
+
+
+  return code;
+};
+
+Blockly.Blocks['skl_json2skl'] = {
+  init: function() {
+    this.appendValueInput("json")
+        .setCheck(null)
+        .appendField("insert json skeleton");
+    this.appendValueInput("skl")
+        .setCheck(null)
+        .appendField("into");
+    this.setInputsInline(true);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(330);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Lua['skl_json2skl'] = function(block) {
+  var value_json = Blockly.Lua.valueToCode(block, 'json', Blockly.Lua.ORDER_ATOMIC);
+  var value_skl = Blockly.Lua.valueToCode(block, 'skl', Blockly.Lua.ORDER_ATOMIC);
+ 
+  var skl_utility = Blockly.Lua.provideFunction_(
+      'req_skl_utility',
+      [ 'require "skl_utility"']);
+
+    code = "json2skl("+value_json+","+value_skl+")\n";
+
+
+  return code;
+};
+
 Blockly.Blocks['inspect'] = {
   init: function() {
     this.appendDummyInput()
@@ -419,10 +565,10 @@ Blockly.Lua['create_2d_array'] = function(block) {
 Blockly.Blocks['get_2d_array_element'] = {
   init: function() {
     this.appendValueInput("row")
-        .setCheck("Number")
+        .setCheck(null)
         .appendField("get element");
     this.appendValueInput("col")
-        .setCheck("Number");
+        .setCheck(null);
     this.appendValueInput("from")
         .setCheck("2d_array")
         .appendField("from");

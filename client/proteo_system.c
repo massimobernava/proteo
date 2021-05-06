@@ -57,8 +57,7 @@ static int system_clock (lua_State *state) {
 	struct timespec now;
 	clock_gettime(CLOCK_REALTIME, &now);
 
-	double n=now.tv_sec;
-	n=n+(now.tv_nsec/1000000000.0);
+	double n=now.tv_sec+(now.tv_nsec/1000000000.0);
 	lua_pushnumber (state,n);
 
   return 1;
@@ -108,8 +107,8 @@ static int system_readFile(lua_State *state) {
 	if(verbose) printf("system.readFile: %s\n",fname);
 
 	char *data = loadfile((char*)fname);
-	if(debug) printf("%s\n",data);
-
+	if(verbose) printf("%s\n",data);
+        
 	//lua_getglobal(state,callback);
     if(callback!=NULL)
         lua_getglobal(state,callback);
@@ -153,6 +152,11 @@ static int system_login(lua_State *state) {
     //setLuaScreenSize(state);
     lua_pushinteger(state, NULL);
     lua_setglobal(state, "touch");
+    
+    lua_pushnil(state);
+    lua_setglobal(state, "close");
+    
+    freeskeletons();
     
     ProteoComponent* current=components;
     while(current!=NULL)

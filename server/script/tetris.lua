@@ -10,8 +10,10 @@ function pipe(json_data)
   proteo.graphics.changeImage(left_image,left_frame)
   data = {}
   data['type']='FRAME'
-  data['username']=USERNAME
+  data['encoding']='JPEG'
+  data['request']='TFLPOSE'
   data['frame']=tmp
+  data['session']=current_session
   return json.encode(data)
 end
 
@@ -35,49 +37,13 @@ function get_rotate_left()
 end
 
 
+require "tfl_utility"
+
 -- Describe this function...
 function pose(data)
-  bbox = data['data']
-  size = data['size']
-  w = size[2]
-  h = size[1]
-  for i = 1, #bbox, 1 do
-    current_bbox = bbox[i]
-    x1 = current_bbox['topleft']['x'] * w
-    y1 = current_bbox['topleft']['y'] * h
-    x2 = current_bbox['btmright']['x'] * w
-    y2 = current_bbox['btmright']['y'] * h
-    roi1_x = (current_bbox['roi_coord'][1])['x'] * w
-    roi1_y = (current_bbox['roi_coord'][1])['y'] * h
-    roi2_x = (current_bbox['roi_coord'][2])['x'] * w
-    roi2_y = (current_bbox['roi_coord'][2])['y'] * h
-    roi3_x = (current_bbox['roi_coord'][3])['x'] * w
-    roi3_y = (current_bbox['roi_coord'][3])['y'] * h
-    roi4_x = (current_bbox['roi_coord'][4])['x'] * w
-    roi4_y = (current_bbox['roi_coord'][4])['y'] * h
-    proteo.opencv.rectangle(left_frame,x1,y1,x2,y2,3,'#ff0000')
-    proteo.opencv.line(left_frame,roi1_x,roi1_y,roi2_x,roi2_y,2,'#ffff00')
-    proteo.opencv.line(left_frame,roi2_x,roi2_y,roi3_x,roi3_y,2,'#ffff00')
-    proteo.opencv.line(left_frame,roi3_x,roi3_y,roi4_x,roi4_y,2,'#ffff00')
-    proteo.opencv.line(left_frame,roi4_x,roi4_y,roi1_x,roi1_y,2,'#ffff00')
-    mat_affine = proteo.opencv.getAffineTransform(0,0,1,0,1,1,roi1_x,roi1_y,roi2_x,roi2_y,roi3_x,roi3_y)
-    table_affine = proteo.opencv.toTable(mat_affine)
-    joint = {}
-    if current_bbox['landmarks'] ~= nil then
-      for j = 1, #current_bbox['landmarks']['joint'], 1 do
-        current_joint = current_bbox['landmarks']['joint'][j]
-        j_x = current_joint['x']
-        j_y = current_joint['y']
-        j_v = current_joint['v']
-        if j == 1 then
-          print('Score: ' .. current_bbox['score'])
-        end
-        affine_j_x = (j_x * (table_affine[1][1]) + j_y * (table_affine[1][2])) + (table_affine[1][3])
-        affine_j_y = (j_x * (table_affine[2][1]) + j_y * (table_affine[2][2])) + (table_affine[2][3])
-        joint[j] = {affine_j_x, affine_j_y}
-        proteo.opencv.circle(left_frame,affine_j_x,affine_j_y,4,'#33ff33')
-      end
-    end
+  for _, b in ipairs(data['data']) do
+    landmarks = show_landmark(b,left_frame,b['landmarks'])
+    show_pose(landmarks,left_frame)
   end
 end
 
@@ -122,6 +88,27 @@ end
 
 
 -- Describe this function...
+function pose_control(joint)
+  if (joint[16][2]) < (joint[12][2]) and check_t_left(LEFT) == 0 then
+    if left_control[LEFT] == false then
+      left_control[LEFT] = true
+      t_left['x']=(t_left['x'] - 1)
+    else
+      left_control[LEFT] = false
+    end
+  end
+  if (joint[17][2]) < (joint[13][2]) and check_t_left(RIGHT) == 0 then
+    if left_control[RIGHT] == false then
+      left_control[RIGHT] = true
+      t_left['x']=(t_left['x'] + 1)
+    else
+      left_control[RIGHT] = false
+    end
+  end
+end
+
+
+-- Describe this function...
 function fix_t_left()
   current_t = t[t_left['type']][t_left['rotate']]
   for y = 1, 4, 1 do
@@ -153,6 +140,17 @@ function create_list_repeated(item, count)
 end
 
 -- Describe this function...
+function create_left_square(x, y)
+  square = {}
+  col = proteo.graphics.newRect("id",'#ff0000',"clear",(1 + x * 30),(601 - y * 30),28,28)
+  proteo.graphics.setLayer(col,TOP)
+  square['col']=col
+  square['border']=proteo.graphics.newRect("id",'#ff0000',"clear",(x * 30),(600 - y * 30),30,30)
+  floor_left[y][x]=square
+end
+
+
+-- Describe this function...
 function update_left_square()
   for y = 1, 20, 1 do
     for x = 1, 10, 1 do
@@ -173,35 +171,6 @@ end
 
 
 -- Describe this function...
-function pose_control(joint)
-  proteo.opencv.line(left_frame,(joint[12][1]),(joint[12][2]),(joint[13][1]),(joint[13][2]),16,'#cc33cc')
-  proteo.opencv.line(left_frame,(joint[12][1]),(joint[12][2]),(joint[14][1]),(joint[14][2]),16,'#993399')
-  proteo.opencv.line(left_frame,(joint[13][1]),(joint[13][2]),(joint[15][1]),(joint[15][2]),16,'#993399')
-  proteo.opencv.line(left_frame,(joint[14][1]),(joint[14][2]),(joint[16][1]),(joint[16][2]),16,'#cc33cc')
-  proteo.opencv.line(left_frame,(joint[15][1]),(joint[15][2]),(joint[17][1]),(joint[17][2]),16,'#cc33cc')
-  proteo.opencv.line(left_frame,(joint[13][1]),(joint[13][2]),(joint[25][1]),(joint[25][2]),16,'#cc66cc')
-  proteo.opencv.line(left_frame,(joint[12][1]),(joint[12][2]),(joint[24][1]),(joint[24][2]),16,'#cc66cc')
-  proteo.opencv.line(left_frame,(joint[25][1]),(joint[25][2]),(joint[24][1]),(joint[24][2]),16,'#ff99ff')
-  if (joint[16][2]) < (joint[12][2]) and check_t_left(LEFT) == 0 then
-    if left_control[LEFT] == false then
-      left_control[LEFT] = true
-      t_left['x']=(t_left['x'] - 1)
-    else
-      left_control[LEFT] = false
-    end
-  end
-  if (joint[17][2]) < (joint[13][2]) and check_t_left(RIGHT) == 0 then
-    if left_control[RIGHT] == false then
-      left_control[RIGHT] = true
-      t_left['x']=(t_left['x'] + 1)
-    else
-      left_control[RIGHT] = false
-    end
-  end
-end
-
-
--- Describe this function...
 function update_t_left()
   current_t = t[t_left['type']][t_left['rotate']]
   for y = 1, 4, 1 do
@@ -215,17 +184,6 @@ function update_t_left()
       end
     end
   end
-end
-
-
--- Describe this function...
-function create_left_square(x, y)
-  square = {}
-  col = proteo.graphics.newRect("id",'#ff0000',"clear",(1 + x * 30),(601 - y * 30),28,28)
-  proteo.graphics.setLayer(col,TOP)
-  square['col']=col
-  square['border']=proteo.graphics.newRect("id",'#ff0000',"clear",(x * 30),(600 - y * 30),30,30)
-  floor_left[y][x]=square
 end
 
 
@@ -412,12 +370,14 @@ update_event = function(dt)
   end
  end
 
+current_session = ''
 start_callback = function(res,data)
+  current_session = data['session']
   proteo.system.stopTimer(webcam_timer)
   proteo.system.startTimer(t_timer)
   zmq_context_tetris = proteo.zmq.ctx_new()
   zmq_socket_tetris = proteo.zmq.socket_new(zmq_context_tetris,proteo.zmq.sockType.ZMQ_REQ)
-  proteo.zmq.connect(zmq_socket_tetris,'tcp://localhost:5555')
+  proteo.zmq.connect(zmq_socket_tetris,'tcp://192.168.1.77:5555')
   proteo.opencv.frame(left_cap,left_frame)
   proteo.opencv.flip(left_frame,left_frame,1)
   proteo.graphics.changeImage(left_image,left_frame)
@@ -425,13 +385,16 @@ start_callback = function(res,data)
   data = {}
   data['type']='FRAME'
   data['frame']=tmp
+  data['session']=current_session
+  data['encoding']='JPEG'
+  data['request']='TFLPOSE'
   proteo.zmq.send (zmq_socket_tetris,json.encode(data),proteo.zmq.flag.ZMQ_DONTWAIT)
   event_timer = proteo.system.createTimer(50,update_event)
   proteo.system.startTimer(event_timer)
  end
 
 start = function(sender)
-  proteo.network.proteo_post("/tetris/start",'{}',start_callback)
+  proteo.network.proteo_post("/deepcrimson/start",'{}',start_callback)
  end
 
 webcam_event = function(dt)
@@ -453,6 +416,10 @@ update_t_event = function(dt)
  end
 
 t_timer = proteo.system.createTimer(1000,update_t_event)
+
+function close()
+  proteo.network.proteo_post("/deepcrimson/stop",'{}',nil)
+ end
 
 function init()
   background = proteo.graphics.newImage("background","tetris_background.png",600,400,1200,800)
@@ -485,8 +452,4 @@ function init()
   update_left_square()
   new_t_left()
   update_t_left()
- end
-
-function close()
-  proteo.network.proteo_post("/tetris/stop",'{}',nil)
  end

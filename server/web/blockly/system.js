@@ -158,10 +158,61 @@ Blockly.Blocks['system_document'] = {
 
 Blockly.Lua['system_document'] = function(block) {
   var value_path = Blockly.Lua.valueToCode(block, 'path', Blockly.Lua.ORDER_ATOMIC);
-  // TODO: Assemble Lua into code variable.
+
   var code = 'proteo.system.document()..'+value_path;
-  // TODO: Change ORDER_NONE to the correct strength.
+
   return [code, Blockly.Lua.ORDER_ATOMIC];
+};
+
+Blockly.Blocks['system_readfile'] = {
+  init: function() {
+    this.appendValueInput("path")
+        .setCheck("String")
+        .appendField("read text file");
+    this.appendValueInput("callback")
+        .setCheck("readfile_callback")
+        .appendField("and send to");
+    this.setInputsInline(true);
+    this.setColour(330);
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Lua['system_readfile'] = function(block) {
+  var value_path = Blockly.Lua.valueToCode(block, 'path', Blockly.Lua.ORDER_ATOMIC);
+  var value_callback = Blockly.Lua.valueToCode(block, 'callback', Blockly.Lua.ORDER_ATOMIC);
+
+  var code = 'proteo.system.readFile('+value_path+','+value_callback+')\n';
+
+  return code;
+};
+
+Blockly.Blocks['system_callbackreadfile'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("read file callback")
+        .appendField(new Blockly.FieldVariable("filename"), "filename")
+        .appendField(new Blockly.FieldVariable("data"), "data");
+    this.appendStatementInput("function")
+        .setCheck(null);
+    this.setOutput(true, "readfile_callback");
+    this.setColour(330);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Lua['system_callbackreadfile'] = function(block) {
+  var variable_filename = Blockly.Lua.variableDB_.getName(block.getFieldValue('filename'), Blockly.Variables.NAME_TYPE);
+  var variable_data = Blockly.Lua.variableDB_.getName(block.getFieldValue('data'), Blockly.Variables.NAME_TYPE);
+  var statements_function = Blockly.Lua.statementToCode(block, 'function');
+  // TODO: Assemble Lua into code variable.
+  var code = 'function('+variable_data+','+variable_filename+') \n'+statements_function+' end\n';
+  // TODO: Change ORDER_NONE to the correct strength.
+  return [code, Blockly.Lua.ORDER_NONE];
 };
 
 Blockly.Blocks['system_username'] = {

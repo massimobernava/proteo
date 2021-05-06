@@ -58,12 +58,15 @@ proteo.route.get("edit/plugins",
 	function(username,permission,data,param) 
 
 		local files=proteo.system.dir(BASEDIR.."plugin/")
-		
+
 		local plugins={}
 		plugins.list={}
-		for i=1,#files do
-			if ends_with(files[i],".xml") then
-				plugins.list[#plugins.list+1]=files[i]:gsub("%.xml", "")
+
+		if username~="demo" then
+			for i=1,#files do
+				if ends_with(files[i],".xml") then
+					plugins.list[#plugins.list+1]=files[i]:gsub("%.xml", "")
+				end
 			end
 		end
 
@@ -78,6 +81,10 @@ proteo.route.get("edit/scripts",
 
 		local files=proteo.system.dir(BASEDIR.."script/")
 		
+		if username=="demo" then
+			files=proteo.system.dir(BASEDIR.."script/demo/")
+		end
+
 		local scripts={}
 		scripts.list={}
 		for i=1,#files do
@@ -91,15 +98,47 @@ proteo.route.get("edit/scripts",
 	end
 )
 
+proteo.route.get("edit/items",
+
+	function(username,permission,data,param) 
+
+		local items={}
+		items.items={}
+
+		if username=="demo" then
+			items.items[1]={id="proteo_lib",hide=true}
+			items.items[2]={id="proteo_route",hide=true}
+			items.items[3]={id="proteo_gui",hide=true}
+			items.items[4]={id="proteo_opencv",hide=true}
+			items.items[5]={id="proteo_system",hide=true}
+			items.items[6]={id="proteo_graphics",hide=true}
+			items.items[7]={id="proteo_enet",hide=true}
+			items.items[8]={id="proteo_zmq",hide=true}
+			items.items[9]={id="proteo_network",hide=true}
+			items.items[10]={id="proteo_ffmpeg",hide=true}
+			items.items[11]={id="proteo_audio",hide=true}
+			items.items[12]={id="proteo_array",hide=true}
+		end
+
+		return json.encode(items)
+
+	end
+)
+
 proteo.route.get("edit/plugin/:plugin",
 
 	function(username,permission,data,param) 
 
 		--if username~="admin" and ispermitted(permission,"edit")==false then return "NULL" end
-		
+
 		local script={}
 		script["type"]="PLUGIN"
 		script["result"]="OK"
+
+		if username=="demo" then
+			script["result"]="PERMISSION DENIED"
+			return json.encode(script)
+		end
 
 		local data=proteo.system.readFile(BASEDIR.."plugin/"..param["plugin"]..".xml")
 
@@ -119,7 +158,11 @@ proteo.route.get("edit/script/:script",
 		script["type"]="SCRIPT"
 		script["result"]="OK"
 
-		local data=proteo.system.readFile(BASEDIR.."script/"..param["script"]..".xml")
+		if username=="demo" then
+			data=proteo.system.readFile(BASEDIR.."script/demo/"..param["script"]..".xml")
+		else
+			data=proteo.system.readFile(BASEDIR.."script/"..param["script"]..".xml")
+		end
 
 		script["xml"]=data
 		
@@ -133,6 +176,11 @@ proteo.route.put("edit/plugin/:plugin",
 		local script={}
 		script["type"]="PLUGIN"
 		script["result"]="OK"
+
+		if username=="demo" then
+			script["result"]="PERMISSION DENIED"
+			return json.encode(script)
+		end
 
 		--local data=proteo.system.readFile(BASEDIR.."plugin/"..param["plugin"]..".xml")
 
@@ -169,8 +217,13 @@ proteo.route.put("edit/script/:script",
 		
 		--print("LUA: "..tmp["lua"])
 
-		local res_xml=proteo.system.writeFile(BASEDIR.."script/"..param["script"]..".xml",tmp["xml"])
-		local res_lua=proteo.system.writeFile(BASEDIR.."script/"..param["script"]..".lua",tmp["lua"])
+		if username=="demo" then
+			res_xml=proteo.system.writeFile(BASEDIR.."script/demo/"..param["script"]..".xml",tmp["xml"])
+			res_lua=proteo.system.writeFile(BASEDIR.."script/demo/"..param["script"]..".lua",tmp["lua"])
+		else
+			res_xml=proteo.system.writeFile(BASEDIR.."script/"..param["script"]..".xml",tmp["xml"])
+			res_lua=proteo.system.writeFile(BASEDIR.."script/"..param["script"]..".lua",tmp["lua"])
+		end
 
 		if res_xml~=0 or res_lua~=0 then
 			script["result"]="FAIL"

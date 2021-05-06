@@ -14,6 +14,7 @@
  * Create a namespace for the application.
  */
 var Code = {};
+var appKey="1234567890123456789012";
 
 /**
  * Lookup for names of supported languages.  Keys should be in ISO 639 format.
@@ -567,7 +568,7 @@ Blockly.Blocks['zmq_createsocket'] = {
         .appendField("create socket from");
     this.appendDummyInput()
         .appendField("of type")
-        .appendField(new Blockly.FieldDropdown([["Request","ZMQ_REQ"], ["Reply","ZMQ_REP"], ["Pair","PAIR"]]), "type");
+        .appendField(new Blockly.FieldDropdown([["Request","ZMQ_REQ"], ["Reply","ZMQ_REP"], ["Pair","ZMQ_PAIR"]]), "type");
     this.setOutput(true, "zmq_socket");
     this.setColour(285);
  this.setTooltip("");
@@ -1051,6 +1052,44 @@ Blockly.Lua['post_route'] = function(block) {
             wheel: true}
       });
 
+    var http = new XMLHttpRequest();
+    var url = ".";
+    var path="/edit/items";
+  
+    var hash = CryptoJS.HmacSHA256(path+token, appKey);
+    var hashInBase64 = CryptoJS.enc.Base64.stringify(hash);
+  
+    http.onreadystatechange = function() {
+      if(http.readyState == 4 && http.status == 200) {
+              
+          var data = JSON.parse(http.responseText);
+
+          for (var j = 0; j < data["items"].length; j++) {
+            var category =  Code.workspace.getToolbox().getToolboxItemById(data["items"][j]["id"]);
+            if (data["items"][j]["hide"])
+            { 
+              if(category==null)
+              {
+                console.log("Category: "+data["items"][j]["id"])
+              }
+              else
+              {
+                category.hide();
+              }
+            }
+          }
+      }              
+    }
+          
+    //console.log("Data: "+jsonData)
+    http.open("GET", url+path, true);
+    http.setRequestHeader("X-HMAC", hashInBase64);
+    http.setRequestHeader("X-TOKEN", token);
+    http.send();
+
+
+
+
   // Add to reserved word list: Local variables in execution environment (runJS)
   // and the infinite loop detection function.
   //Blockly.JavaScript.addReservedWords('code,timeouts,checkTimeout');
@@ -1102,7 +1141,6 @@ Code.bindClick('newButton',
           var xml_script = Blockly.Xml.domToPrettyText(xmlDom);
 
           var jsonData=JSON.stringify({ lua: lua_script,xml:xml_script});
-          var appKey="}~?d1BE+\"d5?TZ(j`{+n`pfK&*2U(WPy";
           
           var hash = CryptoJS.HmacSHA256(path+jsonData, appKey);
             var hashInBase64 = CryptoJS.enc.Base64.stringify(hash);
@@ -1130,8 +1168,6 @@ Code.bindClick('newButton',
           var file=typeMenu.options[typeMenu.selectedIndex].value+"/"+fileMenu.options[fileMenu.selectedIndex].value;
           //console.log(file);
           var path="/edit/"+file;//plugin/prova";
-
-          var appKey="}~?d1BE+\"d5?TZ(j`{+n`pfK&*2U(WPy";
           
           var hash = CryptoJS.HmacSHA256(path+token, appKey);
           var hashInBase64 = CryptoJS.enc.Base64.stringify(hash);
@@ -1236,8 +1272,6 @@ Code.initLanguage = function() {
       path="/edit/scripts";
     }
     fileMenu.options.length = 0
-
-    var appKey="}~?d1BE+\"d5?TZ(j`{+n`pfK&*2U(WPy";
           
     var hash = CryptoJS.HmacSHA256(path+token, appKey);
     var hashInBase64 = CryptoJS.enc.Base64.stringify(hash);

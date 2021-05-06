@@ -99,7 +99,15 @@ void audioPlayCallback(void*  userdata, Uint8* stream, int len)
             {
                 if(debug) printf("End Play: %s\n",sounds[i].sound->id);
                 sounds[i].sound=NULL;
-                //TODO Callback?
+
+                lua_getref(L,sounds[i].callback);
+                if(lua_isfunction(L, -1) )
+                {
+                    if(debug) printf("Audio callback\n");
+                    
+                    lua_pushinteger(L, i);
+                    int error = lua_trace_pcall(L,1,0);//lua_pcall(L, 1, 0, 0);
+                }
             }
         }
     }
@@ -134,20 +142,28 @@ void audioPlayCallback(void*  userdata, Uint8* stream, int len)
 void freesounds()
 {
     if(debug)printf("Free sounds\n");
-  while(sounds!=NULL)
-  {
-    ProteoSound* tmp=(ProteoSound*)sounds->next;
+    
+    for(int i=0;i<MAX_POLYPHONY;i++)
+    {
+        if(playingsounds[i].sound!=NULL)
+        {
+            SDL_PauseAudioDevice(playingsounds[i].device, true);
+        }
+    }
+    while(sounds!=NULL)
+    {
+        ProteoSound* tmp=(ProteoSound*)sounds->next;
 
     
-    if(sounds->buffer!=NULL) SDL_FreeWAV(sounds->buffer);
-    sounds->buffer=NULL;
+        if(sounds->buffer!=NULL) SDL_FreeWAV(sounds->buffer);
+        sounds->buffer=NULL;
       
-    #ifdef LIGHTPROTEOCOMPONENT
+        #ifdef LIGHTPROTEOCOMPONENT
         free(components);
-    #endif
+        #endif
       
-    sounds=tmp;
-  }
+        sounds=tmp;
+    }
 }
 
 void freestreams()
@@ -449,11 +465,14 @@ int audio_playAudio(lua_State* state)
     ProteoSound* sound=checkProteoSound(state,2);
     int vol=luaL_checkinteger(state,3);
     
+    int ref=lua_ref(state, TRUE);
+    
     SDL_LockAudio();
     playingsounds[playIndex].sound=sound;
     playingsounds[playIndex].pos=0;
     playingsounds[playIndex].volume=vol;
     playingsounds[playIndex].device=dev;
+    playingsounds[playIndex].callback=ref;
     SDL_UnlockAudio();
     
     lua_pushinteger(state, playIndex);

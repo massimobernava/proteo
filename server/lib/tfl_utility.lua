@@ -193,65 +193,108 @@ function GenerateAnchors(options)
     return anchors
 end
 
-function show_pose(bbox,image)
+function show_pose(landmarks,image)
+    proteo.opencv.line(image,(landmarks[12].x),(landmarks[12].y),(landmarks[13].x),(landmarks[13].y),16,'#cc33cc')
+    proteo.opencv.line(image,(landmarks[12].x),(landmarks[12].y),(landmarks[14].x),(landmarks[14].y),16,'#993399')
+    proteo.opencv.line(image,(landmarks[13].x),(landmarks[13].y),(landmarks[15].x),(landmarks[15].y),16,'#993399')
+    proteo.opencv.line(image,(landmarks[14].x),(landmarks[14].y),(landmarks[16].x),(landmarks[16].y),16,'#cc33cc')
+    proteo.opencv.line(image,(landmarks[15].x),(landmarks[15].y),(landmarks[17].x),(landmarks[17].y),16,'#cc33cc')
+    proteo.opencv.line(image,(landmarks[13].x),(landmarks[13].y),(landmarks[25].x),(landmarks[25].y),16,'#cc66cc')
+    proteo.opencv.line(image,(landmarks[12].x),(landmarks[12].y),(landmarks[24].x),(landmarks[24].y),16,'#cc66cc')
+    proteo.opencv.line(image,(landmarks[25].x),(landmarks[25].y),(landmarks[24].x),(landmarks[24].y),16,'#ff99ff')
+end
+
+function show_facemesh(landmarks,image)
+
+end
+
+function show_landmark(bbox,image,landmarks)
         
     local size=proteo.opencv.size(image)
     
-    for i=1,#bbox do
-            proteo.opencv.rectangle(image,bbox[i].topleft.x*size[2],bbox[i].topleft.y*size[1],
-                                                                    bbox[i].btmright.x*size[2],bbox[i].btmright.y*size[1],
+    proteo.opencv.rectangle(image,bbox.topleft.x*size[2],bbox.topleft.y*size[1],
+                                                                    bbox.btmright.x*size[2],bbox.btmright.y*size[1],
                                                                     3,"#FF0000")
 
-            t_score=string.format("%.2f",bbox[i].score*100)
-            proteo.opencv.putText(image,t_score,bbox[i].topleft.x*size[2],bbox[i].topleft.y*size[1]-10,0.5,"#FF0000")
+    t_score=string.format("%.2f",bbox.score*100)
+    proteo.opencv.putText(image,t_score,bbox.topleft.x*size[2],bbox.topleft.y*size[1]-10,0.5,"#FF0000")
 
-            proteo.opencv.line(image,bbox[i].roi_coord[1].x*size[2],bbox[i].roi_coord[1].y*size[1],
-                                            bbox[i].roi_coord[2].x*size[2],bbox[i].roi_coord[2].y*size[1],1,"#FFFF00")
+    proteo.opencv.line(image,bbox.roi_coord[1].x*size[2],bbox.roi_coord[1].y*size[1],bbox.roi_coord[2].x*size[2],bbox.roi_coord[2].y*size[1],1,"#FFFF00")
+    proteo.opencv.line(image,bbox.roi_coord[2].x*size[2],bbox.roi_coord[2].y*size[1],bbox.roi_coord[3].x*size[2],bbox.roi_coord[3].y*size[1],1,"#FFFF00")
+    proteo.opencv.line(image,bbox.roi_coord[3].x*size[2],bbox.roi_coord[3].y*size[1],bbox.roi_coord[4].x*size[2],bbox.roi_coord[4].y*size[1],1,"#FFFF00")
+    proteo.opencv.line(image,bbox.roi_coord[4].x*size[2],bbox.roi_coord[4].y*size[1],bbox.roi_coord[1].x*size[2],bbox.roi_coord[1].y*size[1],1,"#FFFF00")
 
-            proteo.opencv.line(image,bbox[i].roi_coord[2].x*size[2],bbox[i].roi_coord[2].y*size[1],
-                                            bbox[i].roi_coord[3].x*size[2],bbox[i].roi_coord[3].y*size[1],1,"#FFFF00")
-
-            proteo.opencv.line(image,bbox[i].roi_coord[3].x*size[2],bbox[i].roi_coord[3].y*size[1],
-                                            bbox[i].roi_coord[4].x*size[2],bbox[i].roi_coord[4].y*size[1],1,"#FFFF00")
-
-            proteo.opencv.line(image,bbox[i].roi_coord[4].x*size[2],bbox[i].roi_coord[4].y*size[1],
-                                            bbox[i].roi_coord[1].x*size[2],bbox[i].roi_coord[1].y*size[1],1,"#FFFF00")
-
-            proteo.opencv.rectangle(image,bbox[i].topleft.x*size[2],bbox[i].topleft.y*size[1],
-                                                                    bbox[i].btmright.x*size[2],bbox[i].btmright.y*size[1],
-                                                                    1,"#FF0000")
+    proteo.opencv.rectangle(image,bbox.topleft.x*size[2],bbox.topleft.y*size[1],bbox.btmright.x*size[2],bbox.btmright.y*size[1],1,"#FF0000")
             
-            for j=1,#bbox[i].keys do
-                proteo.opencv.circle(image,
-                    bbox[i].keys[j].x*size[2],
-                    bbox[i].keys[j].y*size[1],
-                    2,"#0000FF")
-            end
+    for j=1,#bbox.keys do
+        proteo.opencv.circle(image, bbox.keys[j].x*size[2], bbox.keys[j].y*size[1], 2,"#0000FF")
+    end
 
-            --LANDMARK
-            local mat=proteo.opencv.getAffineTransform(0,0
+     --LANDMARK
+    local mat=proteo.opencv.getAffineTransform(0,0
                                               ,1,0
                                               ,1,1
-                                              ,bbox[i].roi_coord[1].x * size[2], bbox[i].roi_coord[1].y * size[1]
-                                              ,bbox[i].roi_coord[2].x * size[2], bbox[i].roi_coord[2].y * size[1]
-                                              ,bbox[i].roi_coord[3].x * size[2], bbox[i].roi_coord[3].y * size[1]
+                                              ,bbox.roi_coord[1].x * size[2], bbox.roi_coord[1].y * size[1]
+                                              ,bbox.roi_coord[2].x * size[2], bbox.roi_coord[2].y * size[1]
+                                              ,bbox.roi_coord[3].x * size[2], bbox.roi_coord[3].y * size[1]
                                                )
-            if bbox[i].facemesh~=nil then
+    if landmarks~=nil then
                 --proteo.opencv.print(mat)
-                mat_table=proteo.opencv.toTable(mat)
+        mat_table=proteo.opencv.toTable(mat)
               --tprint(mat_table)
 
-                facemesh={}
-                for j=1,#bbox[i].facemesh.joint do
-                    facemesh[j]={}
-                    facemesh[j].x=bbox[i].facemesh.joint[j].x*mat_table[1][1]+bbox[i].facemesh.joint[j].y*mat_table[1][2]+mat_table[1][3]
-                    facemesh[j].y=bbox[i].facemesh.joint[j].x*mat_table[2][1]+bbox[i].facemesh.joint[j].y*mat_table[2][2]+mat_table[2][3]
-                
-                    proteo.opencv.circle(image,
-                        facemesh[j].x,
-                        facemesh[j].y,
-                        1,"#00FF00")
-                end
+        ret={}
+        for j=1,#landmarks.joint do
+            ret[j]={}
+            ret[j].x=landmarks.joint[j].x*mat_table[1][1]+landmarks.joint[j].y*mat_table[1][2]+mat_table[1][3]
+            ret[j].y=landmarks.joint[j].x*mat_table[2][1]+landmarks.joint[j].y*mat_table[2][2]+mat_table[2][3]
+            ret[j].z=landmarks.joint[j].z
+
+            if j==8 or j==9 or j==250 then
+                --proteo.opencv.circle(image, ret[j].x, ret[j].y,8,"#0000FF")
+                id=string.format("%d",j)
+                proteo.opencv.putText(image,id,ret[j].x, ret[j].y,0.5,"#FF0000")
+            --elseif j>=249 and j<=255 then
+            --    id=string.format("%d",j)
+            --    proteo.opencv.putText(image,id,ret[j].x, ret[j].y,0.5,"#0000FF")
+            else
+                proteo.opencv.circle(image, ret[j].x, ret[j].y,2,"#00FF00")
             end
+        end
+
+        return ret
     end
+
+    return nil
+end
+
+function get_landmark(bbox,image,landmarks)
+        
+    local size=proteo.opencv.size(image)
+
+     --LANDMARK
+    local mat=proteo.opencv.getAffineTransform(0,0
+                                              ,1,0
+                                              ,1,1
+                                              ,bbox.roi_coord[1].x * size[2], bbox.roi_coord[1].y * size[1]
+                                              ,bbox.roi_coord[2].x * size[2], bbox.roi_coord[2].y * size[1]
+                                              ,bbox.roi_coord[3].x * size[2], bbox.roi_coord[3].y * size[1]
+                                               )
+    if landmarks~=nil then
+                --proteo.opencv.print(mat)
+        mat_table=proteo.opencv.toTable(mat)
+              --tprint(mat_table)
+
+        ret={}
+        for j=1,#landmarks.joint do
+            ret[j]={}
+            ret[j].x=landmarks.joint[j].x*mat_table[1][1]+landmarks.joint[j].y*mat_table[1][2]+mat_table[1][3]
+            ret[j].y=landmarks.joint[j].x*mat_table[2][1]+landmarks.joint[j].y*mat_table[2][2]+mat_table[2][3]
+            ret[j].z=landmarks.joint[j].z
+        end
+
+        return ret
+    end
+
+    return nil
 end

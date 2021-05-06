@@ -20,7 +20,7 @@ int getTicket(const char* app,char** url)
 struct MHD_Response * proteo_info()
 {
 	struct MHD_Response *response;
-	char json[512];
+	char json[1024];
 	strcpy(json,"{");
 	
 

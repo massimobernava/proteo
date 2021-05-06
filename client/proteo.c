@@ -6,7 +6,7 @@
 //=>
 //=> Massimo Bernava
 //=> massimo.bernava@gmail.com
-//=> 2021-04-30
+//=> 2021-05-06
 //==============================================================================
 
 //#if defined(__MINGW32__) || defined(__MINGW64__)
@@ -96,7 +96,6 @@
 //   TODO
 //==============================================================================
 
-// 1) TODO sparsi nel codice
 //
 //==============================================================================
 //   UTILITY
@@ -860,10 +859,7 @@ int initLUA()
     addTable_proteo(L,"opencv","fourcc");
     addEnum_proteo(L,"opencv","fourcc","MJPG",0);
 
-
 #endif
-
-
 
 #ifdef PROTEO_ENET
 	addFunction_proteo(L,"enet","linked_version",linked_version);
@@ -1154,7 +1150,7 @@ void mainloop()
 		n=n+(now.tv_nsec/1000000.0);
 
         ProteoTimer* timer=timers;
-        double min=80;
+        double min=25; 
 		while(timer!=NULL)
 		{
             if(timer->state==1)

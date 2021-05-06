@@ -20,7 +20,11 @@ libs["bit"]="lib/numberlua.lua"
 libs["matrix"]="lib/matrix.lua"
 libs["base64"]="lib/base64.lua"
 libs["aeslua"]="lib/aeslua.lua"
+libs["inspect"]="lib/inspect.lua"
 libs["tfl_utility"]="lib/tfl_utility.lua"
+libs["skl_utility"]="lib/skl_utility.lua"
+
+libs["demo_lib"]="lib/demo_lib.lua"
 
 libs["video_chat"]="lib/video_chat.lua"
 libs["attenzione_visiva"]="lib/attenzione_visiva.lua"
@@ -138,6 +142,15 @@ proteo.route.get("proteo/script/:script",
 	function(username,permission,data,param) 
 
 		--print("GET SCRIPT PERMISSION: "..permission[1])
+		if username=="demo" then
+			script={}
+			script["type"]="SCRIPT"
+			script["result"]="OK"
+			data=proteo.system.readFile(BASEDIR.."script/demo/"..param["script"]..".lua")
+			script["script"]=data
+
+			return json.encode(script)
+		end
 
 		local permitted=ispermitted(permission,param["script"])
 		--false
@@ -158,7 +171,7 @@ proteo.route.get("proteo/script/:script",
 		local script={}
 		script["type"]="SCRIPT"
 		script["result"]="OK"
-		
+
 		--TODO: in alcuni casi (vedi parentme) lo script paziente/terapista potrebbe essere diverso
 		-- nel caso lo script da caricare dipende dai permessi
 

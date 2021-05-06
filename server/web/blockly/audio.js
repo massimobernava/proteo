@@ -189,6 +189,6 @@ Blockly.Lua['audio_playaudio'] = function(block) {
   var variable_device = Blockly.Lua.variableDB_.getName(block.getFieldValue('device'), Blockly.Variables.NAME_TYPE);
   var number_volume = block.getFieldValue('volume');
   // TODO: Assemble Lua into code variable.
-  var code = 'proteo.audio.playAudio('+variable_device+','+variable_audio+','+number_volume+')\n';
+  var code = 'proteo.audio.playAudio('+variable_device+','+variable_audio+','+number_volume+',nil)\n';
   return code;
 };

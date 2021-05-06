@@ -642,6 +642,8 @@ function graphics_init()
     proteo.graphics.addBone("L3",skeleton2,"LeftKnee","LeftAnkle",Body)
     proteo.graphics.addBone("L4",skeleton2,"RightKnee","RightAnkle",Body)
 
+    --proteo.graphics.saveSkeleton(skeleton2,proteo.system.document().."skeleton.json")
+
     proteo.graphics.bindSkeleton(skeleton2,shape2)
     proteo.graphics.updateSkeleton(skeleton2)
 

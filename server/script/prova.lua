@@ -2,6 +2,25 @@ require "Form"
 
 local json=require "json"
 
+require "skl_utility"
+
+-- Describe this function...
+function animate(sprite, current_animation)
+  ticks = current_animation[current_animation[CURRENT_FRAME] * 2 + 6]
+  if current_animation[CURRENT_TICK] > ticks then
+    current_animation[CURRENT_TICK] = 0
+    current_animation[CURRENT_FRAME] = current_animation[CURRENT_FRAME] + 1
+    if current_animation[CURRENT_FRAME] >= current_animation[N_FRAMES] then
+      current_animation[CURRENT_FRAME] = current_animation[RESTART_FRAME]
+    end
+    frame = current_animation[current_animation[CURRENT_FRAME] * 2 + 5]
+    proteo.graphics.setFrame(sprite,frame)
+  end
+end
+
+
+require "tfl_utility"
+
 
 t1 = nil
 t2 = nil
@@ -21,6 +40,7 @@ print_clock = function(dt)
  end
 
 logout = function(sender)
+  proteo.network.proteo_post("/prova/stophost",'{}',nil)
   proteo.system.login('','','login')
  end
 
@@ -33,6 +53,9 @@ back = function(sender)
   end
   if t4 ~= nil then
     proteo.system.stopTimer(t4)
+  end
+  if t5 ~= nil then
+    proteo.system.stopTimer(t5)
   end
   forms['menu']:show()
  end
@@ -73,8 +96,89 @@ gui_init = function(sender)
  end
 
 
+farfalla_x = 0
+farfalla_y = 0
+d_x = 0
+d_y = 0
+CURRENT_FRAME = 2
+CURRENT_TICK = 1
+N_FRAMES = 3
+RESTART_FRAME = 4
+-- current_tick,current_frame,num_frames,restar_frame,{frame,ticks}
+farfalla_animation = {{0,0,33,0,1,1, 2,1, 3,1, 4,1, 5,1, 6,1, 7,1, 8,1, 9,1, 10,1, 11,1, 12,1, 13,1, 14,1, 15,1, 16,1, 17,1, 18,1, 19,1, 20,1, 21,1, 22,1, 23,1, 24,1, 25,1, 26,1, 27,1, 28,1, 29,1, 30,1, 31,1, 32,1, 33,1,34,1},
+}
+farfalla_animation = farfalla_animation[1]
+graphics_event = function(dt)
+  farfalla_animation[CURRENT_TICK] = farfalla_animation[CURRENT_TICK] + 1
+  if math.random(1, 50) == 1 then
+    d_x = math.random(-2, 2)
+    d_y = math.random(-2, 2)
+  end
+  proteo.graphics.flipH(farfalla,(d_x < 0))
+  farfalla_x = farfalla_x + d_x
+  farfalla_y = farfalla_y + d_y
+  if farfalla_x <= MIN_X then
+    d_x = d_x * -1
+    farfalla_x = MIN_X + 10
+  end
+  if farfalla_x >= MAX_X then
+    d_x = d_x * -1
+    farfalla_x = MAX_X - 10
+  end
+  if farfalla_y <= MIN_Y then
+    d_y = d_y * -1
+    farfalla_y = MIN_Y + 10
+  end
+  if farfalla_y >= MAX_Y then
+    d_y = d_y * -1
+    farfalla_y = MAX_Y - 10
+  end
+  proteo.graphics.setPosition(farfalla,farfalla_x,farfalla_y)
+  animate(farfalla, farfalla_animation)
+ end
+
+skeleton = nil
+shape = nil
+skl_read_callback = function(data,filename)
+  json2skl(json.decode(data),skeleton)
+  proteo.graphics.bindSkeleton(skeleton,shape)
+  proteo.graphics.updateSkeleton(skeleton)
+ end
+
+graphics_init = function(sender)
+  t5 = proteo.system.createTimer(20,graphics_event)
+  proteo.system.startTimer(t5)
+  t_graphics = proteo.gui.newLabel("t_graphics","Graphics Test","Helvetica",50,"#ff0000","#000000",proteo.gui.LabelAlignment.Center,350,30,500,40)
+  back_graphics = proteo.gui.newButton("back_graphics","Back","Helvetica",30,"#000066","#33ccff",1,"#000099",true,20,600,100,50,back)
+  farfalla = proteo.graphics.newSprite("farfalla",proteo.system.document()..'butterfly_fly-angle1.png',(math.random(1, MAX_X)),(math.random(1, MAX_Y)),70,65)
+  for i = 0, 11, 1 do
+    proteo.graphics.addFrame(farfalla,(i * 70),0,70,65)
+  end
+  for i = 0, 11, 1 do
+    proteo.graphics.addFrame(farfalla,(i * 70),65,70,65)
+  end
+  for i = 0, 9, 1 do
+    proteo.graphics.addFrame(farfalla,(i * 70),130,70,65)
+  end
+  proteo.graphics.setFrame(farfalla,0)
+  svgfile = proteo.graphics.loadSVG(proteo.system.document()..'boy.svg')
+  shape = proteo.graphics.newShape("shape",150,150)
+  svg2shape(svgfile,shape)
+  skeleton = proteo.graphics.newSkeleton("skeleton")
+  proteo.system.readFile(proteo.system.document()..'skeleton.json',skl_read_callback)
+  graphicsForm=Form('graphicsForm')
+  graphicsForm.backgroundColor='#000000'
+  graphicsForm:addControl(t_graphics)
+  graphicsForm:addControl(back_graphics)
+  graphicsForm:addControl(farfalla)
+  graphicsForm:addControl(shape)
+  forms['graphicsForm']=graphicsForm
+  forms['graphicsForm']:show()
+ end
+
+
 play = function(sender)
-  proteo.audio.playAudio(dev_audio_out,wav_audio,100)
+  proteo.audio.playAudio(dev_audio_out,wav_audio,100,nil)
  end
 
 audio_init = function(sender)
@@ -148,15 +252,17 @@ function init()
   btn3_menu = proteo.gui.newButton("btn3_menu","Enet Test","Helvetica",30,"#000000","#99ff99",1,"#006600",true,20,350,500,50,enet_init)
   btn4_menu = proteo.gui.newButton("btn4_menu","Zmq Test","Helvetica",30,"#000000","#99ff99",1,"#006600",true,20,450,500,50,zmq_init)
   btn5_menu = proteo.gui.newButton("btn5_menu","Gui Test","Helvetica",30,"#000000","#99ff99",1,"#006600",true,20,550,500,50,gui_init)
+  btn6_menu = proteo.gui.newButton("btn5_menu","Graphics Test","Helvetica",30,"#000000","#99ff99",1,"#006600",true,20,650,500,50,graphics_init)
   menuForm=Form('menuForm')
   menuForm.backgroundColor=theme['background']
-  menuForm:addControl(t_menu)
   menuForm:addControl(logout_button)
+  menuForm:addControl(t_menu)
   menuForm:addControl(btn1_menu)
   menuForm:addControl(btn2_menu)
   menuForm:addControl(btn3_menu)
   menuForm:addControl(btn4_menu)
   menuForm:addControl(btn5_menu)
+  menuForm:addControl(btn6_menu)
   forms['menu']=menuForm
   forms['menu']:show()
  end
@@ -247,6 +353,9 @@ zmq_event = function(dt)
     data = json.decode(buffer)
     if data['type'] == 'VIDEO' then
       proteo.opencv.imdecode(data['data'],zmq_resized)
+      for _, b in ipairs(data['bbox']) do
+        landmark = show_landmark(b,zmq_resized,b['facemesh'])
+      end
       proteo.graphics.changeImage(zmq_img,zmq_resized)
       proteo.opencv.frame(zmq_cap,zmq_frame)
       proteo.opencv.resize(zmq_frame,zmq_resized)
@@ -260,7 +369,7 @@ zmq_event = function(dt)
 zmq_init = function(sender)
   zmq_context_test = proteo.zmq.ctx_new()
   zmq_socket_test = proteo.zmq.socket_new(zmq_context_test,proteo.zmq.sockType.ZMQ_REQ)
-  proteo.zmq.connect(zmq_socket_test,'tcp://localhost:5555')
+  proteo.zmq.connect(zmq_socket_test,'tcp://192.168.1.77:5555')
   zmq_frame = proteo.opencv.img()
   zmq_resized = proteo.opencv.img()
   proteo.opencv.setImg(zmq_resized,320,240,"#000000")

@@ -567,6 +567,7 @@ typedef struct
     SDL_Point framesDestination[50];
     int nFrame;
     int currentFrame;
+    SDL_RendererFlip flip;
 } _sprite;
 
 typedef struct
@@ -850,7 +851,7 @@ static int gui_setPosition (lua_State *state);
 
 typedef struct ProteoJoint
 {
-    char id[MD5_DIGEST_LENGTH];
+    char id[PROTEO_MAX_ID];//MD5_DIGEST_LENGTH];
 
     SDL_FPoint pos;
 
@@ -873,7 +874,7 @@ typedef struct ProteoJoint
 
 typedef struct ProteoBone
 {
-    char id[MD5_DIGEST_LENGTH];
+    char id[PROTEO_MAX_ID];//MD5_DIGEST_LENGTH];
 
     ProteoJoint *a;
     ProteoJoint *b;
@@ -889,7 +890,7 @@ typedef struct ProteoBone
 
 typedef struct ProteoSkeleton
 {
-    char id[MD5_DIGEST_LENGTH];
+    char id[PROTEO_MAX_ID];//MD5_DIGEST_LENGTH];
 
     ProteoJoint *joints;
     ProteoBone *bones;
@@ -1081,6 +1082,7 @@ typedef struct PSound
     int pos;
     int volume;
     SDL_AudioDeviceID device;
+    int callback;
 } PSound;
 
 typedef struct RSound

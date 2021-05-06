@@ -115,7 +115,7 @@ static int mat_gc(lua_State *l) {
     
     if(mat!=NULL)
     {
-        printf("UMat(%d,%d) release\n",mat->rows,mat->cols);
+        //printf("UMat(%d,%d) release\n",mat->rows,mat->cols);
         mat->release();
     }
     
@@ -297,7 +297,7 @@ int opencv_imencode(lua_State* state)
 {
     UMat *img=checkMat(state,1);
 
-    printf("imencode type %s\n",type2str(img->type()));
+    //printf("imencode type %s\n",type2str(img->type()));
     
     if(img->rows+img->cols==0)
     {

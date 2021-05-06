@@ -525,7 +525,6 @@ Blockly.Blocks['opencv_imread'] = {
     this.appendValueInput("path")
         .setCheck("String")
         .appendField("load image");
-    this.setInputsInline(true);
     this.setOutput(true, null);
     this.setColour(65);
  this.setTooltip("");

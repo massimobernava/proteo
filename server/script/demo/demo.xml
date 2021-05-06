@@ -1,0 +1,258 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <variables>
+    <variable id="aJbDeD!;7Mg;Z.vPq6,T">first_page</variable>
+    <variable id=",06~3rKqi|b*{Wv|4Otu">second_page</variable>
+    <variable id="*;78+~x}(KQ$yG!Z0ve@">consegna</variable>
+    <variable id="=%#tQwm6,BE3Y/8HGv8a">passaggio</variable>
+    <variable id="g:xgX=V!v-;5NB+g,GfI">suggerimento</variable>
+    <variable id="=WkXYtNkW%lps(Qj@bso">richiamo</variable>
+  </variables>
+  <block type="init_function" id="GT2;x?-npngM7ElN(bMc" x="-288" y="-112">
+    <statement name="init">
+      <block type="variables_set" id="mtvQ@LXsbid0tEgF}@zZ">
+        <field name="VAR" id="aJbDeD!;7Mg;Z.vPq6,T">first_page</field>
+        <value name="VALUE">
+          <block type="sequences_createinfopage" id="yfOAY5eeq9usQ@8Ckf7i">
+            <field name="color">#ffffff</field>
+            <field name="text">next</field>
+            <value name="field1">
+              <block type="sequences_txtfield" id="U_.:OqY6rTU:~`}YVGDh">
+                <field name="title">id patient</field>
+              </block>
+            </value>
+            <value name="field2">
+              <block type="sequences_txtfield" id="J:*cgEHMsRrKX.N*g(*Z">
+                <field name="title">patient age</field>
+              </block>
+            </value>
+            <value name="field3">
+              <block type="sequences_txtfield" id="R@dbY8=e|6Wh9A[9(sFp">
+                <field name="title">field 3</field>
+              </block>
+            </value>
+            <value name="field4">
+              <block type="sequences_txtfield" id="~}_[,O{LpTmE{:!#uBUE">
+                <field name="title">field 4</field>
+              </block>
+            </value>
+            <value name="field10">
+              <block type="sequences_txtfield" id="[cp|w8H,m,lw)wU_uE%*">
+                <field name="title">field 10</field>
+              </block>
+            </value>
+            <statement name="action">
+              <block type="sequences_showpage" id="-AVPCQIihV$=[n9BzR=h">
+                <value name="page">
+                  <block type="variables_get" id="xRQrD;tjc!(YLxMCQR/9">
+                    <field name="VAR" id=",06~3rKqi|b*{Wv|4Otu">second_page</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="sequences_playsound" id="Q)/`GpdF2u{XRJis9qUs">
+                    <field name="animation">speaking</field>
+                    <value name="sound">
+                      <block type="variables_get" id="%fu|@+RC1QkO,,*HuLs2">
+                        <field name="VAR" id="*;78+~x}(KQ$yG!Z0ve@">consegna</field>
+                      </block>
+                    </value>
+                  </block>
+                </next>
+              </block>
+            </statement>
+          </block>
+        </value>
+        <next>
+          <block type="variables_set" id="L|xjW?a7=e.MIEk4Xz0P">
+            <field name="VAR" id=",06~3rKqi|b*{Wv|4Otu">second_page</field>
+            <value name="VALUE">
+              <block type="sequences_createpage" id="*_1~|Q/Txs:Doz5vom{:">
+                <field name="correct1">FALSE</field>
+                <field name="correct2">FALSE</field>
+                <field name="correct3">FALSE</field>
+                <field name="correct4">FALSE</field>
+                <field name="correct5">FALSE</field>
+                <field name="correct6">TRUE</field>
+                <field name="correct7">FALSE</field>
+                <field name="correct8">FALSE</field>
+                <field name="shuffle">TRUE</field>
+                <field name="color">#ffffff</field>
+                <value name="main">
+                  <block type="text" id="!E6h5^}fl4Kh[pDirxsu">
+                    <field name="TEXT">ITEM 3 A.png</field>
+                  </block>
+                </value>
+                <value name="option1">
+                  <block type="text" id="tw[dr#]o%hIY1a.vyHIK">
+                    <field name="TEXT">ITEM 3A_A.PNG</field>
+                  </block>
+                </value>
+                <value name="option2">
+                  <block type="text" id="4vdQ:/8bS)Uz-QKFL?f+">
+                    <field name="TEXT">ITEM 3A_B.PNG</field>
+                  </block>
+                </value>
+                <value name="option3">
+                  <block type="text" id="V|D=3I)[S)85$:7$NF?k">
+                    <field name="TEXT">ITEM 3A_C.PNG</field>
+                  </block>
+                </value>
+                <value name="option4">
+                  <block type="text" id="3dEJ9?dVbBdI,SP4|#x*">
+                    <field name="TEXT">ITEM 3A_D.PNG</field>
+                  </block>
+                </value>
+                <value name="option5">
+                  <block type="text" id="P;_vF@`y:m1WU#Z8ygeQ">
+                    <field name="TEXT">ITEM 3A_E.PNG</field>
+                  </block>
+                </value>
+                <value name="option6">
+                  <block type="text" id="hY)u.pK`FG2NmOKSfZ=-">
+                    <field name="TEXT">ITEM 3A_F.PNG</field>
+                  </block>
+                </value>
+                <value name="option7">
+                  <block type="text" id="ma`ZS:,g*4H1tV}u;v}=">
+                    <field name="TEXT">ITEM 3A_G.PNG</field>
+                  </block>
+                </value>
+                <value name="option8">
+                  <block type="text" id="z5]qhk7AuAqHiG}Vt%p@">
+                    <field name="TEXT">ITEM 3A_H.PNG</field>
+                  </block>
+                </value>
+                <statement name="correct">
+                  <block type="sequences_playsound" id="ArP(]o]hcqmodL3EZP;z">
+                    <field name="animation">wow</field>
+                    <value name="sound">
+                      <block type="variables_get" id="D}|v@PSiQN2Yotsnl415">
+                        <field name="VAR" id="=%#tQwm6,BE3Y/8HGv8a">passaggio</field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="sequences_saveall" id="Qbx}VuKCV|@Jt(T8zaR#"></block>
+                    </next>
+                  </block>
+                </statement>
+                <statement name="wrong">
+                  <block type="sequences_playsound" id="RKp,L=kh2k#YaT!o9unV">
+                    <field name="animation">speaking</field>
+                    <value name="sound">
+                      <block type="variables_get" id="eW9nnRiVjoRe!i^9PQ!#">
+                        <field name="VAR" id="g:xgX=V!v-;5NB+g,GfI">suggerimento</field>
+                      </block>
+                    </value>
+                  </block>
+                </statement>
+              </block>
+            </value>
+            <next>
+              <block type="sequences_showpage" id="1WMU1W!x^}`L?~BvndKH">
+                <value name="page">
+                  <block type="variables_get" id="Qta[)=3lh4/BR)(9N~$R">
+                    <field name="VAR" id="aJbDeD!;7Mg;Z.vPq6,T">first_page</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="sequences_createavatar" id="m,Z3),r,ZZK0@MhC){ly">
+                    <value name="default">
+                      <block type="text" id="eXt6^O52=37Qa[[dArm/">
+                        <field name="TEXT">robin_silent.webm</field>
+                      </block>
+                    </value>
+                    <value name="alone">
+                      <block type="text" id=",)UJp{8x%^32BAGLQAX7">
+                        <field name="TEXT">robin_alone.webm</field>
+                      </block>
+                    </value>
+                    <value name="speaking">
+                      <block type="text" id="1hdu0#]Gjwvkbz,sm=Qg">
+                        <field name="TEXT">robin_speaking.webm</field>
+                      </block>
+                    </value>
+                    <value name="wow">
+                      <block type="text" id="wJJuvhBHvR(WP8Y,UQ7z">
+                        <field name="TEXT">robin_wow.webm</field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="sequences_facedetect" id="jZU{M9000u=*(h1|-+Gx">
+                        <field name="sec">1</field>
+                        <statement name="distracted">
+                          <block type="sequences_playsound" id="uH;`z!B^V|K9){3!m3,v">
+                            <field name="animation">alone</field>
+                            <value name="sound">
+                              <block type="variables_get" id="g4/Jgu_xL9/_05,x?n}0">
+                                <field name="VAR" id="=WkXYtNkW%lps(Qj@bso">richiamo</field>
+                              </block>
+                            </value>
+                          </block>
+                        </statement>
+                        <next>
+                          <block type="variables_set" id="Z!i}WbYbi31P`z,/ZSNS">
+                            <field name="VAR" id="*;78+~x}(KQ$yG!Z0ve@">consegna</field>
+                            <value name="VALUE">
+                              <block type="sequences_loadsound" id="a*,F}8wp73`ZS^TG|Qkh">
+                                <value name="load">
+                                  <block type="text" id="W!(M7F,ofOY%jD8tPz1m">
+                                    <field name="TEXT">3a_consegna.wav</field>
+                                  </block>
+                                </value>
+                              </block>
+                            </value>
+                            <next>
+                              <block type="variables_set" id="s4:D$K8BB/2%)pchtjZj">
+                                <field name="VAR" id="=%#tQwm6,BE3Y/8HGv8a">passaggio</field>
+                                <value name="VALUE">
+                                  <block type="sequences_loadsound" id="LnVf[?EEcngUd))E$z;T">
+                                    <value name="load">
+                                      <block type="text" id="gSbJgV,!*QxWcUX.{q`=">
+                                        <field name="TEXT">3a_passaggioproblema_4_1.wav</field>
+                                      </block>
+                                    </value>
+                                  </block>
+                                </value>
+                                <next>
+                                  <block type="variables_set" id="+r.`Dlp]lEB22e,+dlH/">
+                                    <field name="VAR" id="g:xgX=V!v-;5NB+g,GfI">suggerimento</field>
+                                    <value name="VALUE">
+                                      <block type="sequences_loadsound" id="*wcYvXxt=/im*H32SmdF">
+                                        <value name="load">
+                                          <block type="text" id="w8`;|HU-^bWpFoKX~uhy">
+                                            <field name="TEXT">3a_suggerimento_1.wav</field>
+                                          </block>
+                                        </value>
+                                      </block>
+                                    </value>
+                                    <next>
+                                      <block type="variables_set" id="l}7H;V~JzZtf?(G8XK(/">
+                                        <field name="VAR" id="=WkXYtNkW%lps(Qj@bso">richiamo</field>
+                                        <value name="VALUE">
+                                          <block type="sequences_loadsound" id="pb$*++}/wh7V8QDE_zm9">
+                                            <value name="load">
+                                              <block type="text" id="JO)Pi6F77%S?WgX`@2Bb">
+                                                <field name="TEXT">richiamo_1.wav</field>
+                                              </block>
+                                            </value>
+                                          </block>
+                                        </value>
+                                      </block>
+                                    </next>
+                                  </block>
+                                </next>
+                              </block>
+                            </next>
+                          </block>
+                        </next>
+                      </block>
+                    </next>
+                  </block>
+                </next>
+              </block>
+            </next>
+          </block>
+        </next>
+      </block>
+    </statement>
+  </block>
+</xml>

@@ -755,28 +755,45 @@
         <field name="mode">stop</field>
         <field name="timer" id="]5l0pU;ZVq^LFV0]~4C}">test_timer</field>
         <next>
-          <block type="zmq_closesocket" id="u}OTAeH]fWdq/(k$$u@y">
-            <value name="context">
-              <block type="variables_get" id="@=9I..6@QI(J_=07[eE(">
-                <field name="VAR" id="8rIB/Fi1N?,ATFrsF~aO">zmq_socket_test</field>
+          <block type="controls_if" id="OOx|FTbN99A?mTXOE^oZ">
+            <value name="IF0">
+              <block type="logic_compare" id="O9_tD$t(JDiye3vt#[aF">
+                <field name="OP">EQ</field>
+                <value name="A">
+                  <block type="variables_get" id="Ug122m|vh6Yhk21he^76">
+                    <field name="VAR" id="8rIB/Fi1N?,ATFrsF~aO">zmq_socket_test</field>
+                  </block>
+                </value>
+                <value name="B">
+                  <block type="logic_null" id="DH5.iFq(f.d%ooX2{cTw"></block>
+                </value>
               </block>
             </value>
-            <next>
-              <block type="variables_set" id="VVB!KyF?yP3)KPKo3pIi">
-                <field name="VAR" id="8rIB/Fi1N?,ATFrsF~aO">zmq_socket_test</field>
-                <value name="VALUE">
-                  <block type="logic_null" id="CmP9jl7kVB;l.6J8.7NA"></block>
+            <statement name="DO0">
+              <block type="zmq_closesocket" id="u}OTAeH]fWdq/(k$$u@y">
+                <value name="context">
+                  <block type="variables_get" id="@=9I..6@QI(J_=07[eE(">
+                    <field name="VAR" id="8rIB/Fi1N?,ATFrsF~aO">zmq_socket_test</field>
+                  </block>
                 </value>
                 <next>
-                  <block type="variables_set" id="uXLj~GGW7tP~Uz1NRL*W">
-                    <field name="VAR" id="n7Y:;BEK.QWQ9`2HCrY%">zmq_context_test</field>
+                  <block type="variables_set" id="VVB!KyF?yP3)KPKo3pIi">
+                    <field name="VAR" id="8rIB/Fi1N?,ATFrsF~aO">zmq_socket_test</field>
                     <value name="VALUE">
-                      <block type="logic_null" id="#/my9kK}dU6fUEBUGKn*"></block>
+                      <block type="logic_null" id="CmP9jl7kVB;l.6J8.7NA"></block>
                     </value>
+                    <next>
+                      <block type="variables_set" id="uXLj~GGW7tP~Uz1NRL*W">
+                        <field name="VAR" id="n7Y:;BEK.QWQ9`2HCrY%">zmq_context_test</field>
+                        <value name="VALUE">
+                          <block type="logic_null" id="#/my9kK}dU6fUEBUGKn*"></block>
+                        </value>
+                      </block>
+                    </next>
                   </block>
                 </next>
               </block>
-            </next>
+            </statement>
           </block>
         </next>
       </block>
