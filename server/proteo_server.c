@@ -5,15 +5,21 @@
 //=>
 //=> Massimo Bernava
 //=> massimo.bernava@gmail.com
-//=> 2021-05-06
+//=> 2021-05-13
 //==============================================================================
 
 #define PROTEO_OPENCV
+#define DEBUGGER
 
 #include "proteo_server.h"
 #include "proteo_b64.c"
 #include "proteo_config.c"
 #include "proteo_lua.c"
+
+#ifdef DEBUGGER
+#include "debugger_lua.c"
+#endif
+
 #include "proteo_auth.c"
 #include "proteo_sqlite.c"
 #include "proteo_ejdb.c"
@@ -26,11 +32,11 @@
 #include "proteo_ffmpeg.c"
 #include "proteo_tensorflow.c"
 
+
 //==============================================================================
 //   TODO
 //==============================================================================
 
-// 1) TODO sparsi nel codice
 //
 //==============================================================================
 //   UTILITY
@@ -448,6 +454,10 @@ int initLUA()
 
 	luaopen_proteo(L);
 
+#ifdef DEBUGGER
+    dbg_setup(L, "debugger", "dbg", NULL, NULL);
+#endif
+    
 	//addFunction_proteo(L,"media","bhrDiscover",media_bhrDiscover);
 	
     #ifdef PROTEO_OPENCV
@@ -476,6 +486,7 @@ int initLUA()
         addFunction_proteo(L,"opencv","setSize",opencv_setSize);
         addFunction_proteo(L,"opencv","fill",opencv_fill);
         addFunction_proteo(L,"opencv","resize",opencv_resize);
+        addFunction_proteo(L,"opencv","copy",opencv_copy);
         addFunction_proteo(L,"opencv","mul",opencv_mul);
         addFunction_proteo(L,"opencv","add",opencv_add);
         addFunction_proteo(L,"opencv","addWeighted",opencv_addWeighted);
@@ -616,11 +627,17 @@ const char* app_call(int type,const char* url,char* data,char* permissions,char*
 	lua_pushlstring(L,username,strlen(username)); //Username
 	lua_pushlstring(L,token,strlen(token)); //Token	
 	
-	int error = lua_trace_pcall(L, 6, 1);
+	//int error = lua_trace_pcall(L, 6, 1);
+#ifdef DEBUGGER
+        int error = dbg_pcall(L,6,1,0);
+#else
+        int error = lua_trace_pcall(L,6,1);//lua_pcall(L, 1, 0, 0);
+#endif
+    
 	if (error) {
         printf("ERROR pcall(route.call): %s\n", lua_tostring(L, -1));
 		//lua_pop(L, 1);
-        if(debug) printf("App_call GetTop %d\n",lua_gettop(L));
+        if(verbose) printf("App_call GetTop %d\n",lua_gettop(L));
         sem_post(lua_sem);
         return NULL;
         
@@ -646,7 +663,7 @@ const char* app_call(int type,const char* url,char* data,char* permissions,char*
     if(top>0)
         lua_pop(L,top);
 	
-    if(debug) printf("App_call GetTop %d\n",top);
+    if(verbose) printf("App_call GetTop %d\n",top);
     
 	//lua_pop(L, 1);
     sem_post(lua_sem);
@@ -797,6 +814,29 @@ struct MHD_Response* parse_info(struct connection_info_struct *con_info,const ch
 
             response = MHD_create_response_from_buffer (strlen (newpage),(void*) newpage, MHD_RESPMEM_MUST_COPY);
             free((void*)newpage);
+        }
+        else
+        {
+            //TODO error warning
+            char* path=concat(config.basedir,"web/template_login.html");
+            
+            char *page=loadfile(path);//"./web/index.html");
+            char *loginform = "<div class='login-block'>"
+                                        "<h1>Login</h1>"
+                                        "<form method='post' action='' name='loginform'>"
+                                            "<input type='text' placeholder='Username' id='username' name='username' />"
+                                            "<input type='password' placeholder='Password' id='password' name='password' />"
+                                            //"<input type='text'  placeholder='Project' id='project' name='project' />"
+                                            "<button type='submit'>Submit</button>"
+                                        "</form></div>";
+
+            char *newpage=replaceWord(page,"##BODY##", loginform);
+            free(page);
+            free(path);
+
+              response = MHD_create_response_from_buffer (strlen (newpage),(void*) newpage, MHD_RESPMEM_MUST_COPY);
+              free(newpage);
+            
         }
         if(username!=NULL) free(username);
     }
@@ -1064,7 +1104,7 @@ void request_completed (void *cls, struct MHD_Connection *connection,
   (void)connection;  /* Unused. Silent compiler warning. */
   (void)toe;         /* Unused. Silent compiler warning. */
 
-	printf("request_completed\n");
+	if(verbose) printf("request_completed\n");
 
 	if (NULL == con_info)
     	return;
@@ -1277,8 +1317,11 @@ int main(int argc,char **argv)
                     if(lua_isfunction(L, -1) )
                     {
                         lua_pushinteger(L, n-timer->last);
+#ifdef DEBUGGER
+                        int error = dbg_pcall(L,1,0,0);
+#else
                         int error = lua_trace_pcall(L,1,0);//lua_pcall(L, 1, 0, 0);
-                        
+#endif
                         if (error) {
                             //printf("ERROR pcall(timer->callback)\n");
                             printf("ERROR pcall(timer->callback): %s\n",lua_tostring(L, -1));
@@ -1286,7 +1329,7 @@ int main(int argc,char **argv)
                             int top=lua_gettop(L);
                             if(top>0)
                                 lua_pop(L,top);
-                            if(debug) printf("app_call GetTop %d\n",top);
+                            if(verbose) printf("app_call GetTop %d\n",top);
                         }
                     }
                     timer->last=n;
@@ -1300,7 +1343,16 @@ int main(int argc,char **argv)
             }
 			timer=timer->next;
 		}
-        if(min>0) usleep((unsigned int)min);
+        if(min>0)
+        {
+            struct timespec sleepTime;
+            struct timespec returnTime;
+            sleepTime.tv_sec = 0;
+            sleepTime.tv_nsec = min*1000000;
+            nanosleep(&sleepTime, &returnTime);
+            
+            //usleep((unsigned int)min);
+        }
 
 		/*lua_getglobal(L,"event_call");
 		int error = lua_pcall(L, 0, 0, 0);

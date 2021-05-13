@@ -6,7 +6,7 @@
 //=>
 //=> Massimo Bernava
 //=> massimo.bernava@gmail.com
-//=> 2021-05-06
+//=> 2021-05-13
 //==============================================================================
 
 //#if defined(__MINGW32__) || defined(__MINGW64__)
@@ -52,12 +52,15 @@
     
 #endif
 
+//#define PROTEO_USE_TINYJSON
+
 #define PROTEO_ZMQ
 #define PROTEO_OPENCV
 #define PROTEO_FFMPEG
 
 //TODO
 //#define DLINK_LIST_COMPONENT
+
 
 #define PROTEO_ENET
 
@@ -413,6 +416,59 @@ char* concat3(const char *s1, const char *s2, const char *s3)
     return result;
 }
 
+int c_quote(const char* src, char* dest, int maxlen) {
+    int count = 0;
+    if(maxlen < 0) {
+        maxlen = strlen(src)+1;      /* add 1 for NULL-terminator */
+    }
+
+    while(src  && maxlen > 0) {
+        switch(*src) {
+
+            /* these normal, printable chars just need a slash appended */
+            case '\\':
+            case '\"':
+            case '\'':
+                if(dest) {
+                    *dest++ = '\\';
+                    *dest++ = *src;
+                }
+                count += 2;
+                break;
+
+            /* newlines/tabs and unprintable characters need a special code.
+             * Use the macro CASE_CHAR defined below.
+             * The first arg for the macro is the char to compare to,
+             * the 2nd arg is the char to put in the result string, after the '\' */
+#define CASE_CHAR(c, d) case c:\
+    if(dest) {\
+        *dest++ = '\\'; *dest++ = (d);\
+        }\
+count += 2;\
+break;
+            /* --------------  */
+            CASE_CHAR('\n', 'n');
+            CASE_CHAR('\t', 't');
+            CASE_CHAR('\b', 'b');
+            /*  ------------- */
+
+#undef CASE_CHAR
+
+
+            /* by default, just copy the char over */
+            default:
+                if(dest) {
+                    *dest++ = *src;
+                }
+                count++;
+        }
+
+        ++src;
+        --maxlen;
+    }
+    return count;
+}
+
 //simple encrypt-decrypt function
 void encryptDecrypt(char inpString[])
 {
@@ -592,7 +648,7 @@ static int require (lua_State *state) {
 
         strcpy(get_lib,"/proteo/lib/");
         strcat(get_lib,lib);
-        bifrost_get(get_lib,PROTEO_APP_KEY,Token,"");
+        bifrost_get(get_lib,config.appkey,Token,"");
 	#endif
     }
     else
@@ -823,6 +879,7 @@ int initLUA()
     addFunction_proteo(L,"opencv","setSize",opencv_setSize);
     addFunction_proteo(L,"opencv","fill",opencv_fill);
     addFunction_proteo(L,"opencv","resize",opencv_resize);
+    addFunction_proteo(L,"opencv","copy",opencv_copy);
     addFunction_proteo(L,"opencv","mul",opencv_mul);
     addFunction_proteo(L,"opencv","add",opencv_add);
     addFunction_proteo(L,"opencv","addWeighted",opencv_addWeighted);
@@ -1202,7 +1259,7 @@ int main(int argc,char **argv)
 
 	pthread_t t_update;
 
-	printf("Proteo\n");
+	printf("Proteo %s\n",argv[0]);
 
 	//char luafile[50];
 	char username[50];
@@ -1213,6 +1270,8 @@ int main(int argc,char **argv)
 	int opt_script=FALSE;
     int opt_gmode=FALSE;
    
+    strcpy(app_path,dirname(argv[0]));
+    
 	//int opt_appkey=FALSE;
     config=load_config();
     if(config.load_error!=0)
@@ -1267,6 +1326,18 @@ int main(int argc,char **argv)
     //strcpy(basedir,"./");
 
     //printf("HOME: %s\n",home);
+#elif TARGET_OS_MAC
+    opt_gmode=TRUE;
+    opt_remoteconsole=TRUE;
+
+    char basedir_tmp[PATH_MAX];
+    strcpy(basedir_tmp,config.basedir);
+    strcpy(config.basedir,app_path);
+    strcat(config.basedir,"/");
+    strcat(config.basedir,basedir_tmp);
+    
+    debug=TRUE;
+    verbose=FALSE;
 #elif __EMSCRIPTEN__
 	opt_gmode=TRUE;
 
@@ -1478,7 +1549,7 @@ int main(int argc,char **argv)
             #ifdef PROTEO2
             proteo_login(username,password,script);
             #else
-            proteo_login(username,password,"abcdc123-abcd-1234-5678-abcdqwerzxcv");
+            proteo_login(username,password,"8756c123-4567-9876-9876-1234567");
             #endif
 		}
 	}

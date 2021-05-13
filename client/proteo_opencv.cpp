@@ -595,6 +595,18 @@ int opencv_fill(lua_State* state)
     return 0;
 }
 
+int opencv_copy(lua_State* state)
+{
+    UMat *in=checkMat(state,1);
+    UMat *out=checkMat(state,2);
+        //*ret=ret->mul(num);
+
+    //cv::copyTo(*in,*out,NULL);
+    in->copyTo(*out);
+
+    return 0;
+}
+
 int opencv_mul(lua_State* state)
 {
     UMat *in=checkMat(state,1);

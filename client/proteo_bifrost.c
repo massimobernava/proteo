@@ -6,7 +6,7 @@ static int network_bifrost_get(lua_State *state) {
 
 	const char* res = luaL_checkstring(state,1);
 	const char* callback = luaL_checkstring(state,2);
-	bifrost_get(res,PROTEO_APP_KEY,Token,callback);
+	bifrost_get(res,config.appkey,Token,callback);
 
 	return 0;
 }
@@ -27,7 +27,7 @@ static int network_bifrost_post(lua_State *state) {
     const char* json = luaL_checkstring(state,2);
     
 	const char* callback = luaL_checkstring(state,3);
-	bifrost_post(res,PROTEO_APP_KEY,Token,json,callback);
+	bifrost_post(res,config.appkey,Token,json,callback);
 	//free((void*)json);
     
 	return 0;

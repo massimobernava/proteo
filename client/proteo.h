@@ -157,7 +157,7 @@ typedef struct SDL_FPoint
 } SDL_FPoint;
 #endif
 
-#define PROTEO_VERSION "2.0"
+#define PROTEO_VERSION "2.0.0"
 #define PROTEO_MAJOR_VERSION 2
 #define PROTEO_MINOR_VERSION 0
 
@@ -173,7 +173,9 @@ typedef struct SDL_FPoint
 
 #define lua_unref(L,ref)        luaL_unref(L, LUA_REGISTRYINDEX, (ref))
 
+#ifndef lua_getref
 #define lua_getref(L,ref)       lua_rawgeti(L, LUA_REGISTRYINDEX, ref)
+#endif
 
 const int SCREEN_WIDTH = 1200;
 const int SCREEN_HEIGHT = 800;
@@ -186,6 +188,8 @@ int debug=FALSE;
 int opt_fullscreen=FALSE;
 int opt_remoteconsole=FALSE;
 
+char app_path[PATH_MAX];
+
 #define LIGHTPROTEOCOMPONENT
 #define LIGHTPROTEOSOUND
 
@@ -194,9 +198,6 @@ int opt_remoteconsole=FALSE;
 #define PROTEOTIMER "ProteoTimer"
 #define PROTEOSTREAM "ProteoStream"
 #define PROTEOSKELETON "ProteoSkeleton"
-
-#define PROTEO_APP_KEY "1234567890123456789012"
-#define PROTEO_BASE_URL "http://localhost:8888"
 
 #define PROTEO2
 
@@ -350,6 +351,8 @@ color_name colors[]={
 const char server_form[] = "local label_server=nil \n"
                             "local label_info=nil \n"
                             "local text_server=nil \n"
+                            "local label_appkey=nil \n"
+                            "local text_appkey=nil \n"
                             "local btn_save=nil \n"
                             "--local json=require \"json\" \n"
                             "local config=nil \n"
@@ -358,20 +361,30 @@ const char server_form[] = "local label_server=nil \n"
                               "proteo.graphics.setBackground('dimgray') \n"
                               "config=proteo.system.loadConfig() \n"
                               "label_info=proteo.gui.newLabel('label_info',\"Impossibile accedere al server. Inserire l'indirizzo corretto e riprovare.\",'OpenSans',18,'black','Clear',proteo.gui.LabelAlignment.Left,MIN_X +30,MIN_Y + 170,400,30) \n"
+
                               "label_server=proteo.gui.newLabel('label_server','Server:','OpenSans',18,'black','Clear',proteo.gui.LabelAlignment.Left,MIN_X +80,MIN_Y + 250,150,30) \n"
-                              "text_server=proteo.gui.newTextField('text_server',config.server,'OpenSans',18,'Black','White',MIN_X +200,MIN_Y + 250,280,30,'') \n"
+                              "text_server=proteo.gui.newTextField('text_server',config.server,'OpenSans',18,'Black','White',MIN_X +200,MIN_Y + 250,380,30,'') \n"
+                                
+                              "label_appkey=proteo.gui.newLabel('label_appkey','AppKey:','OpenSans',18,'black','Clear',proteo.gui.LabelAlignment.Left,MIN_X +80,MIN_Y + 300,150,30) \n"
+                              "text_appkey=proteo.gui.newTextField('text_appkey',config.appkey,'OpenSans',18,'Black','White',MIN_X +200,MIN_Y + 300,380,30,'') \n"
+
                               "btn_save=proteo.gui.newButton('btn_save','Save','OpenSans',20,'black','cornsilk',1,'crimson',true,MID_X - 100,MAX_Y - 100,100,50,\"save\") \n"
                             "end \n"
                             "function update(dt) end \n"
                             "function save(sender) \n"
                               "--data={} \n"
                               "config[\"server\"]=proteo.gui.getText(text_server) \n"
+                              "config[\"appkey\"]=proteo.gui.getText(text_appkey) \n"
+                              "config[\"script\"]=\"\" \n"
+                              "config[\"version\"]=\"" PROTEO_VERSION "\"\n"
                               "proteo.system.saveConfig(config) \n"
                               "proteo.system.login(\"\",\"\",\"login\") \n"
                               "--hide \n"
                               "--proteo.gui.setHidden(label_info,true) \n"
                               "proteo.gui.setHidden(label_server,true) \n"
                               "proteo.gui.setHidden(text_server,true) \n"
+                              "proteo.gui.setHidden(label_appkey,true) \n"
+                              "proteo.gui.setHidden(text_appkey,true) \n"
                               "proteo.gui.setHidden(btn_save,true) \n"
                               "--and set nil \n"
                               "collectgarbage('restart')\n"
@@ -743,6 +756,7 @@ void addComponent(ProteoComponent * component,ProteoComponent** list);
 
 char* concat(const char *s1, const char *s2);
 char* concat3(const char *s1, const char *s2, const char *s3);
+int c_quote(const char* src, char* dest, int maxlen);
 
 static ProteoFont* newFont(const char* path,int size);
 
@@ -1024,6 +1038,7 @@ int opencv_setImg(lua_State* state);
 int opencv_setSize(lua_State* state);
 int opencv_fill(lua_State* state);
 int opencv_resize(lua_State* state);
+int opencv_copy(lua_State* state);
 int opencv_mul(lua_State* state);
 int opencv_add(lua_State* state);
 int opencv_addWeighted(lua_State* state);

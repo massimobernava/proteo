@@ -680,7 +680,7 @@ void downloadIcon(const char* path,ProteoIcon* icon)
     curl_easy_setopt (hnd, CURLOPT_SSL_VERIFYPEER, FALSE);
 
     ret = curl_easy_perform (hnd);
-    free(url);
+    free((void*)url);
 
     if(ret != CURLE_OK) {
         printf("curl_easy_perform() failed: %s\n",
@@ -932,7 +932,7 @@ static int graphics_isInside(lua_State *state)
 	const int x=luaL_checkint(state,2);
 	const int y=luaL_checkint(state,3);
 
-	if(debug) printf("graphics.isInside: x=%d y=%d\n",x,y);
+	if(verbose) printf("graphics.isInside: x=%d y=%d\n",x,y);
 
 	int inside=FALSE;
 	SDL_Point point={x,y};
@@ -972,7 +972,7 @@ static int graphics_setPosition (lua_State *state) {
 	const int x=luaL_checkint(state,2);
 	const int y=luaL_checkint(state,3);
 
-	if(debug) printf("graphics.setPosition : %s\n",pc->id);
+	if(verbose) printf("graphics.setPosition : %s\n",pc->id);
 
 	if(pc->type==Image)
 	{
@@ -992,7 +992,7 @@ static int graphics_getPosition (lua_State *state) {
 
     ProteoComponent* pc=toProteoComponent(state,1);
 
-    if(debug) printf("graphics.getPosition : %s\n",pc->id);
+    if(verbose) printf("graphics.getPosition : %s\n",pc->id);
 
     lua_newtable(state);
 
@@ -1023,7 +1023,7 @@ static int graphics_addFrame (lua_State *state) {
 
     sprite->nFrame+=1;
 
-    if(debug) printf("graphics.addFrame : %s(%d)\n",sprite->id,sprite->nFrame);
+    if(verbose) printf("graphics.addFrame : %s(%d)\n",sprite->id,sprite->nFrame);
 
     return 0;
 }
@@ -1048,7 +1048,7 @@ static int graphics_addFrameSource(lua_State *state) {
 
     sprite->nFrame+=1;
 
-    if(debug) printf("graphics.addFrame : %s(%d)\n",sprite->id,sprite->nFrame);
+    if(verbose) printf("graphics.addFrame : %s(%d)\n",sprite->id,sprite->nFrame);
 
     return 0;
 }
@@ -1058,7 +1058,7 @@ static int graphics_setFrame (lua_State *state) {
     ProteoComponent* sprite=toProteoComponent(state,1);
     const int frame=luaL_checkint(state,2);
 
-    if(debug) printf("graphics.setFrame : %s(%d)\n",sprite->id,frame);
+    if(verbose) printf("graphics.setFrame : %s(%d)\n",sprite->id,frame);
 
     sprite->currentFrame=frame;
 
@@ -1067,11 +1067,32 @@ static int graphics_setFrame (lua_State *state) {
 
 static int graphics_flipH (lua_State *state) {
 
+    ProteoComponent* pc=toProteoComponent(state,1);
+    const int fliph=lua_toboolean(state,2);
+    
+    if(pc->type==Sprite)
+    {
+        if(fliph)
+            pc->component.sprite.flip=pc->component.sprite.flip|SDL_FLIP_HORIZONTAL;
+        else
+            pc->component.sprite.flip=pc->component.sprite.flip&~SDL_FLIP_HORIZONTAL;
+    }
     return 0;
 }
 
 static int graphics_flipV (lua_State *state) {
 
+    ProteoComponent* pc=toProteoComponent(state,1);
+    const int flipv=lua_toboolean(state,2);
+    
+    if(pc->type==Sprite)
+    {
+        if(flipv)
+            pc->component.sprite.flip=pc->component.sprite.flip|SDL_FLIP_VERTICAL;
+        else
+            pc->component.sprite.flip=pc->component.sprite.flip&~SDL_FLIP_VERTICAL;
+    }
+    
     return 0;
 }
 
@@ -1409,10 +1430,10 @@ static int graphics_drawSkeleton(SDL_Renderer* renderer,ProteoSkeleton* skeleton
     int tx=0;
     int ty=0;
 
-    if(skeleton->shape->hidden) return 0;
-
     if(skeleton->shape!=NULL)
     {
+        if(skeleton->shape->hidden) return 0;
+
         tx=skeleton->shape->rect.x;
         ty=skeleton->shape->rect.y;
     }
@@ -1433,6 +1454,57 @@ static int graphics_drawSkeleton(SDL_Renderer* renderer,ProteoSkeleton* skeleton
         ,tx+skeleton->bones[i].b->tpos.x,ty+skeleton->bones[i].b->tpos.y
 
         ,4,255,255,0,255);
+        
+#ifdef DEBUG_BEZIER
+        //Disegna una linea che va dal centro del bone ad ogni bezier in cui il peso è >0
+        
+        int mx= tx + (skeleton->bones[i].a->tpos.x + skeleton->bones[i].b->tpos.x)/2;
+        int my= ty + (skeleton->bones[i].a->tpos.y + skeleton->bones[i].b->tpos.y)/2;
+        
+        filledEllipseRGBA (renderer, mx, my, 3, 3,
+        255, 0, 255, 255);
+        
+        for(int j=0;j<skeleton->shape->component.shape.nchilds;j++)
+        {
+        for(int k=0;k<skeleton->shape->component.shape.childs[j]->component.polygon.nbeziers;k++)
+        if(skeleton->bones[i].weights!=NULL && skeleton->bones[i].weights[j]!=NULL && skeleton->bones[i].weights[j][k]>0)
+        {
+            int to_x1=skeleton->shape->component.shape.childs[j]->component.polygon.beziers[k].T0.x;
+            int to_y1=skeleton->shape->component.shape.childs[j]->component.polygon.beziers[k].T0.y;
+            
+            int to_x2=skeleton->shape->component.shape.childs[j]->component.polygon.beziers[k].T1.x;
+            int to_y2=skeleton->shape->component.shape.childs[j]->component.polygon.beziers[k].T1.y;
+            
+            int to_x3=skeleton->shape->component.shape.childs[j]->component.polygon.beziers[k].T2.x;
+            int to_y3=skeleton->shape->component.shape.childs[j]->component.polygon.beziers[k].T2.y;
+            
+            int to_x4=skeleton->shape->component.shape.childs[j]->component.polygon.beziers[k].T3.x;
+            int to_y4=skeleton->shape->component.shape.childs[j]->component.polygon.beziers[k].T3.y;
+            
+            thickLineRGBA(renderer,
+                          mx,my
+                          ,to_x1,to_y1
+                          ,2,50*k,0,255,55*skeleton->bones[i].weights[j][k]);
+            
+            thickLineRGBA(renderer,
+                          mx,my
+                          ,to_x2,to_y2
+                          ,2,50*k,0,255,55*skeleton->bones[i].weights[j][k]);
+            
+            thickLineRGBA(renderer,
+                          mx,my
+                          ,to_x3,to_y3
+                          ,2,50*k,0,255,55*skeleton->bones[i].weights[j][k]);
+            
+            thickLineRGBA(renderer,
+                          mx,my
+                          ,to_x4,to_y4
+                          ,2,255,0,255,55*skeleton->bones[i].weights[j][k]);
+            
+        }
+        }
+        
+#endif
 
     }
 
@@ -1462,7 +1534,8 @@ static int graphics_newSkeleton(lua_State *state)
 
     ProteoSkeleton *skeleton = pushProteoSkeleton(state);
 
-    MD5((unsigned char*)id, strlen(id), (unsigned char*)skeleton->id);
+    //MD5((unsigned char*)id, strlen(id), (unsigned char*)skeleton->id);
+    strlcpy(skeleton->id,id,PROTEO_MAX_ID);
     //skeleton->pos.x=x;
     //skeleton->pos.y=y;
     skeleton->hidden=FALSE;
@@ -1502,7 +1575,8 @@ static int graphics_addJoint(lua_State *state) {
     {
         ps->joints=malloc(sizeof(ProteoJoint));
 
-        MD5((unsigned char*)id, strlen(id), (unsigned char*)ps->joints[0].id);
+        //MD5((unsigned char*)id, strlen(id), (unsigned char*)ps->joints[0].id);
+        strlcpy(ps->joints[0].id,id,PROTEO_MAX_ID);
         ps->joints[0].pos.x=x;
         ps->joints[0].pos.y=y;
         ps->joints[0].tpos.x=0;
@@ -1540,7 +1614,9 @@ static int graphics_addJoint(lua_State *state) {
     {
         ps->joints=realloc(ps->joints,(ps->njoints+1)*sizeof(ProteoJoint));
 
-        MD5((unsigned char*)id, strlen(id), (unsigned char*)ps->joints[ps->njoints].id);
+        //MD5((unsigned char*)id, strlen(id), (unsigned char*)ps->joints[ps->njoints].id);
+        strlcpy(ps->joints[ps->njoints].id,id,PROTEO_MAX_ID);
+        
         ps->joints[ps->njoints].pos.x=x;
         ps->joints[ps->njoints].pos.y=y;
         ps->joints[ps->njoints].tpos.x=0;
@@ -1921,13 +1997,14 @@ static int graphics_resetJoint(lua_State *state) {
     const char* id=luaL_checkstring(state,1); //TODO bisogna trasformarlo in puntatore
     ProteoSkeleton* ps=checkProteoSkeleton(state, 2 );
 
-    char md5_id[MD5_DIGEST_LENGTH];
-    MD5((unsigned char*)id, strlen(id), (unsigned char*)md5_id);
+    //char md5_id[MD5_DIGEST_LENGTH];
+    //MD5((unsigned char*)id, strlen(id), (unsigned char*)md5_id);
 
     ProteoJoint* joint=NULL;
     for(int i=0;i<ps->njoints;i++)
     {
-        if(memcmp(ps->joints[i].id,md5_id,sizeof(md5_id))==0)
+        //if(memcmp(ps->joints[i].id,id,sizeof(id))==0)
+        if(strcmp(ps->joints[i].id,id)==0)
         {
             joint=&ps->joints[i];
             break;
@@ -1956,13 +2033,14 @@ static int graphics_moveJoint(lua_State *state) {
     long x=luaL_checkinteger(state,3);
     long y=luaL_checkinteger(state,4);
 
-    char md5_id[MD5_DIGEST_LENGTH];
-    MD5((unsigned char*)id, strlen(id), (unsigned char*)md5_id);
+    //char md5_id[MD5_DIGEST_LENGTH];
+    //MD5((unsigned char*)id, strlen(id), (unsigned char*)md5_id);
 
     ProteoJoint* joint=NULL;
     for(int i=0;i<ps->njoints;i++)
     {
-        if(memcmp(ps->joints[i].id,md5_id,sizeof(md5_id))==0)
+        //if(memcmp(ps->joints[i].id,id,sizeof(id))==0)
+        if(strcmp(ps->joints[i].id,id)==0)
         {
             joint=&ps->joints[i];
             break;
@@ -2002,13 +2080,14 @@ static int graphics_rotateJoint(lua_State *state) {
     ProteoSkeleton* ps=checkProteoSkeleton(state, 2 );
     float r=luaL_checknumber(state,3);
 
-    char md5_id[MD5_DIGEST_LENGTH];
-    MD5((unsigned char*)id, strlen(id), (unsigned char*)md5_id);
+    //char md5_id[MD5_DIGEST_LENGTH];
+    //MD5((unsigned char*)id, strlen(id), (unsigned char*)md5_id);
 
     ProteoJoint* joint=NULL;
     for(int i=0;i<ps->njoints;i++)
     {
-        if(memcmp(ps->joints[i].id,md5_id,sizeof(md5_id))==0)
+        //if(memcmp(ps->joints[i].id,id,sizeof(id))==0)
+        if(strcmp(ps->joints[i].id,id)==0)
         {
             joint=&ps->joints[i];
             break;
@@ -2033,12 +2112,13 @@ static int graphics_getJoint(lua_State *state) {
 
 ProteoJoint *getJoint(ProteoSkeleton* skeleton,const char* joint_id)
 {
-    char md5_id[MD5_DIGEST_LENGTH];
-    MD5((unsigned char*)joint_id, strlen(joint_id), (unsigned char*)md5_id);
+    //char md5_id[MD5_DIGEST_LENGTH];
+    //MD5((unsigned char*)joint_id, strlen(joint_id), (unsigned char*)md5_id);
 
     for(int i=0;i<skeleton->njoints;i++)
     {
-        if(memcmp(skeleton->joints[i].id,md5_id,sizeof(md5_id))==0)
+        //if(memcmp(skeleton->joints[i].id,joint_id,sizeof(joint_id))==0)
+        if(strcmp(skeleton->joints[i].id,joint_id)==0)
         {
             return &skeleton->joints[i];
         }
@@ -2076,7 +2156,8 @@ static int graphics_addBone(lua_State *state) {
 
     }
 
-    MD5((unsigned char*)id, strlen(id), (unsigned char*)ps->bones[ps->nbones].id);
+    //MD5((unsigned char*)id, strlen(id), (unsigned char*)ps->bones[ps->nbones].id);
+    strlcpy(ps->bones[ps->nbones].id,id,PROTEO_MAX_ID);
     ps->bones[ps->nbones].a=getJoint(ps,id_joint1);
     ps->bones[ps->nbones].b=getJoint(ps,id_joint2);
     ps->bones[ps->nbones].group_id=group_id;
@@ -2479,7 +2560,55 @@ static int graphics_loadSkeleton(lua_State *state)
 
 static int graphics_saveSkeleton(lua_State *state)
 {
-    //saveSkeleton
+    ProteoSkeleton* ps=checkProteoSkeleton(state,1);
+    const char* filepath=luaL_checkstring(state,2);
+    
+    char* bone=malloc(512);
+    char *result = NULL;
+    for(int k=0;k<ps->nbones;k++)
+    {
+        snprintf(bone, 512,"\"%s\":{\"a\":\"%s\",\"b\":\"%s\",\"group\":%d}%s",ps->bones[k].id,ps->bones[k].a->id,ps->bones[k].b->id,ps->bones[k].group_id,(k+1)<ps->nbones?",\n":"\n");
+        if(result==NULL) result=concat("{\"bones\":{", bone);
+        else
+        {
+            char* tmp=result;
+            result=concat(result, bone);
+            free(tmp);
+        }
+    }
+    free(bone);
+    char* tmp=result;
+    result=concat(result, "},\"joints\":{");
+    free(tmp);
+    char* joint=malloc(512);
+    for(int k=0;k<ps->njoints;k++)
+    {
+        snprintf(joint, 512,"\"%s\":{\"x\":%f,\"y\":%f}%s",ps->joints[k].id,ps->joints[k].pos.x,ps->joints[k].pos.y,(k+1)<ps->njoints?",\n":"\n");
+
+        char* tmp=result;
+        result=concat(result, joint);
+        free(tmp);
+    }
+    free(joint);
+    
+    tmp=result;
+    result=concat(result, "}}");
+    free(tmp);
+    
+    //printf("%s",result);
+    writefile(filepath, result);
+    free(result);
+
+    return 0;
+    /*{"bones":{"F1":["Nose","Neck"]},"joints":{"Nose":{"y":120,"x":10},"Neck":{"y":120,"x":10}}}*/
+    
+    /*{"bones":{
+     "F2":["Nose2","Neck2"],
+     "F1":["Nose","Neck"]
+     },"joints":{
+     "Nose":{"y":120,"x":10},
+     "Neck":{"y":120,"x":10}
+     }}*/
 }
 
 //Add polygon or shape to shape
@@ -2752,13 +2881,15 @@ static int graphics_drawSprite (SDL_Renderer* renderer,ProteoComponent* sprite)
     if(sprite->component.sprite.image->texture!=NULL && sprite->nFrame>0 && sprite->nFrame>sprite->currentFrame)
     {
         if(sprite->framesDestination[sprite->currentFrame].x==0 || sprite->framesDestination[sprite->currentFrame].y==0)
-           SDL_RenderCopy(renderer, sprite->component.sprite.image->texture, &sprite->framesSource[sprite->currentFrame], &sprite->rect );
+           SDL_RenderCopyEx(renderer, sprite->component.sprite.image->texture, &sprite->framesSource[sprite->currentFrame], &sprite->rect
+                            ,0.0,NULL,sprite->component.sprite.flip );
         else
         {
             SDL_Rect location={sprite->rect.x,sprite->rect.y,
             sprite->framesDestination[sprite->currentFrame].x,sprite->framesDestination[sprite->currentFrame].y};
 
-            SDL_RenderCopy(renderer, sprite->component.sprite.image->texture, &sprite->framesSource[sprite->currentFrame], &location );
+            SDL_RenderCopyEx(renderer, sprite->component.sprite.image->texture, &sprite->framesSource[sprite->currentFrame], &location
+                             ,0.0,NULL,sprite->component.sprite.flip);
         }
     }
 
@@ -2799,6 +2930,8 @@ static int graphics_newSprite (lua_State *state) {
     pc->font=NULL;
     pc->txt=NULL;
 
+    pc->component.sprite.flip=SDL_FLIP_NONE;
+    
     /*if(components==NULL)
     {
         components=pc;
@@ -2931,20 +3064,20 @@ static int graphics_drawPolygon (SDL_Renderer* renderer,ProteoComponent* polygon
     for(int i=0;i<polygon->component.polygon.nbeziers;i++)
     {
         filledEllipseRGBA (renderer, polygon->component.polygon.beziers[i].T0.x,
-                           polygon->component.polygon.beziers[i].T0.y, 3, 3,
-                           128, 255, 0, 255);
+                           polygon->component.polygon.beziers[i].T0.y, 2, 2,
+                           255, 0, 255, 255);
 
         filledEllipseRGBA (renderer, polygon->component.polygon.beziers[i].T1.x,
-                           polygon->component.polygon.beziers[i].T1.y, 3, 3,
+                           polygon->component.polygon.beziers[i].T1.y, 2, 2,
                            128, 255, 0, 255);
 
         filledEllipseRGBA (renderer, polygon->component.polygon.beziers[i].T2.x,
-                           polygon->component.polygon.beziers[i].T2.y, 3, 3,
+                           polygon->component.polygon.beziers[i].T2.y, 2, 2,
                            128, 255, 0, 255);
 
         filledEllipseRGBA (renderer, polygon->component.polygon.beziers[i].T3.x,
-                           polygon->component.polygon.beziers[i].T3.y, 3, 3,
-                           128, 255, 0, 255);
+                           polygon->component.polygon.beziers[i].T3.y, 2, 2,
+                           255, 0, 255, 255);
 
         thickLineRGBA(renderer,
          polygon->component.polygon.beziers[i].T0.x,polygon->component.polygon.beziers[i].T0.y
@@ -3197,8 +3330,8 @@ void add_graphics_proteo(lua_State* state)
     addFunction_proteo(state,"graphics","addFrame",graphics_addFrame);
     addFunction_proteo(state,"graphics","addFrameSource",graphics_addFrameSource);
     addFunction_proteo(state,"graphics","setFrame",graphics_setFrame);
-    addFunction_proteo(state,"graphics","flipH",graphics_flipH); //TODO
-    addFunction_proteo(state,"graphics","flipV",graphics_flipV); //TODO
+    addFunction_proteo(state,"graphics","flipH",graphics_flipH);
+    addFunction_proteo(state,"graphics","flipV",graphics_flipV);
     addFunction_proteo(state,"graphics","infoComponent",graphics_infoComponent); //TODO
     addFunction_proteo(state,"graphics","setColor",graphics_setColor);
     //addFunction_proteo(state,"graphics","collide",graphics_collide); //TODO

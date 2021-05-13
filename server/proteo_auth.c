@@ -1,3 +1,4 @@
+
 unsigned char *serverkey = (unsigned char *)"01234567890123456789012345678901"; //TODO va nel config
 unsigned char *clientkey = (unsigned char *)"1234567890123456789012"; //TODO va nel config
 
@@ -132,11 +133,16 @@ int createTokenAndTicket(const char* username,const char* scriptId, char* token,
 	//printf("JSON info: %s\n",json_info);
 	if(json_info==NULL)
     {
-        if(debug) printf("The file %s.json does not exist\n",scriptId);
-        char* fake_json="{\"version\": \"0.0\",\"plugins\": [],\"libs\":[]}\0";
-        json_info=malloc(strlen(fake_json) * sizeof(char));
-        strcpy(json_info, fake_json);
-        //return 1;
+        snprintf(path,100,"%sscript/%s/%s.json",config.basedir,username,scriptId);
+        json_info=loadfile(path);
+        if(json_info==NULL)
+        {
+            if(debug) printf("The file %s.json does not exist\n",scriptId);
+            char* fake_json="{\"version\": \"0.0\",\"plugins\": [],\"libs\":[]}\0";
+            json_info=malloc(strlen(fake_json) * sizeof(char));
+            strcpy(json_info, fake_json);
+            //return 1;
+        }
     }
     
 	json_object * jobj = json_tokener_parse(json_info);
@@ -167,6 +173,8 @@ int createTokenAndTicket(const char* username,const char* scriptId, char* token,
 		const char* plug_name=json_object_get_string(p);
 		//printf("Plug: %s\n",plug_name);
 		char* url=NULL;
+        
+        //Get "best" url for plugin
 		if(0==getTicket(plug_name,&url))
 		{
 			printf("Ticket: [%s]=%s\n",plug_name,url);
@@ -197,7 +205,7 @@ int createTokenAndTicket(const char* username,const char* scriptId, char* token,
 
     /* A 128 bit IV */
     unsigned char iv[17];
-    rand_string(iv, 17);
+    rand_string((char*)iv, 17);
     //unsigned char *iv = (unsigned char *)"0123456789012345"; //TODO Nella versione definitiva deve essere random e accodato
 
     //printf("IV:%s\n",iv);

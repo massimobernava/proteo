@@ -171,3 +171,10 @@ proteo.route.post("deepcrimson/start",
 end
 )
 
+
+proteo.route.post("deepcrimson/landmarks",
+
+  function(username,permission,data,param) 
+      return deepcrimson_data.pipe(data)
+    end
+)

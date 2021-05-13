@@ -1,6 +1,5 @@
 
---if proteo_once==true then return end
---proteo_once=true
+--local dbg = require("debugger")
 
 local json=require "json"
 --local Parser = require'ParseLua'
@@ -25,6 +24,7 @@ libs["tfl_utility"]="lib/tfl_utility.lua"
 libs["skl_utility"]="lib/skl_utility.lua"
 
 libs["demo_lib"]="lib/demo_lib.lua"
+libs["tetris_lib"]="lib/tetris_lib.lua"
 
 libs["video_chat"]="lib/video_chat.lua"
 libs["attenzione_visiva"]="lib/attenzione_visiva.lua"
@@ -142,7 +142,8 @@ proteo.route.get("proteo/script/:script",
 	function(username,permission,data,param) 
 
 		--print("GET SCRIPT PERMISSION: "..permission[1])
-		if username=="demo" then
+		if username=="demo" then --TODO può diventare l'opzione di default cercare lo script ANCHE nella cartella del proprio utente
+								 --potrebbe essere un modo per testare gli script prima di rilasciarli nella cartella comune
 			script={}
 			script["type"]="SCRIPT"
 			script["result"]="OK"

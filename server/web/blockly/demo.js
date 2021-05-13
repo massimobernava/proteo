@@ -448,3 +448,115 @@ Blockly.Lua['sequences_saveall'] = function(block) {
 
   return code;
 };
+
+Blockly.Blocks['tetris_createtemplate'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("create tetris template with:");
+    this.appendStatementInput("controller")
+        .setCheck(null)
+        .appendField("controller");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(135);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Lua['tetris_createtemplate'] = function(block) {
+  var statements_controller = Blockly.Lua.statementToCode(block, 'controller');
+  
+  var tetris_lib = Blockly.Lua.provideFunction_(
+    'tetris_lib',
+    [ 'local ' + Blockly.Lua.FUNCTION_NAME_PLACEHOLDER_ + '=require "tetris_lib"\n ']);
+
+
+  var code = tetris_lib+'.create_template(function(joint)'+statements_controller+' end)\n';
+  return code;
+};
+
+Blockly.Blocks['tetris_getjoint'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("get joint")
+        .appendField(new Blockly.FieldDropdown([ 
+
+          ["nose","1"],
+          ["left eye inner","2"],
+          ["left eye","3"],
+          ["left eye outer","4"],
+          ["right eye inner","5"],
+          ["right eye","6"],
+          ["right eye outer","7"],
+          ["left ear","8"],
+          ["right ear","9"],
+          ["mouth left","10"],
+          ["mouth right","11"],
+          ["left shoulder","12"],
+          ["right shoulder","13"],
+          ["left elbow","14"],
+          ["right elbow","15"],
+          ["left wrist","16"],
+          ["right wrist","17"],
+          ["left pinky","18"],
+          ["right pinky","19"],
+          ["left index","20"],
+          ["right index","21"],
+          ["left thumb","22"],
+          ["right thumb","23"],
+          ["left hip","24"],
+          ["right hip","25"],
+          ["left knee","26"],
+          ["right knee","27"],
+          ["left ankle","28"],
+          ["right ankle","29"],
+          ["left heel","30"],
+          ["right heel","31"],
+          ["left foot index","32"],
+          ["right foot index","33"]
+
+          ]), "joint")
+        .appendField(new Blockly.FieldDropdown([["x","x"], ["y","y"], ["z","z"]]), "dir");
+    this.setOutput(true, null);
+    this.setColour(135);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Lua['tetris_getjoint'] = function(block) {
+  var dropdown_joint = block.getFieldValue('joint');
+  var dropdown_dir = block.getFieldValue('dir');
+  // TODO: Assemble Lua into code variable.
+  var code = 'joint['+dropdown_joint+'].'+dropdown_dir;
+  // TODO: Change ORDER_NONE to the correct strength.
+  return [code, Blockly.Lua.ORDER_NONE];
+};
+
+Blockly.Blocks['tetris_move'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("move")
+        .appendField(new Blockly.FieldDropdown([["left","left"], ["right","right"], ["rotate","rotate"], ["down","down"]]), "joint");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(135);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Lua['tetris_move'] = function(block) {
+  var dropdown_joint = block.getFieldValue('joint');
+
+    var tetris_lib = Blockly.Lua.provideFunction_(
+    'tetris_lib',
+    [ 'local ' + Blockly.Lua.FUNCTION_NAME_PLACEHOLDER_ + '=require "tetris_lib"\n ']);
+
+
+  var code = tetris_lib+'.left_move_'+dropdown_joint+'()\n';
+  return code;
+};
+
+

@@ -497,7 +497,7 @@ void get_script(json_t const * jobj)
 				if ( JSON_TEXT == json_getType( lib ) ) {
 					char const* name = json_getName(lib);
 					char const* script = json_getValue(lib);
-					if(debug) printf( "Lib: %s\n", name, script );
+					if(debug) printf( "Lib: %s\n", name );
 					addLib(name,script);
 				}
 			}
@@ -590,11 +590,17 @@ void get_script(json_object * jobj)
 				{
 					//printf("Downloaded LUA: %s\n",scr);
 
-					luaL_dostring(L,scr);
+					int error = luaL_dostring(L,scr);
 					//lua_pushcfunction(L, traceback);
+                    
+                    if (error) {
+                        fprintf(stderr, "ERROR start script: %s\n", lua_tostring(L, -1));
+                        lua_pop(L, 1);
+                    }
+                    
 					lua_getglobal(L,"init");
         			//int error = lua_pcall(L, 0, 0, -2);
-                    int error = lua_trace_pcall(L,0,0);
+                    error = lua_trace_pcall(L,0,0);
 
         			if (error) {
         				fprintf(stderr, "ERROR pcall(init): %s\n", lua_tostring(L, -1));
@@ -676,14 +682,26 @@ void proteo_post(const char* res,const char* appkey, const char* token,const cha
 void proteo_post(const char* res,const char* appkey, const char* token,const char* post_data, const char* callback,const int ref_callback)
 {
     char* url=NULL;
-    //TODO foreach app
-    if(strstr(res,"deepblue")!=NULL)
+    
+    char tmp[256];
+    strcpy(tmp,res);
+    char* app=strtok(tmp+1, "/");
+    
+    /*if(strstr(res,"deepblue")!=NULL)
     {
         url=concat(getaccesspoint("deepblue"),res);
     }
     else
-        url=concat(config.server,res);
+        url=concat(config.server,res);*/
 
+    char* a_p=getaccesspoint(app);
+    if(a_p!=NULL)
+    {
+        url=concat(a_p,res);
+    }
+    else
+        url=concat(config.server,res);
+        
     char* data=concat(res,post_data);
 
    // if(debug) printf("HMAC \n json) %s\n",data);
@@ -750,6 +768,10 @@ void proteo_post_callback(const char* res,const char* data,const char* callback,
 {
     //printf("%lu bytes retrieved\n", (unsigned long)chunk.size);
     #ifdef PROTEO_USE_TINYJSON
+    //int count=0;
+    //for(int i=0; data[i]; i++) if(data[i]==':') count++; //Very simple estimation
+    
+    //TODO
     json_t mem[32];
     json_t const* jobj = json_create( data, mem, sizeof mem / sizeof *mem );
     #else
@@ -789,6 +811,10 @@ void proteo_post_callback(const char* res,const char* data,const char* callback,
               }
           }
       }
+    
+#ifdef PROTEO_USE_TINYJSON
+    free(mem);
+#endif
 
 }
 
@@ -847,14 +873,26 @@ void proteo_get(const char* res,const char* appkey, const char* token,const char
 	strcat(url,res);*/
 
 	char* url=NULL;
-	//TODO foreach app
-	if(strstr(res,"deepblue")!=NULL && getaccesspoint("deepblue")!=NULL)
-	{
-		url=concat(getaccesspoint("deepblue"),res);
-	}
-	else
-		url=concat(config.server,res);
 
+    char tmp[256];
+    strcpy(tmp,res);
+    char* app=strtok(tmp+1, "/");
+    
+    /*if(strstr(res,"deepblue")!=NULL)
+    {
+        url=concat(getaccesspoint("deepblue"),res);
+    }
+    else
+        url=concat(config.server,res);*/
+
+    char* a_p=getaccesspoint(app);
+    if(a_p!=NULL)
+    {
+        url=concat(a_p,res);
+    }
+    else
+        url=concat(config.server,res);
+    
 	char* data=concat(res,token);
 
 	/*char data[2000];
@@ -974,7 +1012,7 @@ static int network_proteo_get(lua_State *state) {
 
 	const char* res = luaL_checkstring(state,1);
 	const char* callback = luaL_checkstring(state,2);
-	proteo_get(res,PROTEO_APP_KEY,Token,callback);
+	proteo_get(res,config.appkey,Token,callback);
 
 	return 0;
 }
@@ -1003,7 +1041,7 @@ static int network_proteo_post(lua_State *state) {
     else
         ref_callback=lua_ref(state, TRUE);
 
-    proteo_post(res,PROTEO_APP_KEY,Token,json,callback,ref_callback);
+    proteo_post(res,config.appkey,Token,json,callback,ref_callback);
     //free((void*)json);
 
 	return 0;
@@ -1097,7 +1135,7 @@ static int proteo_login_callback(char* ptr)
 				strcpy(get_script,"/proteo/script/");
 				strcat(get_script,script);
 				printf("Download LUA: %s\n",get_script);
-				proteo_get(get_script,PROTEO_APP_KEY,Token,"");
+				proteo_get(get_script,config.appkey,Token,"");
 
 			}
 			else if(res==2)
@@ -1161,7 +1199,7 @@ static int proteo_login_callback(char* ptr)
 			strcpy(get_script,"/proteo/script/");
 			strcat(get_script,script);
 			printf("Download LUA: %s\n",get_script);
-			bifrost_get(get_script,PROTEO_APP_KEY,Token,"");
+			bifrost_get(get_script,config.appkey,Token,"");
 		}
 		else if(local_lua)
 		{

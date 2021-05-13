@@ -328,7 +328,7 @@ static int gui_setHidden (lua_State *state) {
 
   ProteoComponent* pc=toProteoComponent(state,1);
 
-  if(pc->type==Deleted) return 0;
+  if(pc!=NULL  && pc->type==Deleted) return 0;
 
   const int hidden=lua_toboolean(state,2);
   pc->hidden=hidden;
@@ -545,9 +545,22 @@ static int gui_eventList (lua_State *state,ProteoComponent* list,SDL_Event e,SDL
                 //printf("select: %s\n",current->id);
                 list->component.list.selected_item=current;
                 //printf("call: %s\n",current->parent->callback);
+                bool callback_valid=false;
                 if(current->parent->callback!=NULL)
                 {
+                    callback_valid=true;
                     lua_getglobal(state,current->parent->callback);
+                }
+                else if(current->parent->ref_callback!=-1)
+                {
+                    callback_valid=true;
+                    lua_getref(state,current->parent->ref_callback);
+                }
+                    
+                
+                if(callback_valid)
+                {
+                    //lua_getglobal(state,current->parent->callback);
                     lua_pushlightuserdata(state, current);
                     int error = lua_pcall(state, 1, 0, 0);
 
@@ -615,8 +628,14 @@ static int gui_newList (lua_State *state) {
   const int pos_y=luaL_checkint(state,8);
   const int width=luaL_checkint(state,9);
   const int height=luaL_checkint(state,10);
-  const char* callback=luaL_checkstring(state,11);
 
+    char* callback=NULL;
+    int ref_callback=-1;
+    if (lua_isstring(state,11)==1)
+        callback=(char*)luaL_checkstring(state,11);
+    else
+        ref_callback=lua_ref(state, TRUE);
+    
   ProteoComponent* pc=pushProteoComponent(state);
 
   //strcpy(pc->id,id);
@@ -636,7 +655,9 @@ static int gui_newList (lua_State *state) {
   pc->enabled=TRUE;
   pc->type=List;
   pc->layer=100;
-  pc->callback=(char*)callback;
+  pc->callback=callback;
+    pc->ref_callback=ref_callback;
+    
     pc->txt=NULL;
     if(title!=NULL && strlen(title)>0)
     {

@@ -156,7 +156,9 @@ size_t strlcpy(char       *dst, const char *src, size_t      size)
 
 #define lua_unref(L,ref)        luaL_unref(L, LUA_REGISTRYINDEX, (ref))
 
+#ifndef lua_getref
 #define lua_getref(L,ref)       lua_rawgeti(L, LUA_REGISTRYINDEX, ref)
+#endif
 
 int run;
 int paused;
@@ -167,8 +169,6 @@ char basedir[50];
 
 #define PROTEOCOMPONENT "ProteoComponent"
 #define PROTEOTIMER "ProteoTimer"
-//#define PROTEO_APP_KEY "}~?d1BE+\"d5?TZ(j`{+n`pfK&*2U(WPy"
-
 
 void init(lua_State *state,const char* app) ;
 int initLUA();
@@ -277,6 +277,7 @@ int opencv_setImg(lua_State* state);
 int opencv_setSize(lua_State* state);
 int opencv_fill(lua_State* state);
 int opencv_resize(lua_State* state);
+int opencv_copy(lua_State* state);
 int opencv_mul(lua_State* state);
 int opencv_add(lua_State* state);
 int opencv_addWeighted(lua_State* state);

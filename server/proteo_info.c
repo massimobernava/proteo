@@ -6,6 +6,8 @@ struct MemoryStruct {
 int addTicket(const char* app,const char* url,int value)
 {
 	//TODO
+    //Lua script
+    
 	//IF SQLITE
 	return sqlite_addTicket(app,url,value);
 }
@@ -13,6 +15,8 @@ int addTicket(const char* app,const char* url,int value)
 int getTicket(const char* app,char** url)
 {
 	//TODO
+    //Lua script
+    
 	//IF SQLITE
 	return sqlite_getTicket(app,url);
 }
@@ -23,7 +27,6 @@ struct MHD_Response * proteo_info()
 	char json[1024];
 	strcpy(json,"{");
 	
-
 	printf("Plugins count: %d\n",config.plugin_count);
 	for(int i=0;i<config.plugin_count;i++)
 	{

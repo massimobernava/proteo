@@ -7,6 +7,7 @@ typedef struct conf
 {
 	char version[10];
 	//char server[64];
+    char appkey[33];
 	int ssl;
 
     char username[50];
@@ -29,7 +30,10 @@ conf default_config()
 
     strcpy(_config.basedir,"./");
     strcpy(_config.version,PROTEO_VERSION);
+    strcpy(_config.username,"");
+    strcpy(_config.password,"");
     strcpy(_config.server,"http://localhost:8888");
+    strcpy(_config.appkey,"1234567890123456789012");
     _config.ssl=0;
 
 #ifdef __EMSCRIPTEN__
@@ -74,12 +78,15 @@ conf load_config()
 	);
 #else
 #if TARGET_OS_IPHONE
-    char path_config[256];
+    char path_config[PATH_MAX];
     char *home = getenv("HOME");
     strcpy(path_config,home);
     strcat(path_config,"/Documents/config.json");
 #else
-	char *path_config="./config.json";
+    char path_config[PATH_MAX];
+    strcpy(path_config,app_path);
+    strcat(path_config,"/config.json");
+	//char *path_config="./config.json";
 #endif
     if(verbose) printf("LOAD CONFIG: %s\n",path_config);
 	char* json_config=loadfile(path_config);
@@ -132,7 +139,12 @@ conf load_config()
     if ( !server || JSON_TEXT != json_getType( server ) ) printf("Error, the server property is not found.");
     else
         strcpy(_config.server,json_getValue(server));
-
+    
+    json_t const* appkey = json_getProperty( json, "appkey" );
+    if ( !appkey || JSON_TEXT != json_getType( appkey ) ) printf("Error, the appkey property is not found.");
+    else
+        strcpy(_config.appkey,json_getValue(appkey));
+    
     json_t const* ssl = json_getProperty( json, "ssl" );
     if ( !ssl || JSON_INTEGER != json_getType( ssl ) ) printf("Error, the ssl property is not found.");
     else
@@ -172,6 +184,10 @@ conf load_config()
 	const char* server=json_object_get_string(obj);
 	if(server!=NULL) strcpy(_config.server,server);
 
+    json_object_object_get_ex(jobj, "appkey", &obj);
+    const char* appkey=json_object_get_string(obj);
+    if(appkey!=NULL) strcpy(_config.appkey,appkey);
+    
 	json_object_object_get_ex(jobj, "ssl", &obj);
 	_config.ssl=json_object_get_int(obj);
 
@@ -197,9 +213,10 @@ int save_config(conf _config)
               "\"username\":\"%s\","
               "\"password\":\"%s\","
               "\"script\":\"%s\","
+              "\"appkey\":\"%s\","
                     "\"ssl\":%d"
               "}",_config.version,_config.basedir,_config.server,
-            _config.username,_config.password,_config.script,_config.ssl);
+            _config.username,_config.password,_config.script,_config.appkey,_config.ssl);
 	EM_ASM({
 		var d = new Date(2021, 01, 01);
         var p = '/';
@@ -214,7 +231,9 @@ int save_config(conf _config)
         strcpy(path_config,home);
         strcat(path_config,"/Documents/config.json");
     #else
-        char *path_config="./config.json";
+        char path_config[PATH_MAX];
+        strcpy(path_config,app_path);
+        strcat(path_config,"/config.json");
     #endif
 
     FILE *f = fopen(path_config, "w");
@@ -222,6 +241,13 @@ int save_config(conf _config)
     {
         return 1;
     }
+    
+    int dest_len=c_quote(_config.appkey,NULL,-1);
+    char* q_appkey=malloc(dest_len);
+    c_quote(_config.appkey,q_appkey,-1);
+    //printf("q appkey: %s",q_appkey);
+    
+    
     fprintf(f,    "{"
                     "\"version\":\"%s\","
                     "\"basedir\":\"%s\","
@@ -229,10 +255,13 @@ int save_config(conf _config)
             "\"username\":\"%s\","
             "\"password\":\"%s\","
             "\"script\":\"%s\","
+            "\"appkey\":\"%s\","
                     "\"ssl\":%d"
             "}",_config.version,_config.basedir,_config.server,
-            _config.username,_config.password,_config.script,_config.ssl);
+            _config.username,_config.password,_config.script,q_appkey,_config.ssl);
     fclose(f);
+    free(q_appkey);
+    
     #endif
     return 0;
 }
@@ -276,6 +305,9 @@ static int system_loadConfig (lua_State *state) {
     lua_pushstring(state, _config.version);
     lua_setfield(state, -2, "version");
 
+    lua_pushstring(state, _config.appkey);
+    lua_setfield(state, -2, "appkey");
+    
     lua_pushinteger(state, _config.ssl);
     lua_setfield(state, -2, "ssl");
 
@@ -309,7 +341,8 @@ static int system_saveConfig (lua_State *state) {
             else if(strcmp(key,"username")==0) strcpy(_config.username,value);
             else if(strcmp(key,"password")==0) strcpy(_config.password,value);
             else if(strcmp(key,"script")==0) strcpy(_config.script,value);
-
+            else if(strcmp(key,"appkey")==0) strcpy(_config.appkey,value);
+            
             //printf("%s => %s\n", key, value);
         }
 

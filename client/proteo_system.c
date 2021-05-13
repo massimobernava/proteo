@@ -40,7 +40,7 @@ static int system_console (lua_State *state) {
                   "\"timestamp\":\"%s\""
                   "}",luaL_checkstring(state,1),timestamp);
         printf("%s\n",json);
-        proteo_post("/proteo/console",PROTEO_APP_KEY,Token,json,NULL,-1);
+        proteo_post("/proteo/console",config.appkey,Token,json,NULL,-1);
         
     }
   return 0;

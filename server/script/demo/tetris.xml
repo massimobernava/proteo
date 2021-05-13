@@ -1,0 +1,60 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <block type="init_function" id="7}nqfMDX!Iw)[trw),ZF" x="37" y="-288">
+    <statement name="init">
+      <block type="tetris_createtemplate" id="-9$jZvAzvz;p|eb-#7.-">
+        <statement name="controller">
+          <block type="controls_if" id="mGmvc~mx=vc!!=SSlje|">
+            <value name="IF0">
+              <block type="logic_compare" id="c1az_m|nb1;M5Pqb_n:u">
+                <field name="OP">LT</field>
+                <value name="A">
+                  <block type="tetris_getjoint" id="U)-#1BGxD;$4aM6+@gMV">
+                    <field name="joint">16</field>
+                    <field name="dir">y</field>
+                  </block>
+                </value>
+                <value name="B">
+                  <block type="tetris_getjoint" id="8[Y6q6`vKw.%q#;6KPC$">
+                    <field name="joint">12</field>
+                    <field name="dir">y</field>
+                  </block>
+                </value>
+              </block>
+            </value>
+            <statement name="DO0">
+              <block type="tetris_move" id="Q=!/`qtved4%xNptBujY">
+                <field name="joint">left</field>
+              </block>
+            </statement>
+            <next>
+              <block type="controls_if" id=";QFR}kufTmoA~W:8Q+*g">
+                <value name="IF0">
+                  <block type="logic_compare" id="MUp^uNA2bBnaj:g|vve6">
+                    <field name="OP">LT</field>
+                    <value name="A">
+                      <block type="tetris_getjoint" id="QBkx)*XMeswbbYApW`;w">
+                        <field name="joint">17</field>
+                        <field name="dir">y</field>
+                      </block>
+                    </value>
+                    <value name="B">
+                      <block type="tetris_getjoint" id="b*^XmvfpNTqJ0+SdAW,U">
+                        <field name="joint">13</field>
+                        <field name="dir">y</field>
+                      </block>
+                    </value>
+                  </block>
+                </value>
+                <statement name="DO0">
+                  <block type="tetris_move" id="4kIJJI}qR{upez(*:kbm">
+                    <field name="joint">right</field>
+                  </block>
+                </statement>
+              </block>
+            </next>
+          </block>
+        </statement>
+      </block>
+    </statement>
+  </block>
+</xml>

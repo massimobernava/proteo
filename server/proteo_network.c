@@ -213,8 +213,12 @@ void server_post(const char* url,const char* appkey, const char* token,const cha
 			lua_getglobal(L,callback);
 			lua_pushlstring(L,url,strlen(url));
 			json_object_to_table(L,jobj);
-   			int error = lua_trace_pcall(L, 2, 0);
-
+   			//int error = lua_trace_pcall(L, 2, 0);
+#ifdef DEBUGGER
+            int error = dbg_pcall(L,2,0,0);
+#else
+            int error = lua_trace_pcall(L,2,0);//lua_pcall(L, 1, 0, 0);
+#endif
    			if (error) {
        			fprintf(stderr, "ERROR pcall(%s): %s\n",callback, lua_tostring(L, -1));
        			//lua_pop(L, 1);
@@ -288,8 +292,12 @@ void server_get(const char* url,const char* appkey, const char* token,const char
 			lua_getglobal(L,callback);
 			lua_pushlstring(L,url,strlen(url));
 			json_object_to_table(L,jobj);
-   			int error = lua_trace_pcall(L, 2, 0);
-
+   			//int error = lua_trace_pcall(L, 2, 0);
+#ifdef DEBUGGER
+            int error = dbg_pcall(L,2,0,0);
+#else
+            int error = lua_trace_pcall(L,2,0);//lua_pcall(L, 1, 0, 0);
+#endif
    			if (error) {
        			fprintf(stderr, "ERROR pcall(%s): %s\n",callback, lua_tostring(L, -1));
        			//lua_pop(L, 1);

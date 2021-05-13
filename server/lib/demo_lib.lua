@@ -167,18 +167,18 @@ demo.touch=function(x,y)
 		for i=1,8 do
     		if proteo.graphics.isInside(demo.current_page.options[i].img,x,y) then
     		
-    			demo.current_page.record[#page.record+1]={}
-    			demo.current_page.record[#page.record].type="selection"
-				demo.current_page.record[#page.record].time=os.clock()
-    			demo.current_page.record[#page.record].option_id=i
-    			demo.current_page.record[#page.record].option_file=demo.current_page.options[i].file
+    			demo.current_page.record[#demo.current_page.record+1]={}
+    			demo.current_page.record[#demo.current_page.record].type="selection"
+				demo.current_page.record[#demo.current_page.record].time=os.clock()
+    			demo.current_page.record[#demo.current_page.record].option_id=i
+    			demo.current_page.record[#demo.current_page.record].option_file=demo.current_page.options[i].file
 
     			if demo.current_page.options[i].correct then
     				demo.current_page.correct()
-    				demo.current_page.record[#page.record].correct=true
+    				demo.current_page.record[#demo.current_page.record].correct=true
     			else
     				demo.current_page.wrong()
-    				demo.current_page.record[#page.record].correct=false
+    				demo.current_page.record[#demo.current_page.record].correct=false
     			end
     		end
     	end
@@ -283,12 +283,15 @@ demo.pipe = function (json_data)
   proteo.opencv.frame(demo.cap,demo.frame)
   tmp = proteo.opencv.imencode(demo.frame)
   
+  print( data['data'])
+
   for _, b in ipairs(data['data']) do
     landmarks = get_landmark(b,demo.frame,b['landmarks'])
-    --show_pose(landmarks,left_frame)
+    --DEBUG
+    --landmarks = show_landmark(b,demo.frame,b['landmarks'])
   end
 
-  	if #landmarks > 250 then
+  	if #data['data'] > 0 then
         a={}
         a.x=landmarks[8].x-landmarks[9].x
         a.y=landmarks[8].y-landmarks[9].y
@@ -304,28 +307,38 @@ demo.pipe = function (json_data)
         N.z = a.x * b.y - a.y * b.x
     
         if N.x<-300 or N.x>300 then
-        	demo.distraction_level=demo.distraction_level+1
-        	print("+ ("..N.x..")")
+        	if demo.distraction_level<demo.distraction_threshold then
+        		demo.distraction_level=demo.distraction_level+1
+        	end
         else
-        	demo.distraction_level=0
-        	print("0 ("..N.x..")")
+        	if demo.distraction_act == 1 then
+        		demo.function_attentive()
+        		demo.distraction_act = 0
+        	end
+
+        	if demo.distraction_level>0 then
+        		demo.distraction_level=demo.distraction_level-1
+        	end      	
         end
     else
-    	demo.distraction_level=demo.distraction_level+1
+    	if demo.distraction_level<demo.distraction_threshold then
+        	demo.distraction_level=demo.distraction_level+1
+        end
     end
+    print(demo.distraction_level.." ("..N.x..") nF: "..#data['data'])
 
-    if demo.distraction_level > 10 then
-    	print("ATTENZIONE")
+    if demo.distraction_level >= demo.distraction_threshold then
     	demo.function_distracted()
-    	demo.distraction_level=-100
+    	demo.distraction_level=0
+    	demo.distraction_act=1
     	demo.current_page.record[#demo.current_page.record+1]={}
     	demo.current_page.record[#demo.current_page.record].type="distracted"
     	demo.current_page.record[#demo.current_page.record].time=os.clock()
     end
 
   --DEBUG
-  proteo.opencv.flip(demo.frame,demo.frame,1)
-  proteo.graphics.changeImage(debug_img,demo.frame)
+  --proteo.opencv.flip(demo.frame,demo.frame,1)
+  --proteo.graphics.changeImage(debug_img,demo.frame)
   --=====
 
   data = {}
@@ -355,7 +368,7 @@ demo.start_callback = function(res,data)
   	demo.zmq_context = proteo.zmq.ctx_new()
   	demo.zmq_socket = proteo.zmq.socket_new(demo.zmq_context,proteo.zmq.sockType.ZMQ_REQ)
   
-  	proteo.zmq.connect(demo.zmq_socket,'tcp://poseidone.irib.cloud:5555')
+  	proteo.zmq.connect(demo.zmq_socket,'tcp://localhost:5555')
   
   	demo.frame = proteo.opencv.img()
   	demo.cap = proteo.opencv.videocapture(0)
@@ -366,12 +379,13 @@ demo.start_callback = function(res,data)
   	proteo.opencv.flip(demo.frame,demo.frame,1)
   
   	--DEBUG
-	debug_img=proteo.graphics.newImage("debug_img","@webcam",300,200,160,120)
-  	proteo.graphics.setLayer(debug_img,TOP)
-	proteo.graphics.changeImage(debug_img,demo.frame)
+	--debug_img=proteo.graphics.newImage("debug_img","@webcam",300,200,160,120)
+  --proteo.graphics.setLayer(debug_img,TOP)
+	--proteo.graphics.changeImage(debug_img,demo.frame)
 	--=====
 
 	demo.distraction_level=0
+	demo.distraction_act=0
 
   	tmp = proteo.opencv.imencode(demo.frame)
 
@@ -392,6 +406,7 @@ demo.face_detect = function(option)
 	proteo.network.proteo_post("/deepcrimson/start",'{}',demo.start_callback)
 	demo.function_attentive=option.function_attentive
 	demo.function_distracted=option.function_distracted
+	demo.distraction_threshold=option.sec*10
 end
 
 

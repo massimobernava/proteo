@@ -62,6 +62,7 @@ proteo.route.get("edit/plugins",
 		local plugins={}
 		plugins.list={}
 
+		--TODO la possibilità di modificare i plugin deve dipendere da un permesso e non dal nome utente
 		if username~="demo" then
 			for i=1,#files do
 				if ends_with(files[i],".xml") then
@@ -81,7 +82,7 @@ proteo.route.get("edit/scripts",
 
 		local files=proteo.system.dir(BASEDIR.."script/")
 		
-		if username=="demo" then
+		if username=="demo" then 
 			files=proteo.system.dir(BASEDIR.."script/demo/")
 		end
 
@@ -105,6 +106,7 @@ proteo.route.get("edit/items",
 		local items={}
 		items.items={}
 
+		--TODO le funzioni disponibili devono dipendere da un eprmesso e non dal nome
 		if username=="demo" then
 			items.items[1]={id="proteo_lib",hide=true}
 			items.items[2]={id="proteo_route",hide=true}
