@@ -1,8 +1,6 @@
 # Proteo
 
-Proteo is an open-source and cross-platform scriptable platform, highly modular and with built-in support for many useful modules for **Serious Games** implementation. Developing a cross-platform, scriptable solution for multimedia applications even with computer vision and **Deep Learning** support is a challenging task, since many different components have to be connected and tuned to reach a robust yet performative system
-
-Proteo framework is designed to develop **Serious Games** with **Deep Learning** support, it work as a general purpose glue, and wraps together several libraries::
+Proteo is an open-source and cross-platform scriptable platform, highly modular and with built-in support for many useful modules for **Serious Games** implementation. Developing a cross-platform, scriptable solution for multimedia applications even with computer vision and **Deep Learning** support is a challenging task, since many different components have to be connected and tuned to reach a robust yet performative system:
 
 - Lua for script
 - SDL for graphics and audio
@@ -14,34 +12,52 @@ Proteo framework is designed to develop **Serious Games** with **Deep Learning**
 
 Proteo consists of two main applications, Proteo Server and Proteo Client, both written in C using libraries that can be ported to the main hardware and software platforms. The API is designed to be minimal and easy: one API for client and server.
 
-![Proteo Architecture](Proteo Architecture.png)
-
-Do you want to be a full stack developer? With Proteo you just need a single programming language and a minimalist API!
+![Proteo Architecture](/Proteo_Architecture.png)
 
 Proteo is distributed under the MIT License. 
 
-## Example
+## Proteo Architecture
 
-### Server plugin
+### Server
+
+Each Proteo server exposes a REST interface depending on the active plugins. Each plugin operates independently and each endpoint is defined by a verb (in the example GET), a path and a function:
+
 ```lua
 
 local json=require "json"
 
-proteo.route.get("helloworld/hi",
+proteo.route.get("plugin_name/helloworld/hi/:name",
 
 	function(username,permission,data,param) 
   
-		local data={}
-		data["hello"]="Hi "..username
+		local response={}
+		response["hello"]="Hi "..username.." and "..param["name"]
 
-		return json.encode(data)
+		return json.encode(response)
     
 	end
 )
 
 ```
+The path can contain variables (in the example :name). The function arguments are the username, the user permissions, the data passed during the function call, and the pa-rameters passed by the path. Conventionally, the function returns a JSON string, but any string is allowed.
 
-### Client script
+There are three types of script files in Proteo: plugin, script and lib. Every type of script is written in Lua and stored in specific folders within the server root folder. Given the aim of making Proteo easy to program, in addition to being able to edit scripts manually, it is possible to act at a higher level of abstraction through visual programming.
+
+Using [Blockly](https://developers.google.com/blockly), it is possible, for instance, to translate the previous function into a block::
+
+![Blockly Example](/Blockly_example.png)
+
+In order to optimize visual programming, the aim is to further abstract the programming level through the use of libraries.  
+For example, to estimate the pose from a frame using the [Blazepose](https://google.github.io/mediapipe/solutions/pose.html) algorithm, an appropriate library has been created:
+
+![Blazepose Example](/Blaze_pose.png)
+
+Although Blockly can reproduce each of the constructs of the Lua language, it is specifically intended for users who have no development skills. In the context of serious game development, with Blockly, starting with a serious game model, we give everyone a chance to overcome technical skill barriers, and achieve autonomy. 
+
+### Client
+
+Proteo is designed following the cloud computing paradigm. A Proteo client can be an empty container: the interface, multimedia and computational resources lie on the server. During login the client receives a “task”. This task may depend on the request, but also on user’s permissions or other conditions. In addition, the client also receives the addresses of the secondary servers from the main server, thus transparently distributing the workload in the cloud. 
+
 ```lua
 
 local json=require "json"
@@ -54,7 +70,7 @@ end
 
 function init()
 
-  proteo.network.proteo_get("/helloworld/hi","hi_callback")
+  proteo.network.proteo_get("plugin_name/helloworld/hi/max",hi_callback)
 
 end
 
@@ -115,6 +131,8 @@ proteo.system.console()
 
 ## Gym Tetris
 
+![Gym Tetris](Gym_tetris.png)
+
 ## Jump'n'Bump Porting
 [Wiki](https://en.wikipedia.org/wiki/Jump_%27n_Bump)
 
@@ -122,4 +140,7 @@ proteo.system.console()
 
 ## Pose Animator Porting
 
-![](ProteoPose_small.mov)
+![Pose](Pose.png)
+
+**How to cite:**
+>Bernava, G.; Nucita, A.; Iannizzotto, G.; Caprì, T.; Fabio, R.A. Proteo: A Framework for Serious Games in Tele-rehabilitation. Preprints 2021, 2021050290 
