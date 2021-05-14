@@ -12,7 +12,7 @@ Proteo is an open-source and cross-platform scriptable platform, highly modular 
 
 Proteo consists of two main applications, Proteo Server and Proteo Client, both written in C using libraries that can be ported to the main hardware and software platforms. The API is designed to be minimal and easy: one API for client and server.
 
-![Proteo Architecture](/Proteo_Architecture.png)
+![Proteo Architecture](Proteo_Architecture.png)
 
 Proteo is distributed under the MIT License. 
 
@@ -45,12 +45,12 @@ There are three types of script files in Proteo: plugin, script and lib. Every t
 
 Using [Blockly](https://developers.google.com/blockly), it is possible, for instance, to translate the previous function into a block::
 
-![Blockly Example](/Blockly_example.png)
+![Blockly Example](Blockly_example.png)
 
 In order to optimize visual programming, the aim is to further abstract the programming level through the use of libraries.  
 For example, to estimate the pose from a frame using the [Blazepose](https://google.github.io/mediapipe/solutions/pose.html) algorithm, an appropriate library has been created:
 
-![Blazepose Example](/Blaze_pose.png)
+![Blazepose Example](Blaze_pose.png)
 
 Although Blockly can reproduce each of the constructs of the Lua language, it is specifically intended for users who have no development skills. In the context of serious game development, with Blockly, starting with a serious game model, we give everyone a chance to overcome technical skill barriers, and achieve autonomy. 
 
