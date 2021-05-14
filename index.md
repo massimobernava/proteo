@@ -1,4 +1,5 @@
-# Proteo
+
+<img src="https://github.com/massimobernava/proteo/blob/gh-pages/Logo_simple.png" width="150">
 
 Proteo is an open-source and cross-platform scriptable platform, highly modular and with built-in support for many useful modules for **Serious Games** implementation. Developing a cross-platform, scriptable solution for multimedia applications even with computer vision and **Deep Learning** support is a challenging task, since many different components have to be connected and tuned to reach a robust yet performative system:
 
