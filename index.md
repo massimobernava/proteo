@@ -87,15 +87,7 @@ end
 
 ## Client 
 
-### Linux
-Test: Ubuntu ... Raspberry ...
-
-### OSX
-
-### iOs
-
-### Windows
-
+Choose, [red pill](https://github.com/massimobernava/proteo/blob/master/README.md) and continue to compile, [blue pill](https://github.com/massimobernava/proteo/releases) and download one of the releases.
 
 ## Config
 
