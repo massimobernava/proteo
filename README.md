@@ -56,6 +56,8 @@ sudo ./install.sh
 
 ## Client 
 
+Choose, red pill and continue to compile, [blue pill](https://github.com/massimobernava/proteo/releases) and download one of the releases.
+
 ### Linux
 Test: Ubuntu ... Raspberry ...
 
