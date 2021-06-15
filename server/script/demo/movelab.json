@@ -1,4 +1,5 @@
 {
 	"version": "0.1",
-	"plugins": ["proteo","deepcrimson"]
+	"plugins": ["proteo","deepcrimson"],
+	"libs":["json","md5","inspect","tfl_utility"]
 }

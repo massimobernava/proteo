@@ -241,7 +241,7 @@ static int host_create(lua_State *l) {
 			if (!lua_isnil(l, 2)) peer_count = luaL_checkint(l, 2);
 	}
 
-	if(debug) printf("host create, peers=%d, channels=%d, in=%d, out=%d\n",
+    if(debug) printf("host create, peers=%zu, channels=%zu, in=%d, out=%d\n",
 			peer_count, channel_count, in_bandwidth, out_bandwidth);
 	host = enet_host_create(have_address ? &address : NULL, peer_count,
 			channel_count, in_bandwidth, out_bandwidth);

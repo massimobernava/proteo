@@ -176,6 +176,9 @@ void updatetxt(ProteoComponent* pc,SDL_Renderer* renderer)
 
     }*/
     pc->surface = getTxtSurface(pc);
+#ifdef USEOPENGL
+        GL_ResizeSurface(pc);
+#endif
 	pc->texture = SDL_CreateTextureFromSurface(renderer, pc->surface);
 }
 
@@ -184,6 +187,12 @@ static int gui_getText (lua_State *state) {
   ProteoComponent* pc=toProteoComponent(state,1);
   if(verbose) printf("gui.getText\n");
 
+    if(pc->txt==NULL)
+    {
+        lua_pushnil(state);
+        return 1;
+    }
+    
     if(pc->type==DropDown)
     {
         //TODO per il dropdown deve tornare il testo del controller o quello del child selezionato?
@@ -328,7 +337,7 @@ static int gui_setHidden (lua_State *state) {
 
   ProteoComponent* pc=toProteoComponent(state,1);
 
-  if(pc!=NULL  && pc->type==Deleted) return 0;
+  if(pc==NULL || pc->type==Deleted) return 0;
 
   const int hidden=lua_toboolean(state,2);
   pc->hidden=hidden;
@@ -723,6 +732,7 @@ static int gui_newListItem (lua_State *state) {
     pc->layer=100;
     pc->font=newFont(font2path(font), font_size);
     //strcpy(pc->txt,txt);
+    pc->txt=NULL;
     if(txt!=NULL && strlen(txt)>0)
     {
         pc->txt=malloc(strlen(txt)+1);
@@ -762,6 +772,31 @@ static int gui_eventLabel (lua_State *state,ProteoComponent* label,SDL_Event e,S
 {
   return FALSE;
 }
+
+#ifdef USEOPENGL
+static int gui_drawLabel_GL  (ProteoComponent* label)
+{
+    SDL_Rect label_rect=label->rect;
+    SDL_Rect texture_rect=label->texture_rect;
+
+    if(label->parent!=NULL)
+    {
+        label_rect.x+=label->parent->rect.x;
+        label_rect.y+=label->parent->rect.y;
+
+        texture_rect.x+=label->parent->rect.x;
+        texture_rect.y+=label->parent->rect.y;
+    }
+
+    GL_SetRenderDrawColor(label->color.r, label->color.g, label->color.b, label->color.a );
+    GL_RenderFillRect(& label_rect );
+
+    if(label->texture)
+        GL_RenderCopy(label->surface, NULL, & texture_rect );
+
+    return 1;
+}
+#endif
 
 static int gui_drawLabel  (SDL_Renderer* renderer,ProteoComponent* label)
 {
@@ -857,16 +892,28 @@ static int gui_newLabel (lua_State *state) {
     else
     {
 
-    /*int w,h;
-    TTF_SizeText(pc->font->font,txt,&w,&h);
-    pc->texture_rect.x=pos_x;
-    pc->texture_rect.y=pos_y;
-    pc->texture_rect.w=w;
-    pc->texture_rect.h=h;*/
+/*#ifdef USEOPENGL
+        //Find the first power of two for OpenGL image
+        int w,h;
+        TTF_SizeText(pc->font->font,txt,&w,&h);
+        pc->texture_rect.x=pos_x;
+        pc->texture_rect.y=pos_y;
+        SDL_Color Col = {pc->component.label.font_color.r, pc->component.label.font_color.g, pc->component.label.font_color.b};
+        SDL_Surface *tmp_surface=TTF_RenderText_Blended(pc->font->font, txt, Col);
+        pc->texture_rect.w = power_two_floor(w)*2;
+        pc->texture_rect.h = power_two_floor(h)*2;
+
+        pc->surface = SDL_CreateRGBSurface(0, pc->texture_rect.w, pc->texture_rect.h, 32, 0x00ff0000,0x0000ff00,0x000000ff,0xff000000);
+          SDL_BlitSurface(tmp_surface, NULL, pc->surface, NULL);
+        SDL_FreeSurface(tmp_surface);
+#else*/
+        
         pc->texture_rect=getTextureRect(pc);
-        /*SDL_Color Col = {pc->component.label.font_color.r, pc->component.label.font_color.g, pc->component.label.font_color.b};
-        pc->surface = TTF_RenderText_Blended(pc->font->font, txt, Col);*/
         pc->surface = getTxtSurface(pc);
+//#endif
+#ifdef USEOPENGL
+        GL_ResizeSurface(pc);
+#endif
         pc->texture = SDL_CreateTextureFromSurface(gRenderer, pc->surface);
     }
 
@@ -1047,6 +1094,49 @@ int proteo_makecursor(SDL_Rect *rect,ProteoComponent* textfield)
   return 0;
 }
 
+#ifdef USEOPENGL
+static int gui_drawTextField_GL (ProteoComponent* textfield)
+{
+    SDL_Rect textfield_rect=textfield->rect;
+    SDL_Rect texture_rect=textfield->texture_rect;
+
+    if(textfield->parent!=NULL)
+    {
+        textfield_rect.x+=textfield->parent->rect.x;
+        textfield_rect.y+=textfield->parent->rect.y;
+
+        texture_rect.x+=textfield->parent->rect.x;
+        texture_rect.y+=textfield->parent->rect.y;
+    }
+
+  GL_SetRenderDrawColor(textfield->color.r, textfield->color.g, textfield->color.b, textfield->color.a );
+  GL_RenderFillRect( & textfield_rect );
+
+ // GL_RenderSetClipRect(&textfield_rect);
+    
+  if(textfield->texture!=NULL) GL_RenderCopy(textfield->surface, NULL, & texture_rect );
+
+  if(textfield==selected)
+  {
+      blinkCursor++;
+      if(blinkCursor<30)
+      {
+          GL_SetRenderDrawColor( textfield->component.textfield.font_color.r,
+                                 textfield->component.textfield.font_color.g,
+                                 textfield->component.textfield.font_color.b,
+                                 255 );
+          SDL_Rect cursor;
+          proteo_makecursor(&cursor,textfield);
+          GL_RenderFillRect( & cursor );
+      }
+      else if (blinkCursor>60) blinkCursor=0;
+  }
+  //  GL_RenderSetClipRect(NULL);
+
+  return TRUE;
+}
+#endif
+
 static int gui_drawTextField (SDL_Renderer* renderer,ProteoComponent* textfield)
 {
     SDL_Rect textfield_rect=textfield->rect;
@@ -1217,6 +1307,56 @@ static int gui_eventButton (lua_State *state,ProteoComponent* button,SDL_Event e
   return FALSE;
 }
 
+#ifdef USEOPENGL
+static int gui_drawButton_GL (ProteoComponent* button)
+{
+    SDL_Rect button_rect=button->rect;
+    SDL_Rect texture_rect=button->texture_rect;
+
+    if(button->parent!=NULL)
+    {
+        button_rect.x+=button->parent->rect.x;
+        button_rect.y+=button->parent->rect.y;
+
+        texture_rect.x+=button->parent->rect.x;
+        texture_rect.y+=button->parent->rect.y;
+    }
+  ProteoColor bcol={button->color.a,button->color.r,button->color.g,button->color.b};
+  if(button->enabled)
+  {
+    int x,y;
+
+    SDL_GetMouseState(&x,&y);
+    SDL_Point point={x/gScale,y/gScale};
+
+    if(SDL_PointInRect(&point,&button_rect))
+    {
+      bcol=brightness(button->color,1.1f);
+
+    }
+
+  }
+  else
+  {
+    bcol=saturation(button->color,0.3f);
+
+  }
+    
+    GL_SetRenderDrawColor(button->colorB.r, button->colorB.g, button->colorB.b, button->colorB.a);
+    SDL_Rect border={button_rect.x-button->component.button.border_size,button_rect.y-button->component.button.border_size,
+        button_rect.w+2*button->component.button.border_size,button_rect.h+2*button->component.button.border_size};
+    GL_RenderFillRoundRect(& border,button->component.button.rounded?0.2:0 );
+    
+    GL_SetRenderDrawColor(bcol.r, bcol.g, bcol.b, bcol.a);
+    
+    GL_RenderFillRoundRect(& button_rect,button->component.button.rounded?0.2:0 );
+    
+  if(button->texture!=NULL) GL_RenderCopy(button->surface, NULL, & texture_rect );
+
+  return 1;
+}
+#endif
+
 static int gui_drawButton (SDL_Renderer* renderer,ProteoComponent* button)
 {
     SDL_Rect button_rect=button->rect;
@@ -1348,11 +1488,9 @@ static int gui_newButton (lua_State *state) {
 
   if(!pc->font->font) {
       if(verbose) printf("Font newButton(%d) error: %s\n",currentline(state), TTF_GetError());
-
   }
   else
   {
-
     /*int w,h;
     TTF_SizeText(pc->font->font,txt,&w,&h);
     pc->texture_rect.x=pos_x+(width-w)/2;
@@ -1363,6 +1501,9 @@ static int gui_newButton (lua_State *state) {
       /*SDL_Color Col = {pc->component.button.font_color.r, pc->component.button.font_color.g, pc->component.button.font_color.b};
       pc->surface = TTF_RenderText_Blended(pc->font->font, txt, Col);*/
       pc->surface = getTxtSurface(pc);
+#ifdef USEOPENGL
+        GL_ResizeSurface(pc);
+#endif
       pc->texture = SDL_CreateTextureFromSurface(gRenderer, pc->surface);
   }
 
@@ -1960,6 +2101,90 @@ static int gui_newDropDownItem (lua_State *state)
 //==============================================================================
 //   Form
 //==============================================================================
+#ifdef USEOPENGL
+static int gui_drawForm_GL (ProteoComponent* form)
+{
+    ProteoColor back_color={form->component.form.back_color.a,form->component.form.back_color.r,form->component.form.back_color.g,form->component.form.back_color.b};
+    ProteoColor bar_color={form->component.form.bar_color.a,form->component.form.bar_color.r,form->component.form.bar_color.g,form->component.form.bar_color.b};
+
+    if(form->enabled)
+    {
+      int x,y;
+      SDL_GetMouseState(&x,&y);
+      SDL_Point point={x/gScale,y/gScale};
+
+
+      if(SDL_PointInRect(&point,&form->rect))
+      {
+          //back_color=brightness(form->component.form.back_color,1.1f);
+          bar_color=brightness(form->component.form.bar_color,1.1f);
+      }
+    }
+    else
+    {
+        back_color=saturation(form->component.form.back_color,0.3f);
+        bar_color=saturation(form->component.form.bar_color,0.3f);
+    }
+
+    if(form->component.form.state==2)
+    {
+        GL_SetRenderDrawColor(back_color.r,back_color.g, back_color.b, back_color.a );
+        GL_RenderFillRect(& form->rect );
+    }
+    
+    if((form->component.form.mode & 2) == 0)
+    {
+
+        GL_SetRenderDrawColor(bar_color.r,
+                               bar_color.g, bar_color.b, bar_color.a );
+        SDL_Rect bar;
+        bar.x=form->rect.x;
+        bar.y=form->rect.y;
+        bar.w=form->rect.w;
+        bar.h=form->component.form.bar_size;
+        GL_RenderFillRect( & bar);
+
+        SDL_Rect texture_rect=form->texture_rect;
+        texture_rect.x+=form->rect.x;
+        texture_rect.y+=form->rect.y;//+(form->component.form.bar_size-form->texture_rect.h)/2;
+        //if(form->texture!=NULL) SDL_RenderCopy(renderer, form->texture, NULL, & form->texture_rect );
+        if(form->texture!=NULL) GL_RenderCopy(form->surface,NULL,&texture_rect);
+
+        ProteoColor button_color=brightness(form->component.form.bar_color,0.9f);
+    }
+    
+    if(form->component.form.state==2)
+    {
+        //ProteoComponent* current=form->component.form.child_next;
+       // while(current!=NULL)
+            for(int i=0;i<form->component.form.nchilds;i++)
+        {
+            ProteoComponent* current=form->component.form.childs[i];
+            if(current->type!=Deleted && current->hidden==FALSE)
+            {
+                //SDL_SetRenderDrawBlendMode(renderer,SDL_BLENDMODE_BLEND);
+                if(current->type==Rect) graphics_drawRect_GL (current);
+                //else if(current->type==Ellips) graphics_drawEllipse (renderer,current);
+                else if(current->type==Label)  gui_drawLabel_GL (current);
+                //else if(current->type==Image) graphics_drawImage (renderer,current);
+                //else if(current->type==Icon) graphics_drawIcon (renderer,current);
+                //else if(current->type==Polyg) graphics_drawPolygon (renderer,current);
+                else if(current->type==Button) gui_drawButton_GL (current);
+                else if(current->type==TextField) gui_drawTextField_GL (current);
+                //else if(current->type==List) gui_drawList (renderer,current);
+                //else if(current->type==Checkbox) gui_drawCheckbox (renderer,current);
+                //else if(current->type==Sprite) graphics_drawSprite (renderer,current);
+                //else if(current->type==DropDown) gui_drawDropDown (renderer,current);
+                else if(current->type==Form) gui_drawForm_GL (current);
+            }
+            //current=current->component.form.child_next;
+        }
+    }
+    
+    return 1;
+}
+#endif
+
 static int gui_drawForm (SDL_Renderer* renderer,ProteoComponent* form)
 {
     ProteoColor back_color={form->component.form.back_color.a,form->component.form.back_color.r,form->component.form.back_color.g,form->component.form.back_color.b};
@@ -2003,9 +2228,10 @@ static int gui_drawForm (SDL_Renderer* renderer,ProteoComponent* form)
         bar.h=form->component.form.bar_size;
         SDL_RenderFillRect( renderer, & bar);
 
-        form->texture_rect.x=10+form->rect.x;
-        form->texture_rect.y=form->rect.y+(form->component.form.bar_size-form->texture_rect.h)/2;
-        if(form->texture!=NULL) SDL_RenderCopy(renderer, form->texture, NULL, & form->texture_rect );
+        SDL_Rect texture_rect=form->texture_rect;
+        texture_rect.x+=form->rect.x;
+        texture_rect.y+=form->rect.y;//+(form->component.form.bar_size-form->texture_rect.h)/2;
+        if(form->texture!=NULL) SDL_RenderCopy(renderer, form->texture, NULL, & texture_rect );
 
         ProteoColor button_color=brightness(form->component.form.bar_color,0.9f);
 
@@ -2264,10 +2490,16 @@ static int gui_newForm (lua_State *state) {
         int w,h;
         TTF_SizeText(pc->font->font,title,&w,&h);
         pc->texture_rect.x=10;//(width-w)/2;
-        pc->texture_rect.y=(bar_size-h)/2;
+        pc->texture_rect.y=(bar_size-h)/2; //ATTENZIONE vengono sovrascritti durante il draw
+        
         pc->texture_rect.w=w;
         pc->texture_rect.h=h;
         pc->surface = TTF_RenderText_Blended(pc->font->font, title, Col);
+        
+#ifdef USEOPENGL
+        GL_ResizeSurface(pc);
+#endif
+        
         pc->texture = SDL_CreateTextureFromSurface(gRenderer, pc->surface);
     }
 

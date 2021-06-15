@@ -368,7 +368,7 @@ demo.start_callback = function(res,data)
   	demo.zmq_context = proteo.zmq.ctx_new()
   	demo.zmq_socket = proteo.zmq.socket_new(demo.zmq_context,proteo.zmq.sockType.ZMQ_REQ)
   
-  	proteo.zmq.connect(demo.zmq_socket,'tcp://localhost:5555')
+  	proteo.zmq.connect(demo.zmq_socket,'tcp://poseidone.irib.cloud:5555')
   
   	demo.frame = proteo.opencv.img()
   	demo.cap = proteo.opencv.videocapture(0)

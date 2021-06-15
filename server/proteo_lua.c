@@ -35,6 +35,7 @@ static int traceback(lua_State *state) {
 }
 
 sem_t* lua_sem;
+
 int lua_trace_pcall( lua_State* state, int nargs, int nret ) {
 
     //sem_wait(lua_sem);
@@ -46,6 +47,7 @@ int lua_trace_pcall( lua_State* state, int nargs, int nret ) {
   lua_insert( state, hpos );
 
   ret = lua_pcall( state, nargs, nret, hpos );
+
 
   lua_remove( state, hpos );
     //sem_post(lua_sem);
@@ -81,5 +83,5 @@ void init(lua_State *state,const char* app)  //chiamato da initLUA
 void closeLUA()
 {
     lua_close(L);
-    sem_close(lua_sem);
+    if(lua_sem!=SEM_FAILED) sem_close(lua_sem);
 }

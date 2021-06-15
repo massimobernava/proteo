@@ -1,4 +1,5 @@
 {
 	"version": "0.1",
-	"plugins": ["proteo"]
+	"plugins": ["proteo"],
+	"libs":["json","skl_utility","tfl_utility"]
 }

@@ -44,7 +44,7 @@ static int system_fileexist(lua_State *state) {
 static int system_document(lua_State *state) {
   if(verbose) printf("system.document\n");
   //lua_pushliteral(state,"./");
-  lua_pushlstring(state,basedir,strlen(basedir));
+  lua_pushlstring(state,config.basedir,strlen(config.basedir));
   return 1;
 }
 
@@ -186,6 +186,8 @@ static int system_createTimer(lua_State *state) {
         
 	ProteoTimer* pt=pushProteoTimer(state);
 	
+    printf("Create timer ms: %f\n",time);
+    
     pt->time=time;
     //pt->callback=callback;
     
@@ -320,8 +322,8 @@ void sendMail(const char* to_mail, const char* from_mail, const char* cc_mail, c
     curl = curl_easy_init();
     if(curl) {
         /* Set username and password */
-        curl_easy_setopt(curl, CURLOPT_USERNAME, "");
-        curl_easy_setopt(curl, CURLOPT_PASSWORD, "");
+        curl_easy_setopt(curl, CURLOPT_USERNAME, "massimo.bernava@gmail.com");
+        curl_easy_setopt(curl, CURLOPT_PASSWORD, "juzbjdkglpzhspnf");
      
         /* This is the URL for your mailserver. Note the use of smtps:// rather
          * than smtp:// to request a SSL based connection. */

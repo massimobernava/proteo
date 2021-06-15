@@ -16,11 +16,15 @@ libs["json"]="lib/json.lua"
 libs["room"]="lib/room.lua"
 libs["md5"]="lib/md5.lua"
 libs["bit"]="lib/numberlua.lua"
+--libs["bit32"]="lib/numberlua.lua"
 libs["matrix"]="lib/matrix.lua"
 libs["base64"]="lib/base64.lua"
 libs["aeslua"]="lib/aeslua.lua"
 libs["inspect"]="lib/inspect.lua"
 libs["tfl_utility"]="lib/tfl_utility.lua"
+libs["tfl_blazepose"]="lib/tfl_blazepose.lua"
+libs["tfl_blazeface"]="lib/tfl_blazeface.lua"
+libs["tfl_hand"]="lib/tfl_hand.lua"
 libs["skl_utility"]="lib/skl_utility.lua"
 
 libs["demo_lib"]="lib/demo_lib.lua"
@@ -90,6 +94,27 @@ proteo.route.get("proteo/scriptandlibs/:script",
 
 		--print("GET SCRIPT PERMISSION: "..permission)
 
+		if username=="demo" then --TODO può diventare l'opzione di default cercare lo script ANCHE nella cartella del proprio utente
+								 --potrebbe essere un modo per testare gli script prima di rilasciarli nella cartella comune
+			script={}
+			script["type"]="SCRIPT"
+			script["result"]="OK"
+			data=proteo.system.readFile(BASEDIR.."script/"..username.."/"..param["script"]..".lua")
+			script["script"]=data
+			script["libs"]={}
+
+			local script_info=json.decode(proteo.system.readFile(BASEDIR.."script/"..username.."/"..param["script"]..".json"))
+		
+			if script_info["libs"]~=nil then
+				for i=1,#script_info["libs"] do
+					local lib_name=script_info["libs"][i]
+					script["libs"][lib_name]=proteo.system.readFile(BASEDIR..libs[lib_name])
+				end
+			end
+			
+			return json.encode(script)
+		end
+
 		local permitted=false
 		for i=1,#permission do
 			print("PERMISSION: "..permission[i])
@@ -147,7 +172,7 @@ proteo.route.get("proteo/script/:script",
 			script={}
 			script["type"]="SCRIPT"
 			script["result"]="OK"
-			data=proteo.system.readFile(BASEDIR.."script/demo/"..param["script"]..".lua")
+			data=proteo.system.readFile(BASEDIR.."script/"..username.."/"..param["script"]..".lua")
 			script["script"]=data
 
 			return json.encode(script)

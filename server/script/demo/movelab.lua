@@ -27,39 +27,74 @@ colors.button_font="black"
 colors.button_back="aliceblue"
 colors.button_border="black"
 
+
+
 function selectvideo(sel)
 
     selected_video=videos[proteo.system.getName(sel)]
+    print("Selected video: "..selected_video)
+    --video_cap=proteo.opencv.videocapture("http://localhost:8888/sample_video.avi")
 
 end
+
+function frame_update(dt)
+
+  --analyzeframe(current_frame)
+  --frame_wl=proteo.opencv.img()
+  --proteo.opencv.copy(current_video[current_frame].frame,frame_wl)
+
+  --proteo.graphics.changeImage(video_img,frame_wl)
+
+  --current_frame=current_frame+1
+
+  analyzeframe(current_frame)
+
+  current_frame=current_frame+1
+
+  if current_frame>#current_video then
+    proteo.system.stopTimer(frame_timer)
+  end  
+end
+
+frame_timer=proteo.system.createTimer(50,frame_update)
 
 function landmarks_callback(res,data)
 	frame_wl=proteo.opencv.img()
 	--proteo.opencv.setSize(current_video[current_frame].frame_wl,video_size.x,video_size.y)
   	proteo.opencv.copy(current_video[current_frame].frame,frame_wl)
 
+    current_video[current_frame].request=data['request']
   	current_video[current_frame].data=data['data']
+    current_video[current_frame].landmarks={}
 
-  	for _, b in ipairs(data['data']) do
-    	landmarks = show_landmark(b,frame_wl,b['landmarks'])
+  	for i, b in ipairs(data['data']) do
+      --print("Center X:"..landmarks[1].x.." Y:"..landmarks[1].y)
+      landmarks = get_landmark(b,frame_wl,b['landmarks'])
+      current_video[current_frame].landmarks[i]=landmarks
+
+      if data['request']=="TFLPOSE" or data['request']=="TFLHOLI" then
+        show_pose(landmarks,frame_wl)
+      elseif data['request'] == "TFLFACE" then
+        show_facemesh(landmarks,frame_wl)
+      else
+        show_hand(landmarks,frame_wl)
+      end
   	end
 
+  if current_video[current_frame].request=="TFLHOLI" then
+    for _, b in ipairs(data['face']) do
+      landmarks = show_landmark(b,frame_wl,b['landmarks'])
+    end
+  end
+    
 
   	proteo.graphics.changeImage(video_img,frame_wl)
 
+    
 end
 
-function analysevideo(sender)
-
-    sel=proteo.gui.getValue(drop_video)
-    if sel==nil then 
-        return
-    end
-    --proteo.opencv.resize(video_frame,video_resized)
-    --proteo.opencv.cropImg(video_frame,video_resized,(videosize[2]-456)/2,(videosize[1]-256)/2,456,256)   
-
-    --proteo.opencv.convert(current_video[videoframe].frame,current_video[videoframe].frame,proteo.opencv.matType.CV_32F)
-    local tmp=proteo.opencv.imencode(current_video[current_frame].frame)
+function analyzeframe(nframe)
+  local tmp=proteo.opencv.imencode(current_video[nframe].frame)
             
     local data={}
     data['type']='FRAME'
@@ -69,6 +104,10 @@ function analysevideo(sender)
         data["request"]="TFLFACE"
     elseif proteo.gui.getId(sel)=="drop_gui_pose" then
         data["request"]="TFLPOSE"
+    elseif proteo.gui.getId(sel)=="drop_gui_holi" then
+        data["request"]="TFLHOLI"
+    elseif proteo.gui.getId(sel)=="drop_gui_hand" then
+        data["request"]="TFLHAND"
     end
 
     data["frame"]=tmp
@@ -76,22 +115,64 @@ function analysevideo(sender)
     local js=json.encode(data)
 
     proteo.network.proteo_post("/deepcrimson/landmarks",js,landmarks_callback)
+end
 
+function analyzecurrentframe(sender)
+
+    sel=proteo.gui.getValue(drop_video)
+    if sel==nil then 
+        return
+    end
+
+  analyzeframe(current_frame)
+    
+end
+
+function analyzevideo(sender)
+
+    sel=proteo.gui.getValue(drop_video)
+    if sel==nil then 
+        return
+    end
+
+    current_frame=1
+    proteo.system.startTimer(frame_timer)
+    
+end
+
+function savedata(sender)
+
+  for i=1,#current_video do
+    if current_video[i].landmarks~=nil then
+      for j=1,#current_video[i].landmarks do
+        row="Frame"..i..",Box"..j
+        for k=1,#current_video[i].landmarks[j] do
+          row=row..","..current_video[i].landmarks[j][k].x
+          row=row..","..current_video[i].landmarks[j][k].y
+          row=row..","..current_video[i].landmarks[j][k].z
+        end
+        print(row)
+      end
+    end
+  end
 end
 
 function showvideo(sender)
     if selected_video~=nil then
         current_video={}
         --data=proteo.system.readFile(selected_file,readfile)
+        --selected_video="http://localhost:8888/sample_video.avi"
+
+        --In modalità web la fase di videocapture richiede un'attesa prima di richiedere il frame, per adesso ho spostato in selectvideo
         video_cap=proteo.opencv.videocapture(selected_video)
         local i=1
         video_frame=proteo.opencv.img()
 
         while proteo.opencv.frame(video_cap,video_frame)==1 do
+        --if proteo.opencv.frame(video_cap,video_frame)==1 then
             current_video[i]={}
 
             current_video[i].frame=proteo.opencv.img()
-
             proteo.opencv.setImg(current_video[i].frame,video_size.x,video_size.y,"#000000") 
             proteo.opencv.resize(video_frame,current_video[i].frame)
             --proteo.opencv.infoImg(current_video[i].frame)
@@ -99,7 +180,6 @@ function showvideo(sender)
         end
         
         current_frame=1
-        
         proteo.graphics.changeImage(video_img,current_video[current_frame].frame)
         
     end
@@ -114,10 +194,15 @@ function nextvideo(sender)
     	frame_wl=proteo.opencv.img()
 		proteo.opencv.copy(current_video[current_frame].frame,frame_wl)
 
-  		for _, b in ipairs(current_video[current_frame].data) do
-    		landmarks = show_landmark(b,frame_wl,b['landmarks'])
-  		end
-
+      for i=1,#current_video[current_frame].landmarks do
+        if current_video[current_frame].request == "TFLPOSE" or current_video[current_frame].requestv=="TFLHOLI" then
+          show_pose(current_video[current_frame].landmarks[i],frame_wl)
+        elseif current_video[current_frame].request == "TFLFACE" then
+          show_facemesh(current_video[current_frame].landmarks[i],frame_wl)
+        else
+          show_hand(current_video[current_frame].landmarks[i],frame_wl)
+        end
+      end
   		proteo.graphics.changeImage(video_img,frame_wl)
 
     else
@@ -136,10 +221,15 @@ function prevvideo(sender)
     	frame_wl=proteo.opencv.img()
 		proteo.opencv.copy(current_video[current_frame].frame,frame_wl)
 
-  		for _, b in ipairs(current_video[current_frame].data) do
-    		landmarks = show_landmark(b,frame_wl,b['landmarks'])
-  		end
-
+      for i=1,#current_video[current_frame].landmarks do
+        if current_video[current_frame].request == "TFLPOSE" or current_video[current_frame].requestv=="TFLHOLI" then
+          show_pose(current_video[current_frame].landmarks[i],frame_wl)
+        elseif current_video[current_frame].request == "TFLFACE" then
+          show_facemesh(current_video[current_frame].landmarks[i],frame_wl)
+        else
+          show_hand(current_video[current_frame].landmarks[i],frame_wl)
+        end
+      end
   		proteo.graphics.changeImage(video_img,frame_wl)
 
     else
@@ -155,16 +245,22 @@ function create_page()
   	video_load=proteo.gui.newList('video_load','','Helvetica',30,colors.list_font,colors.list_back,MIN_X+20,150,500,400,selectvideo)
     show_video=proteo.gui.newButton('show_video',"Show>>",'Helvetica',25,colors.button_font,colors.button_back,1,colors.button_border,true,MIN_X + 420 ,MAX_Y - 220,100,50,showvideo)
     video_img=proteo.graphics.newImage("video","@video",800,350,video_size.x,video_size.y)
-	next_video=proteo.gui.newButton('next_video',">>",'Helvetica',25,colors.button_font,colors.button_back,1,colors.button_border,true,MIN_X + 650 ,MAX_Y - 120,100,50,nextvideo)
-    prev_video=proteo.gui.newButton('prev_video',"<<",'Helvetica',25,colors.button_font,colors.button_back,1,colors.button_border,true,MIN_X + 500 ,MAX_Y - 120,100,50,prevvideo)
+	  next_video=proteo.gui.newButton('next_video',">>",'Helvetica',25,colors.button_font,colors.button_back,1,colors.button_border,true,MIN_X + 500 ,MAX_Y - 120,100,50,nextvideo)
+    prev_video=proteo.gui.newButton('prev_video',"<<",'Helvetica',25,colors.button_font,colors.button_back,1,colors.button_border,true,MIN_X + 350 ,MAX_Y - 120,100,50,prevvideo)
     
-    analyse_video=proteo.gui.newButton('analyse_video',"Analyse",'Helvetica',25,colors.button_font,colors.button_back,1,colors.button_border,true,MIN_X + 800 ,MAX_Y - 120,300,50,analysevideo)
+    analyze_frame=proteo.gui.newButton('analyse_frame',"Analyze Frame",'Helvetica',20,colors.button_font,colors.button_back,1,colors.button_border,true,MIN_X + 650 ,MAX_Y - 120,150,50,analyzecurrentframe)
+    analyze_video=proteo.gui.newButton('analyse_video',"Analyze All",'Helvetica',20,colors.button_font,colors.button_back,1,colors.button_border,true,MIN_X + 820 ,MAX_Y - 120,150,50,analyzevideo)
+    save_data=proteo.gui.newButton('analyse_video',"Save",'Helvetica',25,colors.button_font,colors.button_back,1,colors.button_border,true,MIN_X + 990 ,MAX_Y - 120,150,50,savedata)
     
-    drop_video=proteo.gui.newDropDown('drop_video',"Select Mode",'Helvetica',20,colors.button_font,colors.button_back,"",proteo.gui.DropDownType.Normal,colors.button_back,MIN_X+200 ,MAX_Y - 110,200,30,"")
+    drop_video=proteo.gui.newDropDown('drop_video',"Select Mode",'Helvetica',20,colors.button_font,colors.button_back,"",proteo.gui.DropDownType.Normal,colors.button_back,MIN_X+50 ,MAX_Y - 150,200,30,"")
     drop_gui_pose=proteo.gui.newDropDownItem('drop_gui_pose',"BlazePose",'Helvetica',20,colors.button_font,colors.button_back,"","",200,30)
     drop_gui_face=proteo.gui.newDropDownItem('drop_gui_face',"BlazeFace",'Helvetica',20,colors.button_font,colors.button_back,"","",200,30)
+    drop_gui_hand=proteo.gui.newDropDownItem('drop_gui_hand',"Hand",'Helvetica',20,colors.button_font,colors.button_back,"","",200,30)
+    drop_gui_holi=proteo.gui.newDropDownItem('drop_gui_holi',"Holistic",'Helvetica',20,colors.button_font,colors.button_back,"","",200,30)
     proteo.gui.addItem(drop_video,drop_gui_pose)
     proteo.gui.addItem(drop_video,drop_gui_face)
+    proteo.gui.addItem(drop_video,drop_gui_hand)
+    proteo.gui.addItem(drop_video,drop_gui_holi)
 
     proteo.gui.addItem(form,video_load)
     proteo.gui.addItem(form,video_img)
@@ -172,7 +268,9 @@ function create_page()
     proteo.gui.addItem(form,next_video)
     proteo.gui.addItem(form,prev_video)
     proteo.gui.addItem(form,drop_video)
-    proteo.gui.addItem(form,analyse_video)
+    proteo.gui.addItem(form,analyze_video)
+    proteo.gui.addItem(form,analyze_frame)
+    proteo.gui.addItem(form,save_data)
 
     page={}
     page.form=form
@@ -189,11 +287,17 @@ function load_list(video_list)
         proteo.system.document(),
         "%a*avi$",
         function(filename)
+          print("Found:"..filename)
 
+          --if EMSCRIPTEN==0 then
             videos[md5.sumhexa(filename)]=filename
-
             list_item_file=proteo.gui.newListItem(md5.sumhexa(filename),proteo.system.basename(filename),'Helvetica',15,colors.list_font,colors.list_back,"","",500,50)
-            proteo.gui.addItem(video_list,list_item_file)
+          --else
+          --  videos[filename]=filename
+          --  list_item_file=proteo.gui.newListItem(filename,proteo.system.basename(filename),'Helvetica',15,colors.list_font,colors.list_back,"","",500,50)
+          --end
+
+          proteo.gui.addItem(video_list,list_item_file)
         end
         )
 end
@@ -203,12 +307,19 @@ function start_callback(res,data)
 	current_session = data['session']
 end
 
+function download_callback()
+
+end
 
 function init()
 
 	home=create_page()
 	load_list(home.video_load)
 	
+  --if EMSCRIPTEN==1 then
+  --  proteo.network.download("sample_video.avi","/proteo/sample_video.avi","download_callback")
+  --end
+
 	proteo.network.proteo_post("/deepcrimson/start",'{}',start_callback)
 
 	proteo.gui.setHidden(home.form,false)

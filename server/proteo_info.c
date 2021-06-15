@@ -5,20 +5,66 @@ struct MemoryStruct {
 
 int addTicket(const char* app,const char* url,int value)
 {
-	//TODO
-    //Lua script
+    lua_getglobal(L,"ticket_add");
+    lua_pushlstring(L,app,strlen(app));
+    lua_pushlstring(L,url,strlen(url));
+    lua_pushinteger(L, value);
     
+#ifdef DEBUGGER
+        int error = dbg_pcall(L,3,1,0);
+#else
+        int error = lua_trace_pcall(L,3,1);//lua_pcall(L, 1, 0, 0);
+#endif
+    
+    if (error) {
+        printf("ERROR pcall(ticket_add): %s\n", lua_tostring(L, -1));
+        //lua_pop(L, 1);
+        if(verbose) printf("Add ticket GetTop %d\n",lua_gettop(L));
+        return 1;
+        
+    }
+    
+    return 0;
 	//IF SQLITE
-	return sqlite_addTicket(app,url,value);
+	//return sqlite_addTicket(app,url,value);
 }
 
 int getTicket(const char* app,char** url)
 {
-	//TODO
-    //Lua script
+    lua_getglobal(L,"ticket_get");
+    lua_pushlstring(L,app,strlen(app));
+    //int error = lua_trace_pcall(L, 6, 1);
+#ifdef DEBUGGER
+        int error = dbg_pcall(L,1,1,0);
+#else
+        int error = lua_trace_pcall(L,1,1);//lua_pcall(L, 1, 0, 0);
+#endif
     
+    if (error) {
+        printf("ERROR pcall(ticket_get): %s\n", lua_tostring(L, -1));
+        //lua_pop(L, 1);
+        if(verbose) printf("Get ticket GetTop %d\n",lua_gettop(L));
+        return 1;
+        
+    }
+
+    const char* ret=NULL;
+    int iType = lua_type(L, -1);
+    switch (iType)
+    {
+        case LUA_TSTRING:
+            ret = lua_tostring(L, -1);//Oppure 1?
+            lua_pop(L, 1);
+            *url=malloc(strlen(ret)+1);
+            strcpy(*url,ret);
+            break;
+        default:
+            printf("WHAT?!?!?!\n");
+    }
+    
+    return 0;
 	//IF SQLITE
-	return sqlite_getTicket(app,url);
+	//return sqlite_getTicket(app,url);
 }
 
 struct MHD_Response * proteo_info()
@@ -135,8 +181,20 @@ void get_info(char* url)
 void get_server_info()
 {
 	char path[100];
-	strcpy(path,config.local);
-	strcat(path,"/info");
+    /*if(config.ssl)
+        strcpy(path,"https://");
+    else
+        strcpy(path,"http://");
+    strcat(path,config.baseurl);
+    strcat(path,":");
+    strcat(path,config.port);
+	strcat(path,"/info");*/
+    
+    //snprintf(path,sizeof(path)-1,"%s%s:%d/info",config.ssl?"https://":"http://",config.baseurl,config.port);
+    
+    //With some urls it may not work, so it's better to set always localhost
+    snprintf(path,sizeof(path)-1,"%slocalhost:%d/info",config.ssl?"https://":"http://",config.port);
+    
 	if(verbose) printf("get_info: %s\n",path);
 	get_info(path);
 
@@ -148,4 +206,23 @@ void get_server_info()
 		if(verbose) printf("get_info: %s\n",path);
 		get_info(path); 
 	}
+}
+
+static int info_updateTickets(lua_State *state) {
+    
+    const char* url = luaL_checkstring(state,1);
+    if(strcmp(url, config.baseurl)!=0)
+    {
+        //TODO
+        //Non può invocare se stesso perchè si blocca, bisogna procedere in altro modo
+        
+        return 0;
+    }
+    char path[100];
+    strcpy(path,url);
+    strcat(path,"/info");
+    
+    get_info(path);
+    
+    return 0;
 }

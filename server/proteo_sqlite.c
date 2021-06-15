@@ -58,15 +58,15 @@ int sqlite_create_auth_user_db(const char* path)
              ");"
 
   			 "INSERT INTO `permissions` VALUES (1,1,'proteo','admin',1,CURRENT_TIMESTAMP);"
-             "INSERT INTO `permissions` VALUES (2,1,'admin','admin',1,CURRENT_TIMESTAMP);"
+    "INSERT INTO `permissions` VALUES (2,1,'admin','admin',1,CURRENT_TIMESTAMP);";
     
-             "DROP TABLE IF EXISTS `tickets`;"
+            /*"DROP TABLE IF EXISTS `tickets`;"
              "CREATE TABLE `tickets` ("
              "`id_tick` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,"
              "`app` TEXT NOT NULL,"
              "`url` TEXT NOT NULL,"
              "`ticket` INTEGER NOT NULL,"
-             "UNIQUE(app,url));";
+             "UNIQUE(app,url));";*/
 
     return sqlite_exec(path,sql);
 }
@@ -303,7 +303,7 @@ static int sqlite_exe (lua_State *state) {
 //=============================================
 // TICKETS
 //=============================================
-int sqlite_addTicket(const char* app,const char* url,int value)
+/*int sqlite_addTicket(const char* app,const char* url,int value)
 {
     char sql[256];
 
@@ -417,7 +417,7 @@ int sqlite_getTicket(const char* app,char** url)
     return 1;
 
 }
-
+*/
 //=============================================
 // AUTH
 //=============================================

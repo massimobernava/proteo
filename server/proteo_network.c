@@ -317,7 +317,7 @@ static int network_get(lua_State *state) {
 	const char* token = luaL_checkstring(state,2);
 	const char* callback = luaL_checkstring(state,3);
 	
-	server_get(url,(const char*)clientkey,token,callback);
+	server_get(url,(const char*)config.client_key,token,callback);
 	
 	return 0;
 }
@@ -333,7 +333,7 @@ static int network_post(lua_State *state) {
 	const char* token = luaL_checkstring(state,3);
 	const char* callback = luaL_checkstring(state,4);
 	
-	server_post(url,(const char*)clientkey,token,json,callback);
+	server_post(url,(const char*)config.client_key,token,json,callback);
 	
 	free((void*)json);
 

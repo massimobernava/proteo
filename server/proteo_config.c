@@ -16,7 +16,7 @@ struct server
 struct conf
 {
 	char version[10];
-	char local[64];
+	//char local[64];
     char basedir[256];
     char baseurl[64];
     int port;
@@ -29,6 +29,8 @@ struct conf
 	int ssl;
 	char ssl_key[64];
 	char ssl_cert[64];
+    char server_key[33];
+    char client_key[33];
 
 } conf;
 
@@ -47,15 +49,17 @@ int load_config(char *path_config)
 		}
 		fprintf(f,	"{"
 						"\"version\":\"0.1\","
-						"\"local\":\"http://localhost:8888\","
+						//"\"local\":\"http://localhost:8888\","
 						"\"master\":1,"
                         "\"basedir\":\"%s/\","
                         "\"baseurl\":\"localhost\","
                         "\"port\":8888,"
 						"\"ssl\":0,"
+                        "\"server_key\":\"01234567890123456789012345678901\","
+                        "\"client_key\":\"01234567890123456789012345678901\","
 						"\"admin_enabled\":1,"
 						"\"plugins\":[\"proteo\",\"admin\"],"
-						"\"servers\":[\"http://remote.server.com:8888\"]"
+						"\"servers\":[\"http://remote.server:8888\"]"
 					"}",dirname(path_config));
 		fclose(f);
 	}
@@ -75,9 +79,9 @@ int load_config(char *path_config)
 	const char* ver=json_object_get_string(obj);
 	strcpy(config.version,ver);
 
-	json_object_object_get_ex(jobj, "local", &obj);
-	const char* lcl=json_object_get_string(obj);
-	strcpy(config.local,lcl);
+	//json_object_object_get_ex(jobj, "local", &obj);
+	//const char* lcl=json_object_get_string(obj);
+	//strcpy(config.local,lcl);
 
     json_object_object_get_ex(jobj, "basedir", &obj);
     const char* basedir=json_object_get_string(obj);
@@ -86,6 +90,14 @@ int load_config(char *path_config)
     json_object_object_get_ex(jobj, "baseurl", &obj);
     const char* baseurl=json_object_get_string(obj);
     if(baseurl!=NULL) strcpy(config.baseurl,baseurl);
+    
+    json_object_object_get_ex(jobj, "server_key", &obj);
+    const char* server_key=json_object_get_string(obj);
+    if(server_key!=NULL) strcpy(config.server_key,server_key);
+    
+    json_object_object_get_ex(jobj, "client_key", &obj);
+    const char* client_key=json_object_get_string(obj);
+    if(client_key!=NULL) strcpy(config.client_key,client_key);
     
     json_object_object_get_ex(jobj, "port", &obj);
     config.port=json_object_get_int(obj);

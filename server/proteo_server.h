@@ -65,7 +65,13 @@
 #include <microhttpd.h>
 #include <sqlite3.h>
 //#include <tensorflow/c/c_api.h>
+#ifdef TFLITE
 #include <tensorflow/lite/c/c_api.h>
+#endif
+
+#ifdef DEEPSPEECH
+#include <deepspeech.h>
+#endif
 
 #include <libavutil/imgutils.h>
 #include <libavcodec/avcodec.h>
@@ -77,7 +83,10 @@
 #define ENET_IMPLEMENTATION
 #define ENET_DEBUG
 #include "enet.h"
+
+#ifdef EJDB2
 #include <ejdb2/ejdb2.h>
+#endif
 
 #include <zmq.h>
 
@@ -165,7 +174,7 @@ int paused;
 int toreboot=-1;
 int verbose=FALSE;
 int debug=FALSE;
-char basedir[50];
+//char basedir[50];
 
 #define PROTEOCOMPONENT "ProteoComponent"
 #define PROTEOTIMER "ProteoTimer"

@@ -1,15 +1,19 @@
 //==============================================================================
-//=>                       Proteo Server v0.0.1
+//=>                       Proteo Server v0.2
 //=>                        
 //=>                         CC BY-NC-SA 3.0
 //=>
 //=> Massimo Bernava
 //=> massimo.bernava@gmail.com
-//=> 2021-05-13
+//=> 2021-06-15
 //==============================================================================
 
+//#define EJDB2 //CMAKE
+//#define DEEPSPEECH //CMAKE
+//#define TFLITE //CMAKE
+
 #define PROTEO_OPENCV
-#define DEBUGGER
+//#define DEBUGGER
 
 #include "proteo_server.h"
 #include "proteo_b64.c"
@@ -22,7 +26,9 @@
 
 #include "proteo_auth.c"
 #include "proteo_sqlite.c"
+#ifdef EJDB2
 #include "proteo_ejdb.c"
+#endif
 #include "proteo_system.c"
 #include "proteo_info.c"
 #include "proteo_network.c"
@@ -30,7 +36,9 @@
 #include "proteo_admin.c"
 #include "proteo_zmq.c"
 #include "proteo_ffmpeg.c"
+#ifdef TFLITE
 #include "proteo_tensorflow.c"
+#endif
 
 
 //==============================================================================
@@ -382,10 +390,10 @@ LUALIB_API int luaopen_proteo (lua_State *state) {
 
     lua_newtable(state);
     lua_setfield(state, -2, "opencv");
-    
+#ifdef EJDB2
 	lua_newtable(state);
 	lua_setfield(state, -2, "ejdb");
-	
+#endif
     lua_newtable(state);
     lua_setfield(state, -2, "ffmpeg");
     
@@ -397,7 +405,9 @@ LUALIB_API int luaopen_proteo (lua_State *state) {
 	add_system_proteo(state);
     add_zmq_proteo(state);
     add_ffmpeg_proteo(state);
+#ifdef TFLITE
     add_tensorflow_proteo(state);
+#endif
     
   return 1;
 }
@@ -436,8 +446,14 @@ void addEnum_proteo(lua_State *state,const char *lib,const char *enumname,const 
 int initLUA()
 {
     //sem_init(&lua_mutex,0,1);
-    sem_unlink("/lua_call_sem");
-    lua_sem = sem_open ("/lua_call_sem", O_CREAT , 0644, 1);//| O_EXCL
+    char sem_name[10];
+    
+    rand_string(sem_name, 10);
+    sem_name[0]="/";
+    //printf("sem name: %s",sem_name);
+    //if the proteo crash it could remain a suspended semaphore and deny permission to open it. In this way a different semaphore is created each time.
+    sem_unlink(sem_name);
+    lua_sem = sem_open (sem_name, O_CREAT , 0666,1);//0666, 1);//| O_EXCL
     if(lua_sem==SEM_FAILED)
     {
         printf("Sem_open: Failed: %s!\n",strerror(errno));
@@ -467,9 +483,12 @@ int initLUA()
         addFunction_proteo(L,"opencv","videowriter",opencv_videowriter);
         addFunction_proteo(L,"opencv","write",opencv_write);
         addFunction_proteo(L,"opencv","frame",opencv_frame);
+#ifdef OPENCV_DNN
         addFunction_proteo(L,"opencv","readnet",opencv_readnet);
         addFunction_proteo(L,"opencv","forward",opencv_forward);
         addFunction_proteo(L,"opencv","forwardTable",opencv_forwardTable);
+        addFunction_proteo(L,"opencv","infoNet",opencv_infoNet);
+#endif
         //addFunction_proteo(L,"opencv","getpoints",opencv_getpoints);
         addFunction_proteo(L,"opencv","circle",opencv_circle);
         addFunction_proteo(L,"opencv","rectangle",opencv_rectangle);
@@ -481,7 +500,7 @@ int initLUA()
         addFunction_proteo(L,"opencv","size",opencv_size);
         addFunction_proteo(L,"opencv","cropImg",opencv_cropImg);
         addFunction_proteo(L,"opencv","infoImg",opencv_infoImg);
-        addFunction_proteo(L,"opencv","infoNet",opencv_infoNet);
+        
         addFunction_proteo(L,"opencv","setImg",opencv_setImg);
         addFunction_proteo(L,"opencv","setSize",opencv_setSize);
         addFunction_proteo(L,"opencv","fill",opencv_fill);
@@ -526,7 +545,7 @@ int initLUA()
     #endif
     
 	addFunction_proteo(L,"sqlite","exe",sqlite_exe);
-	
+#ifdef EJDB2
 	addFunction_proteo(L,"ejdb","exe",ejdb_lua_exe);
 	//addFunction_proteo(L,"ejdb","new",ejdb_lua_new);
 	addFunction_proteo(L,"ejdb","del",ejdb_lua_del);
@@ -534,7 +553,7 @@ int initLUA()
 	addFunction_proteo(L,"ejdb","put",ejdb_lua_put);
 	addFunction_proteo(L,"ejdb","merge",ejdb_lua_merge);
     addFunction_proteo(L,"ejdb","patch",ejdb_lua_patch);
-	
+#endif
 	//addFunction_proteo(L,"network","download",network_download);
 	addFunction_proteo(L,"network","get",network_get);
 	addFunction_proteo(L,"network","post",network_post);
@@ -596,6 +615,12 @@ int initLUA()
 	luaL_dofile(L,route_path);
     free(route_path);
     
+    char* ticket_path=concat(config.basedir,"ticket.lua");
+    luaL_dofile(L,ticket_path);
+    free(ticket_path);
+    
+    addFunction_proteo(L,"system","updateTickets",info_updateTickets);
+    
     for (int i = 0; i < config.plugin_count; i++) {
         printf("Init Plug: %s\n",config.plugins[i].name);
         //init(plug_name); //proteo_lua.c
@@ -607,7 +632,7 @@ int initLUA()
 
 const char* app_call(int type,const char* url,char* data,char* permissions,char* username,const char* token)
 {
-    sem_wait(lua_sem);
+    if(lua_sem!=SEM_FAILED) sem_wait(lua_sem);
 	lua_getglobal(L,"route_call");
 	/*int type=0;
 	if(0 == strcmp (method, "GET") ) type=GET;
@@ -638,7 +663,7 @@ const char* app_call(int type,const char* url,char* data,char* permissions,char*
         printf("ERROR pcall(route.call): %s\n", lua_tostring(L, -1));
 		//lua_pop(L, 1);
         if(verbose) printf("App_call GetTop %d\n",lua_gettop(L));
-        sem_post(lua_sem);
+        if(lua_sem!=SEM_FAILED) sem_post(lua_sem);
         return NULL;
         
 	}
@@ -666,7 +691,7 @@ const char* app_call(int type,const char* url,char* data,char* permissions,char*
     if(verbose) printf("App_call GetTop %d\n",top);
     
 	//lua_pop(L, 1);
-    sem_post(lua_sem);
+    if(lua_sem!=SEM_FAILED) sem_post(lua_sem);
     
     if(paused && toreboot>=0)
     {
@@ -794,6 +819,7 @@ struct MHD_Response* parse_info(struct connection_info_struct *con_info,const ch
         if (login_correct==1)
         {
             char* path=concat(config.basedir,"web/blockly/index.html");
+            //char* path=concat(config.basedir,"web/ace/editor.html");
             char *page=loadfile(path);
             free(path);
            
@@ -893,7 +919,7 @@ struct MHD_Response* parse_info(struct connection_info_struct *con_info,const ch
 			char permissions[512];
 			char username[100];
 			
-			if(verifyToken(username,permissions,app,token)==0 && verifyHMAC(con_info->url,con_info->data,token,clientkey,hmac)==0)
+			if(verifyToken(username,permissions,app,token)==0 && verifyHMAC(con_info->url,con_info->data,token,config.client_key,hmac)==0)
 			{
 				if(verbose) printf("Token and HMAC ok\n");
 				//luaL_dostring(L, "package.path = './lib/?.lua;' .. package.path");
@@ -1136,8 +1162,16 @@ int main(int argc,char **argv)
 {
 	int c;
 	char config_path[256];
+    
+    //TODO andrebbe messo in una cartella standard sul server, indipendente da basedir
+#ifdef __linux__
+    //mkpath("/usr/local/etc/Proteo");
+    //strcpy(config_path,"/usr/local/etc/Proteo/config.json");
+    strcpy(config_path,"./config.json");
+#else
 	strcpy(config_path,"./config.json");
-
+#endif
+    
 	while ((c = getopt (argc, argv, "vhdc:")) != -1)
     	switch (c)
 		{
@@ -1195,13 +1229,16 @@ int main(int argc,char **argv)
 		return 1;
 	}
 	
+    lua_pushlstring(L,config_path,strlen(config_path));
+    lua_setglobal(L, "CONFIG_PATH");
+#ifdef EJDB2
 	iwrc rc = ejdb_init();
 	if (rc) {
 		iwlog_ecode_error3(rc);
 		printf( "Failed to initialize EJDB!\n" );
 		return 1;
 	}
-	
+#endif
 	//pthread_t poll_event;
 
 	if(config.master==1)
@@ -1223,7 +1260,9 @@ int main(int argc,char **argv)
     printf("%s\n",LUA_VERSION);
 #endif
 	printf("JSON v.%s\n",JSON_C_VERSION);
+#ifdef TFLITE
     printf("TensorFlowLite v.%s\n", TfLiteVersion());
+#endif
     
 	MHD_set_panic_func(&panicCallback, NULL);
 
@@ -1233,7 +1272,7 @@ int main(int argc,char **argv)
 
 	if(config.ssl==0)
 	{
-  		daemon = MHD_start_daemon (MHD_USE_INTERNAL_POLLING_THREAD, 8888,
+  		daemon = MHD_start_daemon (MHD_USE_INTERNAL_POLLING_THREAD, config.port,
   							 NULL, NULL,
                              &url_handler,NULL,
                              MHD_OPTION_NOTIFY_COMPLETED, &request_completed,
@@ -1253,7 +1292,7 @@ int main(int argc,char **argv)
     		return 1;
   		}
 
-  		daemon = MHD_start_daemon (MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_DEBUG | MHD_USE_SSL, 8888,
+  		daemon = MHD_start_daemon (MHD_USE_INTERNAL_POLLING_THREAD | MHD_USE_DEBUG | MHD_USE_SSL, config.port,
   							 NULL, NULL,
                              &url_handler,NULL,
                              MHD_OPTION_NOTIFY_COMPLETED, &request_completed,NULL,
@@ -1298,7 +1337,7 @@ int main(int argc,char **argv)
         }
         
         ProteoTimer* timer=timers;
-        double min=1000;
+        long min=1000;
 		while(timer!=NULL)
 		{
             if(timer->state==1)
@@ -1308,7 +1347,7 @@ int main(int argc,char **argv)
                 {
                     if(paused) continue;
                     
-                    sem_wait(lua_sem);
+                    if(lua_sem!=SEM_FAILED) sem_wait(lua_sem);
                     if(timer->callback!=NULL)
                         lua_getglobal(L,timer->callback);
                     else if(timer->ref_callback!=-1)
@@ -1333,11 +1372,11 @@ int main(int argc,char **argv)
                         }
                     }
                     timer->last=n;
-                    sem_post(lua_sem);
+                    if(lua_sem!=SEM_FAILED) sem_post(lua_sem);
                 }
                 else
                 {
-                    double next=timer->time -(n-timer->last);
+                    long next=timer->time -(n-timer->last);
                     if(next<min) min=next;
                 }
             }
@@ -1347,8 +1386,10 @@ int main(int argc,char **argv)
         {
             struct timespec sleepTime;
             struct timespec returnTime;
-            sleepTime.tv_sec = 0;
-            sleepTime.tv_nsec = min*1000000;
+            //sleepTime.tv_sec = 0;
+            //sleepTime.tv_nsec = min*1000000;
+            sleepTime.tv_sec  = min / 1000;
+            sleepTime.tv_nsec = (min % 1000) * 1000000;
             nanosleep(&sleepTime, &returnTime);
             
             //usleep((unsigned int)min);

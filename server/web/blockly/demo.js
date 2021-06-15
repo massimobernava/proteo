@@ -537,7 +537,7 @@ Blockly.Lua['tetris_getjoint'] = function(block) {
 Blockly.Blocks['tetris_move'] = {
   init: function() {
     this.appendDummyInput()
-        .appendField("move")
+        .appendField("move block")
         .appendField(new Blockly.FieldDropdown([["left","left"], ["right","right"], ["rotate","rotate"], ["down","down"]]), "joint");
     this.setPreviousStatement(true, null);
     this.setNextStatement(true, null);
@@ -556,6 +556,96 @@ Blockly.Lua['tetris_move'] = function(block) {
 
 
   var code = tetris_lib+'.left_move_'+dropdown_joint+'()\n';
+  return code;
+};
+
+Blockly.Blocks['tetris_move_action'] = {
+  init: function() {
+    this.appendStatementInput("effect")
+        .setCheck(null)
+        .appendField("if user")
+        .appendField(new Blockly.FieldDropdown([["raise left arm","LEFT_ARM"], ["raise right arm","RIGHT_ARM"], ["crouch","CROUCH"], ["jump","JUMP"], ["tilt head left","TILT_LEFT"], ["tilt head right","TILT_RIGHT"]]), "NAME");
+        this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(225);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Lua['tetris_move_action'] = function(block) {
+  var dropdown_name = block.getFieldValue('NAME');
+  var statements_effect = Blockly.Lua.statementToCode(block, 'effect');
+  // TODO: Assemble Lua into code variable.
+  var code = '...\n';
+  return code;
+};
+
+Blockly.Blocks['tetris_save_block'] = {
+  init: function() {
+    this.appendDummyInput()
+        .appendField("save current information:");
+    this.appendDummyInput()
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("number of times raise left arm")
+        .appendField(new Blockly.FieldCheckbox("TRUE"), "NAME");
+    this.appendDummyInput()
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("number of times raise right arm")
+        .appendField(new Blockly.FieldCheckbox("TRUE"), "NAME");
+    this.appendDummyInput()
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("greater angle of rotation of the right shoulder")
+        .appendField(new Blockly.FieldCheckbox("TRUE"), "NAME");
+    this.appendDummyInput()
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("greater angle of rotation of the left shoulder")
+        .appendField(new Blockly.FieldCheckbox("TRUE"), "NAME");
+    this.appendDummyInput()
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("number of jumps")
+        .appendField(new Blockly.FieldCheckbox("TRUE"), "NAME");
+    this.appendDummyInput()
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("number of squats")
+        .appendField(new Blockly.FieldCheckbox("TRUE"), "NAME");
+    this.appendDummyInput()
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("number of left head tilts")
+        .appendField(new Blockly.FieldCheckbox("TRUE"), "NAME");
+    this.appendDummyInput()
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("number of right head tilts")
+        .appendField(new Blockly.FieldCheckbox("TRUE"), "NAME");
+    this.appendDummyInput()
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("greater angle of left head tilts")
+        .appendField(new Blockly.FieldCheckbox("TRUE"), "NAME");
+    this.appendDummyInput()
+        .setAlign(Blockly.ALIGN_RIGHT)
+        .appendField("greater angle of right head tilts")
+        .appendField(new Blockly.FieldCheckbox("TRUE"), "NAME");
+    this.setPreviousStatement(true, null);
+    this.setNextStatement(true, null);
+    this.setColour(225);
+ this.setTooltip("");
+ this.setHelpUrl("");
+  }
+};
+
+Blockly.Lua['tetris_save_block'] = function(block) {
+  var checkbox_name = block.getFieldValue('NAME') == 'TRUE';
+  var checkbox_name = block.getFieldValue('NAME') == 'TRUE';
+  var checkbox_name = block.getFieldValue('NAME') == 'TRUE';
+  var checkbox_name = block.getFieldValue('NAME') == 'TRUE';
+  var checkbox_name = block.getFieldValue('NAME') == 'TRUE';
+  var checkbox_name = block.getFieldValue('NAME') == 'TRUE';
+  var checkbox_name = block.getFieldValue('NAME') == 'TRUE';
+  var checkbox_name = block.getFieldValue('NAME') == 'TRUE';
+  var checkbox_name = block.getFieldValue('NAME') == 'TRUE';
+  var checkbox_name = block.getFieldValue('NAME') == 'TRUE';
+  // TODO: Assemble Lua into code variable.
+  var code = '...\n';
   return code;
 };
 

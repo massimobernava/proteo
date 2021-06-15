@@ -6,6 +6,9 @@
 SDL_Window* gWindow = NULL;
 //SDL_Surface* gScreenSurface = NULL;
 SDL_Renderer* gRenderer = NULL;
+SDL_GLContext gContext =NULL;
+SDL_Texture *gTarget=NULL;
+
 float gScale=1.0f;
 
 ProteoColor backgroundColor={255,0,0,0};
@@ -163,11 +166,15 @@ int initSDL()
 #if TARGET_OS_IPHONE
         gWindow = SDL_CreateWindow( NULL, 0, 0, 0, 0, SDL_WINDOW_SHOWN| SDL_WINDOW_BORDERLESS );
 #else
-		gWindow = SDL_CreateWindow( "Proteo", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN/*|SDL_WINDOW_RESIZABLE*/ );
+		gWindow = SDL_CreateWindow( "Proteo", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN|SDL_WINDOW_OPENGL/*|SDL_WINDOW_RESIZABLE*/ );
 		SDL_SetWindowResizable(gWindow,TRUE);
 #endif
-
-
+        
+#ifdef USEOPENGL
+        SDL_SetHint(SDL_HINT_RENDER_DRIVER,"opengles2");
+#endif
+        printf("Hint render driver: %s\n",SDL_GetHint(SDL_HINT_RENDER_DRIVER));
+        
 		if( gWindow == NULL )
 		{
 			printf( "Window could not be created! SDL_Error: %s\n", SDL_GetError() );
@@ -178,11 +185,25 @@ int initSDL()
 			//Get window surface
 			//gScreenSurface = SDL_GetWindowSurface( gWindow );
 
-            gRenderer =  SDL_CreateRenderer( gWindow, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC);
+            gRenderer =  SDL_CreateRenderer( gWindow, -1, SDL_RENDERER_ACCELERATED|SDL_RENDERER_PRESENTVSYNC|SDL_RENDERER_TARGETTEXTURE);
 			SDL_SetRenderDrawBlendMode(gRenderer,SDL_BLENDMODE_BLEND);
 
 		}
+#ifdef USEOPENGL
+        gContext = SDL_GL_CreateContext( gWindow );
+        //SDL_GL_MakeCurrent(gWindow,gContext);
         
+        gTarget = SDL_CreateTexture(gRenderer, SDL_PIXELFORMAT_RGBA8888,
+                SDL_TEXTUREACCESS_TARGET, SCREEN_WIDTH, SCREEN_HEIGHT);
+        
+        //Initialize GLEW
+        glewExperimental = GL_TRUE;
+        GLenum glewError = glewInit();
+        if( glewError != GLEW_OK )
+        {
+            printf( "Error initializing GLEW! %s\n", glewGetErrorString( glewError ) );
+        }
+#endif
         if(opt_fullscreen)
         {
             SDL_SetWindowFullscreen(gWindow,SDL_WINDOW_FULLSCREEN_DESKTOP);
@@ -231,7 +252,12 @@ void closeSDL()
     freesounds();
     freeskeletons();
 
-	SDL_DestroyRenderer(gRenderer);
+    SDL_GL_DeleteContext(gContext);
+    
+    SDL_DestroyTexture(gTarget);
+    gTarget=NULL;
+    
+    SDL_DestroyRenderer(gRenderer);
 	gRenderer = NULL;
 
 	SDL_DestroyWindow( gWindow );

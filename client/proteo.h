@@ -19,16 +19,25 @@
 #include <stddef.h>
 #include <dirent.h>
 
+#if !defined(_WIN32)
+#include <wordexp.h>
+#endif // defined
+
 //#include "lua.h"
 //#include "lauxlib.h"
 //#include "lualib.h"
 
 #ifdef __EMSCRIPTEN__
 #include <lua.h>
-#elif defined(_WIN32)
-#include <lua.h>
+//#elif defined(_WIN32)
+//#include <lua.h>
+//#include <luajit.h>
 #else
+#ifdef LUA_JIT
 #include <luajit.h>
+#else
+#include <lua.h>
+#endif
 #endif //emscripten
 
 #include <lauxlib.h>
@@ -38,6 +47,17 @@
 #include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL2_gfxPrimitives.h>
+
+#ifdef GLEW
+#include <GL/glew.h>
+#include <SDL2/SDL_opengl.h>
+//#include <OpenGL/OpenGL.h>
+//#include <OpenGL/gl3.h>
+#endif
+
+#ifdef TFLITE
+#include <tensorflow/lite/c/c_api.h>
+#endif
 
 #ifdef __EMSCRIPTEN__
     #include <emscripten.h>
@@ -219,17 +239,18 @@ typedef struct font_name
 {
 	char * name;
 	char* path;
+    int base;
 } font_name;
 
 font_name nfonts[]=
 	{
-		{"ColaborateThin","ColabThi.otf"},
-		{"ColaborateBold","ColabBol.otf"},
-		{"ColaborateLight","ColabLig.otf"},
-		{"ColaborateMedium","ColabMed.otf"},
-		{"Colaborate","ColabReg.otf"},
-		{"Helvetica","Helvetica 400.ttf"},
-		{"OpenSans","OpenSans-Regular.ttf"}
+		{"ColaborateThin","ColabThi.otf",FALSE},
+		{"ColaborateBold","ColabBol.otf",FALSE},
+		{"ColaborateLight","ColabLig.otf",FALSE},
+		{"ColaborateMedium","ColabMed.otf",FALSE},
+		{"Colaborate","ColabReg.otf",TRUE},
+		{"Helvetica","Helvetica 400.ttf",FALSE},
+		{"OpenSans","OpenSans-Regular.ttf",TRUE}
 
 	};
 
@@ -364,7 +385,7 @@ const char server_form[] = "local label_server=nil \n"
 
                               "label_server=proteo.gui.newLabel('label_server','Server:','OpenSans',18,'black','Clear',proteo.gui.LabelAlignment.Left,MIN_X +80,MIN_Y + 250,150,30) \n"
                               "text_server=proteo.gui.newTextField('text_server',config.server,'OpenSans',18,'Black','White',MIN_X +200,MIN_Y + 250,380,30,'') \n"
-                                
+
                               "label_appkey=proteo.gui.newLabel('label_appkey','AppKey:','OpenSans',18,'black','Clear',proteo.gui.LabelAlignment.Left,MIN_X +80,MIN_Y + 300,150,30) \n"
                               "text_appkey=proteo.gui.newTextField('text_appkey',config.appkey,'OpenSans',18,'Black','White',MIN_X +200,MIN_Y + 300,380,30,'') \n"
 
@@ -462,7 +483,8 @@ enum ProteoType
   Icon,
   Container,
   Shape,
-  Polyg
+  Polyg,
+  Particle
   //Bezier
 };
 
@@ -585,6 +607,36 @@ typedef struct
 
 typedef struct
 {
+    Uint32 frameTick;
+
+    SDL_FPoint position;
+
+    float speed;
+    float direction;
+    float rotation;
+    int life;
+    int lifeTime;
+
+    float linearAccelerationX;
+    float linearAccelerationY;
+    float angularSpeed;
+
+    float spin;
+    float size;
+    float startSize;
+    float endSize;
+
+    ProteoColor startColor;
+    ProteoColor endColor;
+    SDL_BlendMode blendMode;
+
+    SDL_Rect frameRect;
+    ProteoTexture* image;
+
+} _particle;
+
+typedef struct
+{
     ProteoTexture* image;
 } _image;
 
@@ -596,6 +648,9 @@ typedef struct
 typedef struct
 {
     ProteoColor color;
+    unsigned int shaderId;
+    int ref_render;
+
 } _rect;
 
 /*typedef struct
@@ -688,6 +743,7 @@ typedef union
     _container container;
 
     _sprite sprite;
+    _particle particle;
     _image image;
     _ellipse ellipse;
     _rect rect;
@@ -764,6 +820,8 @@ void addFunction_proteo(lua_State *state,const char *lib,const char *fname,lua_C
 void addTable_proteo(lua_State *state,const char *lib,const char *tname);
 void addEnum_proteo(lua_State *state,const char *lib,const char *enumname,const char *vname,int value);
 
+ProteoColor ColorInterpolation(ProteoColor startColor, float t, ProteoColor endColor);
+float interpolation(float start, float t, float end);
 ProteoColor brightness(ProteoColor color,float bright);
 ProteoColor saturation(ProteoColor color,float sat);
 void mkpath(const char* dir);
@@ -939,6 +997,7 @@ static int graphics_drawEllipse (SDL_Renderer* renderer,ProteoComponent* ellipse
 static int graphics_newEllipse (lua_State *state);
 //static int graphics_eventRect (lua_State *state,ProteoComponent* rect,SDL_Event e,SDL_Renderer* renderer);
 static int graphics_drawRect (SDL_Renderer* renderer,ProteoComponent* rect);
+static int graphics_drawRect_GL(ProteoComponent* rect);
 static int graphics_newRect (lua_State *state);
 //static int graphics_eventImage (lua_State *state,ProteoComponent* image,SDL_Event e,SDL_Renderer* renderer);
 static int graphics_drawImage (SDL_Renderer* renderer,ProteoComponent* image);
@@ -1006,7 +1065,7 @@ typedef struct OCVImage
     int  height;
 
     int type;
-    
+
     unsigned char *data;
     unsigned long  step;
 

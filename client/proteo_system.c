@@ -74,7 +74,14 @@ static int system_fileexist(lua_State *state) {
 static int system_document(lua_State *state) {
   if(debug) printf("system.document\n");
   //lua_pushliteral(state,"./");
+#if TARGET_OS_MAC
+    char path_doc[PATH_MAX];
+    strcpy(path_doc,app_path);
+    strcat(path_doc,"/../../../");
+    lua_pushlstring(state,path_doc,strlen(path_doc));
+#else
     lua_pushlstring(state,config.basedir,strlen(config.basedir));
+#endif
   return 1;
 }
 

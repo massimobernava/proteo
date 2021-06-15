@@ -3,21 +3,21 @@ local inspect = require "inspect"
 
 require "tfl_utility"
 
-local function decode_face_bounds (scores, bbox, score_thresh, input_img_w, input_img_h)
+local function decode_hand_bounds (scores, bbox, score_thresh, input_img_w, input_img_h)
 
 	local region_list={}
 
 
-	for i=1,#face_anchors do
+	for i=1,#hand_anchors do
 		
 		region = {}
-		anchor = face_anchors[i]
+		anchor = hand_anchors[i]
 		score0 = scores[i]
 		score = 1.0 / (1.0 + math.exp(-score0))
 
 		if score > score_thresh then
 
-            local numkey = kFaceDetectKeyNum
+            local numkey = kHandDetectKeyNum
             local bbx_idx = (4 + 2 * numkey) * (i-1)
 
             -- boundary box 
@@ -47,7 +47,7 @@ local function decode_face_bounds (scores, bbox, score_thresh, input_img_w, inpu
 
             -- landmark positions (6 keys)
             local keys={}
-            for j=1,kFaceDetectKeyNum do
+            for j=1,kHandDetectKeyNum do
 
             	local lx = bbox[bbx_idx + 4 + (2 * (j-1)) + 1]
                 local ly = bbox[bbx_idx + 4 + (2 * (j-1)) + 2]
@@ -71,19 +71,16 @@ local function decode_face_bounds (scores, bbox, score_thresh, input_img_w, inpu
 end
 
 
-function compute_detect_face_to_roi (region)
+function compute_detect_hand_to_roi (region)
 	
 	local input_img_w = tfl_detect_inputTensorSize[2]
     local input_img_h = tfl_detect_inputTensorSize[3]
-    local x_center = (region.topleft.x + region.btmright.x) * input_img_w / 2
-    local y_center = (region.topleft.y + region.btmright.y) * input_img_h / 2
-    --local x_scale  = region.keys[kMouth].x * input_img_w
-    --local y_scale  = region.keys[kMouth].y * input_img_h
+    --local x_center = (region.topleft.x + region.btmright.x) * input_img_w / 2
+    --local y_center = (region.topleft.y + region.btmright.y) * input_img_h / 2
 
-    --local x_left  = region.keys[kLeftEye].x * input_img_w
-    --local y_left  = region.keys[kLeftEye].y * input_img_h
-    --local x_right  = region.keys[kRightEye].x * input_img_w
-    --local y_right = region.keys[kRightEye].y * input_img_h
+    local x_center = region.keys[kMiddle].x * input_img_w
+    local y_center = region.keys[kMiddle].y * input_img_h
+
 
     --local box_size = math.sqrt((x_left - x_right) * (x_left - x_right) +
     --                         (y_left - y_right) * (y_left - y_right)) * 2.5
@@ -94,8 +91,8 @@ function compute_detect_face_to_roi (region)
     ---se il volto è troppo lontano questo valore diventa troppo piccolo (ad occhio sotto il 40) 
 
     -- RectTransformationCalculator::TransformNormalizedRect() 
-    local width    = math.max(math.abs(region.topleft.x - region.btmright.x) * input_img_w, math.abs(region.keys[kLeftEye].x - region.keys[kRightEye].x) * input_img_w) --box_size
-    local height   = math.max(math.abs(region.topleft.y - region.btmright.y) * input_img_h, math.abs(region.keys[kMouth].y - region.keys[kNoseTip].y) * input_img_h) --box_size
+    local width    = math.max(math.abs(region.topleft.x - region.btmright.x) * input_img_w, math.abs(region.keys[kThumb_MCP].x - region.keys[kPinky].x) * input_img_w) --box_size
+    local height   = math.max(math.abs(region.topleft.y - region.btmright.y) * input_img_h, math.abs(region.keys[kWrist].y - region.keys[kMiddle].y) * input_img_h) --box_size
     local rotation = region.rotation
     local shift_x =  0.0
     local shift_y =  0.0
@@ -117,8 +114,8 @@ function compute_detect_face_to_roi (region)
         roi_cy = y_center + dy
     end
 
-    local scale_x = 2.0 --1.5
-    local scale_y = 2.0 --1.5
+    local scale_x = 2.6 --1.5
+    local scale_y = 2.6 --1.5
     local long_side = math.max (width, height)
     local roi_w = long_side * scale_x
     local roi_h = long_side * scale_y
@@ -145,7 +142,7 @@ function compute_detect_face_to_roi (region)
     end
 end
 
-function pack_detect_face_result (region_list)
+function pack_detect_hand_result (region_list)
 
 	local detect_result={}
 
@@ -153,8 +150,8 @@ function pack_detect_face_result (region_list)
     
         region = region_list[i]
 
-        compute_rotation (region,kMouth,kNoseTip)
-        compute_detect_face_to_roi (region)
+        compute_rotation (region,kWrist,kMiddle)
+        compute_detect_hand_to_roi (region)
 
         table.insert(detect_result,region)
     end
@@ -163,7 +160,7 @@ function pack_detect_face_result (region_list)
 
 end
 
-function create_face_ssd_anchors(input_w,intput_h)
+function create_hand_ssd_anchors(input_w,intput_h)
 
 	local anchor_options = {}
 	anchor_options.num_layers = 4
@@ -197,18 +194,20 @@ end
 
 --========= INIT
 
-kFaceDetectKeyNum=6
-kLeftEye=1
-kRightEye=2
-kNoseTip=3
-kMouth=4
-kLeftEyeTragion=5
-kRightEyeTragion=6
+kHandDetectKeyNum=7
 
-FACE_LM_NUM=468
+kWrist=1
+kIndex=2
+kMiddle=3
+kRing=4
+kPinky=5
+kThumb_CMC=6
+kThumb_MCP=7
 
-local tfl_detect_model=proteo.tflite.modelFromFile(proteo.system.document().."dl/face_detection_front.tflite")
-local tfl_landmark_model=proteo.tflite.modelFromFile(proteo.system.document().."dl/face_landmark.tflite")
+HAND_LM_NUM=21
+
+local tfl_detect_model=proteo.tflite.modelFromFile(proteo.system.document().."dl/palm_detection.tflite")
+local tfl_landmark_model=proteo.tflite.modelFromFile(proteo.system.document().."dl/hand_landmark.tflite")
 
 local tfl_interpreter_options=proteo.tflite.createInterpreterOptions()
 
@@ -235,12 +234,12 @@ local tfl_landmark_score_outputTensorSize=proteo.tflite.getTensorSize(tfl_landma
 local tfl_frame=proteo.opencv.img()
 proteo.opencv.setSize(tfl_frame,tfl_detect_inputTensorSize[2],tfl_detect_inputTensorSize[3])
 
-face_anchors=create_face_ssd_anchors(tfl_detect_inputTensorSize[3],tfl_detect_inputTensorSize[2])
+hand_anchors=create_hand_ssd_anchors(tfl_detect_inputTensorSize[3],tfl_detect_inputTensorSize[2])
 
 --ocv_detect_model=proteo.opencv.readnet("pose/pose_detection_model_float32.pb","")
 --proteo.opencv.infoNet(ocv_detect_model)
 
-function invoke_face_detect (img)
+function invoke_hand_detect (img)
 
 	proteo.opencv.resize(img,tfl_frame)
 	proteo.opencv.convert(tfl_frame,tfl_frame,proteo.opencv.matType.CV_32F,tfl_detect_inputTensorSize[4])
@@ -262,22 +261,22 @@ function invoke_face_detect (img)
 
     scores = proteo.tflite.tensorToTable(tfl_detect_scores_tensor)
     bbox = proteo.tflite.tensorToTable(tfl_detect_bbox_tensor)
-    score_thresh = 0.7
+    score_thresh = 0.5
 
-    region_list = decode_face_bounds (scores, bbox, score_thresh, tfl_detect_inputTensorSize[3], tfl_detect_inputTensorSize[2])
+    region_list = decode_hand_bounds (scores, bbox, score_thresh, tfl_detect_inputTensorSize[3], tfl_detect_inputTensorSize[2])
 
     iou_thresh = 0.3
 
     region_nms_list = non_max_suppression (region_list, iou_thresh)
 
-	detect_result=pack_detect_face_result (region_nms_list)
+	detect_result=pack_detect_hand_result (region_nms_list)
 
 	--print(inspect(detect_result))
 
     return detect_result
 end
 
-function invoke_face_landmark(img)
+function invoke_hand_landmark(img)
 	landmark_result={}
 
 	proteo.tflite.copyImage(tfl_landmark_input_tensor,img)
@@ -287,7 +286,7 @@ function invoke_face_landmark(img)
 
     landmark_result.score = 0 --TODO
     landmark_result.joint={}
-    for i = 1,FACE_LM_NUM do
+    for i = 1,HAND_LM_NUM do
     	landmark_result.joint[i]={}
         landmark_result.joint[i].x = landmarks[3 * (i-1) + 1] / tfl_landmark_inputTensorSize[3]
         landmark_result.joint[i].y = landmarks[3 * (i-1) + 2] / tfl_landmark_inputTensorSize[2]
@@ -298,7 +297,7 @@ function invoke_face_landmark(img)
 	return landmark_result
 end
 
-function generate_face_landmark_input_image (image, pose)
+function generate_hand_landmark_input_image (image, pose)
 	
 	local size=proteo.opencv.size(image)
 	local H=size[1]

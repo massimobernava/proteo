@@ -2,21 +2,36 @@
 //#ifdef PROTEO_OPENCV
 
 //#ifdef __cplusplus
+
+#include <opencv2/opencv_modules.hpp>
 #include <opencv2/opencv.hpp>
-#include <opencv2/dnn.hpp>
+/*#include <opencv2/dnn.hpp>
 #include <opencv2/imgproc.hpp>
+#include <opencv2/imgcodecs.hpp>
 #include <opencv2/highgui.hpp>
+#include <opencv2/videoio.hpp>
+#include <opencv2/video.hpp>*/
 #include <opencv2/core/types_c.h>
 
 #define OPENCVMAT "OpenCVMat"
 #define OPENCVVC "OpenCVVideoCapture"
-#define OPENCVNET "OpenCVNet"
 #define OPENCVVW "OpenCVVideoWriter"
+
+#if OPENCV_DNN
+//CV_VERSION_MAJOR >= 4
+#define OPENCVNET "OpenCVNet"
+#endif
+
+#ifndef CV_16F
+#define CV_16F  7
+#endif
 
 using namespace std;
 using namespace cv;
+#ifdef OPENCVNET
 using namespace cv::dnn;
-//using namespace cv::cuda;
+using namespace cv::cuda;
+#endif
 
 extern "C" {
 //#endif
@@ -87,6 +102,7 @@ static VideoCapture *checkCap (lua_State *L, int index)
     return cap;
 }
 
+#ifdef OPENCVNET
 static Net *checkNet (lua_State *L, int index)
 {
     Net *net;
@@ -95,6 +111,7 @@ static Net *checkNet (lua_State *L, int index)
     if (net == NULL) luaL_typerror(L, index, OPENCVNET);
     return net;
 }
+#endif
 
 static VideoWriter *checkWriter (lua_State *L, int index)
 {
@@ -135,6 +152,7 @@ static int vc_gc(lua_State *l) {
     return 0;
 }
 
+#ifdef OPENCVNET
 static int net_gc(lua_State *l) {
     
     Net* net = checkNet(l, 1);
@@ -147,6 +165,7 @@ static int net_gc(lua_State *l) {
     
     return 0;
 }
+#endif
 
 static int vw_gc(lua_State *l) {
     
@@ -208,7 +227,7 @@ static UMat * pushMat (lua_State *state)
 }*/
 
 
-
+#ifdef OPENCVNET
 static Net *pushNet (lua_State *state)
 {
     Net *net = new (lua_newuserdata(state, sizeof(Net))) Net();
@@ -229,6 +248,7 @@ static Net *pushNet (lua_State *state)
 
     return net;
 }
+#endif
 
 static VideoWriter *pushWriter (lua_State *state)
 {
@@ -425,7 +445,12 @@ int opencv_write(lua_State* state)
     //UMat *ret=pushMat(state);
     VideoWriter *vw=checkWriter(state,1);
     UMat *ret=checkMat(state,2);
-    if(vw!=NULL) vw->write(*ret);
+    if(vw!=NULL)
+        #ifdef OPENCVNET
+            vw->write(*ret);
+        #else
+            vw->write(ret->getMat(ACCESS_READ));
+        #endif
     // check if we succeeded
     int success=1;
     if (ret->empty()) {
@@ -704,6 +729,7 @@ int opencv_print(lua_State* state)
     
 }
 
+#ifdef OPENCVNET
 int opencv_readnet(lua_State* state)
 {
     const char* model=luaL_checkstring(state,1);
@@ -715,7 +741,9 @@ int opencv_readnet(lua_State* state)
     
     return 1;
 }
+#endif
 
+#ifdef OPENCVNET
 int opencv_forward(lua_State* state)
 {
     Net* net=checkNet(state,1);
@@ -755,7 +783,9 @@ int opencv_forward(lua_State* state)
     
     return 0;
 }
+#endif
 
+#ifdef OPENCVNET
 int opencv_forwardTable(lua_State* state)
 {
     Net* net=checkNet(state,1);
@@ -832,6 +862,7 @@ int opencv_forwardTable(lua_State* state)
     
     return 0;
 }
+#endif
 
 int opencv_sliceImg(lua_State* state)
 {
@@ -1077,6 +1108,8 @@ int opencv_infoImg(lua_State* state)
 
     return 0;
 }
+
+#ifdef OPENCVNET
 int opencv_infoNet(lua_State* state)
 {
      Net * net = (Net *)luaL_checkudata(state, 1, OPENCVNET);
@@ -1098,6 +1131,7 @@ int opencv_infoNet(lua_State* state)
     
     return 0;
 }
+#endif
 
 int opencv_size(lua_State* state)
 {
@@ -1169,7 +1203,19 @@ int opencv_totable(lua_State* state)
         lua_newtable(state);
         for (int c = 0; c < mat.cols; c++) {
             lua_pushinteger(state, c+1);
-            lua_pushnumber(state,mat.at<float>(r, c));
+            float value;
+            
+            switch (mat.depth())
+            {
+            case CV_8U: value = mat.at<uchar>(r, c); break;
+            case CV_8S: value = mat.at<schar>(r, c); break;
+            case CV_16U: value = mat.at<ushort>(r, c); break;
+            case CV_16S: value = mat.at<short>(r, c); break;
+            case CV_32S: value = mat.at<int>(r, c); break;
+            case CV_32F: value = mat.at<float>(r, c); break;
+            case CV_64F: value = mat.at<double>(r, c); break;
+            }
+            lua_pushnumber(state,value);
             lua_settable(state,-3);
         }
         lua_settable(state,-3);

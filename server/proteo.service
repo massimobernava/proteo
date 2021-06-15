@@ -7,7 +7,7 @@ StartLimitIntervalSec=0
 Type=simple
 Restart=always
 RestartSec=1
-ExecStart=/usr/local/bin/proteo_server -d -c  /usr/local/etc/proteo/config.json
+ExecStart=/usr/local/bin/proteo_server -d -c  /usr/local/etc/Proteo/config.json
 
 [Install]
 WantedBy=multi-user.target

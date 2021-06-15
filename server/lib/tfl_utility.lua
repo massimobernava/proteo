@@ -194,24 +194,97 @@ function GenerateAnchors(options)
 end
 
 function show_pose(landmarks,image)
-    proteo.opencv.line(image,(landmarks[12].x),(landmarks[12].y),(landmarks[13].x),(landmarks[13].y),16,'#cc33cc')
-    proteo.opencv.line(image,(landmarks[12].x),(landmarks[12].y),(landmarks[14].x),(landmarks[14].y),16,'#993399')
-    proteo.opencv.line(image,(landmarks[13].x),(landmarks[13].y),(landmarks[15].x),(landmarks[15].y),16,'#993399')
-    proteo.opencv.line(image,(landmarks[14].x),(landmarks[14].y),(landmarks[16].x),(landmarks[16].y),16,'#cc33cc')
-    proteo.opencv.line(image,(landmarks[15].x),(landmarks[15].y),(landmarks[17].x),(landmarks[17].y),16,'#cc33cc')
-    proteo.opencv.line(image,(landmarks[13].x),(landmarks[13].y),(landmarks[25].x),(landmarks[25].y),16,'#cc66cc')
-    proteo.opencv.line(image,(landmarks[12].x),(landmarks[12].y),(landmarks[24].x),(landmarks[24].y),16,'#cc66cc')
-    proteo.opencv.line(image,(landmarks[25].x),(landmarks[25].y),(landmarks[24].x),(landmarks[24].y),16,'#ff99ff')
+
+    proteo.opencv.line(image,(landmarks[4].x),(landmarks[4].y),(landmarks[8].x),(landmarks[8].y),3,'#cc66cc')
+    proteo.opencv.line(image,(landmarks[3].x),(landmarks[3].y),(landmarks[4].x),(landmarks[4].y),3,'#cc66cc')
+    proteo.opencv.line(image,(landmarks[2].x),(landmarks[2].y),(landmarks[3].x),(landmarks[3].y),3,'#993399')
+    proteo.opencv.line(image,(landmarks[1].x),(landmarks[1].y),(landmarks[2].x),(landmarks[2].y),3,'#cc33cc')
+    proteo.opencv.line(image,(landmarks[1].x),(landmarks[1].y),(landmarks[5].x),(landmarks[5].y),3,'#cc33cc')
+    proteo.opencv.line(image,(landmarks[5].x),(landmarks[5].y),(landmarks[6].x),(landmarks[6].y),3,'#993399')
+    proteo.opencv.line(image,(landmarks[6].x),(landmarks[6].y),(landmarks[7].x),(landmarks[7].y),3,'#cc66cc')
+    proteo.opencv.line(image,(landmarks[7].x),(landmarks[7].y),(landmarks[9].x),(landmarks[9].y),3,'#cc66cc')
+
+
+    proteo.opencv.line(image,(landmarks[10].x),(landmarks[10].y),(landmarks[11].x),(landmarks[11].y),3,'#cc33cc')
+
+    proteo.opencv.line(image,(landmarks[12].x),(landmarks[12].y),(landmarks[13].x),(landmarks[13].y),3,'#cc33cc')
+    proteo.opencv.line(image,(landmarks[12].x),(landmarks[12].y),(landmarks[14].x),(landmarks[14].y),3,'#993399')
+    proteo.opencv.line(image,(landmarks[13].x),(landmarks[13].y),(landmarks[15].x),(landmarks[15].y),3,'#993399')
+    proteo.opencv.line(image,(landmarks[14].x),(landmarks[14].y),(landmarks[16].x),(landmarks[16].y),3,'#cc33cc')
+    proteo.opencv.line(image,(landmarks[15].x),(landmarks[15].y),(landmarks[17].x),(landmarks[17].y),3,'#cc33cc')
+    proteo.opencv.line(image,(landmarks[16].x),(landmarks[16].y),(landmarks[18].x),(landmarks[18].y),3,'#cc66cc')
+    proteo.opencv.line(image,(landmarks[17].x),(landmarks[17].y),(landmarks[19].x),(landmarks[19].y),3,'#cc66cc')
+    proteo.opencv.line(image,(landmarks[20].x),(landmarks[20].y),(landmarks[18].x),(landmarks[18].y),3,'#cc66cc')
+    proteo.opencv.line(image,(landmarks[21].x),(landmarks[21].y),(landmarks[19].x),(landmarks[19].y),3,'#cc66cc')
+    proteo.opencv.line(image,(landmarks[20].x),(landmarks[20].y),(landmarks[16].x),(landmarks[16].y),3,'#cc66cc')
+    proteo.opencv.line(image,(landmarks[21].x),(landmarks[21].y),(landmarks[17].x),(landmarks[17].y),3,'#cc66cc')
+    proteo.opencv.line(image,(landmarks[22].x),(landmarks[22].y),(landmarks[16].x),(landmarks[16].y),3,'#cc66cc')
+    proteo.opencv.line(image,(landmarks[23].x),(landmarks[23].y),(landmarks[17].x),(landmarks[17].y),3,'#cc66cc')
+
+    proteo.opencv.line(image,(landmarks[13].x),(landmarks[13].y),(landmarks[25].x),(landmarks[25].y),3,'#cc66cc')
+    proteo.opencv.line(image,(landmarks[12].x),(landmarks[12].y),(landmarks[24].x),(landmarks[24].y),3,'#cc66cc')
+    proteo.opencv.line(image,(landmarks[25].x),(landmarks[25].y),(landmarks[24].x),(landmarks[24].y),3,'#ff99ff')
+
+    proteo.opencv.line(image,(landmarks[25].x),(landmarks[25].y),(landmarks[27].x),(landmarks[27].y),3,'#ff99ff')
+    proteo.opencv.line(image,(landmarks[26].x),(landmarks[26].y),(landmarks[24].x),(landmarks[24].y),3,'#ff99ff')
+    proteo.opencv.line(image,(landmarks[29].x),(landmarks[29].y),(landmarks[27].x),(landmarks[27].y),3,'#ff99ff')
+    proteo.opencv.line(image,(landmarks[26].x),(landmarks[26].y),(landmarks[28].x),(landmarks[28].y),3,'#ff99ff')
+    proteo.opencv.line(image,(landmarks[29].x),(landmarks[29].y),(landmarks[31].x),(landmarks[31].y),3,'#ff99ff')
+    proteo.opencv.line(image,(landmarks[32].x),(landmarks[32].y),(landmarks[28].x),(landmarks[28].y),3,'#ff99ff')
+    proteo.opencv.line(image,(landmarks[33].x),(landmarks[33].y),(landmarks[31].x),(landmarks[31].y),3,'#ff99ff')
+    proteo.opencv.line(image,(landmarks[32].x),(landmarks[32].y),(landmarks[30].x),(landmarks[30].y),3,'#ff99ff')
+    proteo.opencv.line(image,(landmarks[33].x),(landmarks[33].y),(landmarks[29].x),(landmarks[29].y),3,'#ff99ff')
+    proteo.opencv.line(image,(landmarks[28].x),(landmarks[28].y),(landmarks[30].x),(landmarks[30].y),3,'#ff99ff')
 end
 
 function show_facemesh(landmarks,image)
 
+    for i=1,#landmarks do
+        proteo.opencv.circle(image, landmarks[i].x, landmarks[i].y,1,"#00FF00")
+    end
+end
+
+function show_hand(landmark,image)
+
+    proteo.opencv.line(image,(landmarks[1].x),(landmarks[1].y),(landmarks[6].x),(landmarks[6].y),3,'#00AA00')
+    proteo.opencv.line(image,(landmarks[10].x),(landmarks[10].y),(landmarks[6].x),(landmarks[6].y),3,'#00AA00')
+    proteo.opencv.line(image,(landmarks[10].x),(landmarks[10].y),(landmarks[14].x),(landmarks[14].y),3,'#00AA00')
+    proteo.opencv.line(image,(landmarks[14].x),(landmarks[14].y),(landmarks[18].x),(landmarks[18].y),3,'#00AA00')
+    proteo.opencv.line(image,(landmarks[1].x),(landmarks[1].y),(landmarks[18].x),(landmarks[18].y),3,'#00AA00')
+
+    proteo.opencv.line(image,(landmarks[6].x),(landmarks[6].y),(landmarks[7].x),(landmarks[7].y),3,'#00BB00')
+    proteo.opencv.line(image,(landmarks[7].x),(landmarks[7].y),(landmarks[8].x),(landmarks[8].y),3,'#00DD00')
+    proteo.opencv.line(image,(landmarks[8].x),(landmarks[8].y),(landmarks[9].x),(landmarks[9].y),3,'#00FF00')
+
+    proteo.opencv.line(image,(landmarks[10].x),(landmarks[10].y),(landmarks[11].x),(landmarks[11].y),3,'#00BB00')
+    proteo.opencv.line(image,(landmarks[11].x),(landmarks[11].y),(landmarks[12].x),(landmarks[12].y),3,'#00DD00')
+    proteo.opencv.line(image,(landmarks[12].x),(landmarks[12].y),(landmarks[13].x),(landmarks[13].y),3,'#00FF00')
+
+    proteo.opencv.line(image,(landmarks[14].x),(landmarks[14].y),(landmarks[15].x),(landmarks[15].y),3,'#00BB00')
+    proteo.opencv.line(image,(landmarks[15].x),(landmarks[15].y),(landmarks[16].x),(landmarks[16].y),3,'#00DD00')
+    proteo.opencv.line(image,(landmarks[16].x),(landmarks[16].y),(landmarks[17].x),(landmarks[17].y),3,'#00FF00')
+
+    proteo.opencv.line(image,(landmarks[18].x),(landmarks[18].y),(landmarks[19].x),(landmarks[19].y),3,'#00BB00')
+    proteo.opencv.line(image,(landmarks[19].x),(landmarks[19].y),(landmarks[20].x),(landmarks[20].y),3,'#00DD00')
+    proteo.opencv.line(image,(landmarks[20].x),(landmarks[20].y),(landmarks[21].x),(landmarks[21].y),3,'#00FF00')
+
+    proteo.opencv.line(image,(landmarks[1].x),(landmarks[1].y),(landmarks[2].x),(landmarks[2].y),3,'#00BB00')
+    proteo.opencv.line(image,(landmarks[2].x),(landmarks[2].y),(landmarks[3].x),(landmarks[3].y),3,'#00CC00')
+    proteo.opencv.line(image,(landmarks[3].x),(landmarks[3].y),(landmarks[4].x),(landmarks[4].y),3,'#00DD00')
+    proteo.opencv.line(image,(landmarks[4].x),(landmarks[4].y),(landmarks[5].x),(landmarks[5].y),3,'#00FF00')
 end
 
 function show_landmark(bbox,image,landmarks)
         
     local size=proteo.opencv.size(image)
-    
+    --print("Size W:"..size[2].." H:"..size[1])
+
+    --print("Roi1 X:"..bbox.roi_coord[1].x.." Y:"..bbox.roi_coord[1].y)
+    --print("Roi2 X:"..bbox.roi_coord[2].x.." Y:"..bbox.roi_coord[2].y)
+    --print("Roi3 X:"..bbox.roi_coord[3].x.." Y:"..bbox.roi_coord[3].y)
+
+    --print("Landmark1 X:"..landmarks.joint[1].x.." Y:"..landmarks.joint[1].y)
+
     proteo.opencv.rectangle(image,bbox.topleft.x*size[2],bbox.topleft.y*size[1],
                                                                     bbox.btmright.x*size[2],bbox.btmright.y*size[1],
                                                                     3,"#FF0000")
@@ -225,7 +298,9 @@ function show_landmark(bbox,image,landmarks)
     proteo.opencv.line(image,bbox.roi_coord[4].x*size[2],bbox.roi_coord[4].y*size[1],bbox.roi_coord[1].x*size[2],bbox.roi_coord[1].y*size[1],1,"#FFFF00")
 
     proteo.opencv.rectangle(image,bbox.topleft.x*size[2],bbox.topleft.y*size[1],bbox.btmright.x*size[2],bbox.btmright.y*size[1],1,"#FF0000")
-            
+           
+
+    
     for j=1,#bbox.keys do
         proteo.opencv.circle(image, bbox.keys[j].x*size[2], bbox.keys[j].y*size[1], 2,"#0000FF")
     end
@@ -240,26 +315,23 @@ function show_landmark(bbox,image,landmarks)
                                                )
     if landmarks~=nil then
                 --proteo.opencv.print(mat)
-        mat_table=proteo.opencv.toTable(mat)
+        local mat_table=proteo.opencv.toTable(mat)
               --tprint(mat_table)
 
-        ret={}
+        local ret={}
         for j=1,#landmarks.joint do
             ret[j]={}
             ret[j].x=landmarks.joint[j].x*mat_table[1][1]+landmarks.joint[j].y*mat_table[1][2]+mat_table[1][3]
             ret[j].y=landmarks.joint[j].x*mat_table[2][1]+landmarks.joint[j].y*mat_table[2][2]+mat_table[2][3]
             ret[j].z=landmarks.joint[j].z
 
-            if j==8 or j==9 or j==250 then
+            --if j==8 or j==9 or j==250 then
                 --proteo.opencv.circle(image, ret[j].x, ret[j].y,8,"#0000FF")
-                id=string.format("%d",j)
-                proteo.opencv.putText(image,id,ret[j].x, ret[j].y,0.5,"#FF0000")
-            --elseif j>=249 and j<=255 then
-            --    id=string.format("%d",j)
-            --    proteo.opencv.putText(image,id,ret[j].x, ret[j].y,0.5,"#0000FF")
-            else
-                proteo.opencv.circle(image, ret[j].x, ret[j].y,2,"#00FF00")
-            end
+             --   id=string.format("%d",j)
+             --   proteo.opencv.putText(image,id,ret[j].x, ret[j].y,0.5,"#FF0000")
+            --else
+                proteo.opencv.circle(image, ret[j].x, ret[j].y,1,"#00FF00")
+            --end
         end
 
         return ret
@@ -271,6 +343,13 @@ end
 function get_landmark(bbox,image,landmarks)
         
     local size=proteo.opencv.size(image)
+    --print("Size W:"..size[2].." H:"..size[1])
+
+    --print("Roi1 X:"..bbox.roi_coord[1].x.." Y:"..bbox.roi_coord[1].y)
+    --print("Roi2 X:"..bbox.roi_coord[2].x.." Y:"..bbox.roi_coord[2].y)
+    --print("Roi3 X:"..bbox.roi_coord[3].x.." Y:"..bbox.roi_coord[3].y)
+
+    --print("Landmark1 X:"..landmarks.joint[1].x.." Y:"..landmarks.joint[1].y)
 
      --LANDMARK
     local mat=proteo.opencv.getAffineTransform(0,0
@@ -282,10 +361,10 @@ function get_landmark(bbox,image,landmarks)
                                                )
     if landmarks~=nil then
                 --proteo.opencv.print(mat)
-        mat_table=proteo.opencv.toTable(mat)
+        local mat_table=proteo.opencv.toTable(mat)
               --tprint(mat_table)
 
-        ret={}
+        local ret={}
         for j=1,#landmarks.joint do
             ret[j]={}
             ret[j].x=landmarks.joint[j].x*mat_table[1][1]+landmarks.joint[j].y*mat_table[1][2]+mat_table[1][3]
@@ -298,3 +377,18 @@ function get_landmark(bbox,image,landmarks)
 
     return nil
 end
+
+--[[function tprint (tbl, indent)
+  if not indent then indent = 0 end
+  for k, v in pairs(tbl) do
+    formatting = string.rep("  ", indent) .. k .. ": "
+    if type(v) == "table" then
+      print(formatting)
+      tprint(v, indent+1)
+    elseif type(v) == 'boolean' then
+      print(formatting .. tostring(v))      
+    else
+      print(formatting .. v)
+    end
+  end
+end]]--

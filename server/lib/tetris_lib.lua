@@ -1,5 +1,6 @@
 local inspect = require("inspect")
 local json=require "json"
+require "tfl_blazepose"
 require "tfl_utility"
 
 
@@ -26,6 +27,8 @@ tetris.left_move_rotate = function()
   end
 end
 
+--REMOTE TFL
+--[[
 tetris.pose =  function(data)
   for _, b in ipairs(data['data']) do
     landmarks = show_landmark(b,tetris.template.left_frame,b['landmarks'])
@@ -37,6 +40,7 @@ tetris.pose =  function(data)
   end
 end
 
+  
 tetris.pipe =  function(json_data)
   data = json.decode(json_data)
   proteo.opencv.frame(tetris.left_cap,tetris.template.left_frame)
@@ -53,14 +57,41 @@ tetris.pipe =  function(json_data)
   return json.encode(data)
 end
 
+
 tetris.update_event = function(dt)
+
   if tetris.zmq_socket_tetris ~= nil then
     buffer = proteo.zmq.recv(tetris.zmq_socket_tetris,proteo.zmq.flag.ZMQ_DONTWAIT)
     if buffer ~= nil then
       proteo.zmq.send (tetris.zmq_socket_tetris,(tetris.pipe(buffer)),proteo.zmq.flag.ZMQ_DONTWAIT)
     end
   end
+ 
+
  end
+ ]]--
+--=============
+
+--LOCAL TFL
+tetris.update_local_event = function(dt)
+
+    proteo.opencv.frame(tetris.left_cap,tetris.template.left_frame)
+
+    bbox = invoke_pose_detect(tetris.template.left_frame)
+    size = proteo.opencv.size(tetris.template.left_frame)
+
+    for i=1,#bbox do
+      feed_image = generate_pose_landmark_input_image(tetris.template.left_frame,bbox[i])
+      bbox[i].landmarks=invoke_pose_landmark(feed_image)
+      landmarks = get_landmark(bbox[i],tetris.template.left_frame,bbox[i].landmarks)
+      show_pose(landmarks,tetris.template.left_frame)
+      tetris.pose_control(landmarks)
+    end
+
+      proteo.opencv.flip(tetris.template.left_frame,tetris.template.left_frame,1)
+      proteo.graphics.changeImage(tetris.template.left_image,tetris.template.left_frame)
+end
+--=============
 
 tetris.update_t_event = function(dt)
   if tetris.check_t_left(tetris.DOWN) ~= 1 then
@@ -310,16 +341,22 @@ tetris.check_t_left = function(d)
   return 0
 end
 
+--REMOTE TFL
+--[[
 tetris.start_callback = function(res,data)
   tetris.current_session = data['session']
   proteo.system.stopTimer(tetris.webcam_timer)
   proteo.system.startTimer(tetris.t_timer)
+
+  
   tetris.zmq_context_tetris = proteo.zmq.ctx_new()
   tetris.zmq_socket_tetris = proteo.zmq.socket_new(tetris.zmq_context_tetris,proteo.zmq.sockType.ZMQ_REQ)
-  proteo.zmq.connect(tetris.zmq_socket_tetris,'tcp://localhost:5555')
+  proteo.zmq.connect(tetris.zmq_socket_tetris,'tcp://poseidone.irib.cloud:5555')
+
   proteo.opencv.frame(tetris.left_cap,tetris.template.left_frame)
   proteo.opencv.flip(tetris.template.left_frame,tetris.template.left_frame,1)
   proteo.graphics.changeImage(tetris.template.left_image,tetris.template.left_frame)
+
   tmp = proteo.opencv.imencode(tetris.template.left_frame)
   data = {}
   data['type']='FRAME'
@@ -328,12 +365,23 @@ tetris.start_callback = function(res,data)
   data['encoding']='JPEG'
   data['request']='TFLPOSE'
   proteo.zmq.send (tetris.zmq_socket_tetris,json.encode(data),proteo.zmq.flag.ZMQ_DONTWAIT)
+
   tetris.event_timer = proteo.system.createTimer(50,tetris.update_event)
   proteo.system.startTimer(tetris.event_timer)
  end
+ ]]--
+  --===========
 
 tetris.start = function(sender)
-  proteo.network.proteo_post("/deepcrimson/start",'{}',tetris.start_callback)
+
+--REMOTE TFL
+--proteo.network.proteo_post("/deepcrimson/start",'{}',tetris.start_callback)
+--LOCAL TFL
+  proteo.system.stopTimer(tetris.webcam_timer)
+  proteo.system.startTimer(tetris.t_timer)
+  tetris.event_timer = proteo.system.createTimer(50,tetris.update_local_event)
+  proteo.system.startTimer(tetris.event_timer)
+--==========
  end
 
 tetris.update_left_square = function()
@@ -407,7 +455,7 @@ tetris.create_template =  function(pose_control_function)
   	proteo.opencv.setBufferSize(tetris.left_cap,3)
   	proteo.opencv.frame(tetris.left_cap,tetris.template.left_frame)
   	tetris.template.sagoma = proteo.opencv.imread(proteo.system.document()..'sagoma.jpg')
- 	proteo.opencv.resize(tetris.template.sagoma,tetris.template.sagoma,480,640)
+ 	  proteo.opencv.resize(tetris.template.sagoma,tetris.template.sagoma,480,640)
   	tetris.webcam_timer = proteo.system.createTimer(300,tetris.webcam_event)
   	proteo.system.startTimer(tetris.webcam_timer)
   	for y = 1, 20, 1 do

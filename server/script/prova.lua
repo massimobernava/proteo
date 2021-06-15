@@ -109,6 +109,7 @@ farfalla_animation = {{0,0,33,0,1,1, 2,1, 3,1, 4,1, 5,1, 6,1, 7,1, 8,1, 9,1, 10,
 }
 farfalla_animation = farfalla_animation[1]
 graphics_event = function(dt)
+
   farfalla_animation[CURRENT_TICK] = farfalla_animation[CURRENT_TICK] + 1
   if math.random(1, 50) == 1 then
     d_x = math.random(-2, 2)
@@ -145,6 +146,47 @@ skl_read_callback = function(data,filename)
   proteo.graphics.updateSkeleton(skeleton)
  end
 
+--shader=nil
+shader_u_time=2.0
+
+function render(my_shader)
+  if my_shader~=nil then
+    proteo.graphics.setUniform(my_shader,"u_time",shader_u_time)
+    shader_u_time=shader_u_time+0.1
+  end
+end
+
+particle_option={}
+
+function endLife(sender)
+
+  particle_option.frame_x=0
+  particle_option.frame_y=0
+  particle_option.frame_width=256
+  particle_option.frame_height=256
+
+  particle_option.startSpeed=80.0+20*math.random()
+  particle_option.startDirection=(-3.14/2)-(math.random()-0.5)
+  particle_option.lifeTime=3000*math.random()
+  particle_option.linearAccelerationX=150.0 + 50*math.random()
+  particle_option.linearAccelerationY=50.0 + 50*math.random()
+  particle_option.angularSpeed=0 -- 1.5708
+
+  particle_option.position_x=20*math.random()-10
+  particle_option.position_y=20*math.random()-10
+
+  particle_option.spin=5.0*math.random()
+
+  particle_option.startSize=1.0
+    particle_option.endSize=2.0
+
+  particle_option.startColor="#aae25822"
+  particle_option.endColor="#00bbaaff"
+
+  proteo.graphics.setParticle(sender,particle_option)
+  proteo.graphics.setPosition(sender,farfalla_x,farfalla_y)
+end
+
 graphics_init = function(sender)
   t5 = proteo.system.createTimer(20,graphics_event)
   proteo.system.startTimer(t5)
@@ -165,13 +207,64 @@ graphics_init = function(sender)
   shape = proteo.graphics.newShape("shape",150,150)
   svg2shape(svgfile,shape)
   skeleton = proteo.graphics.newSkeleton("skeleton")
-  proteo.system.readFile(proteo.system.document()..'skeleton.json',skl_read_callback)
+  --proteo.system.readFile(proteo.system.document()..'skeleton.json',skl_read_callback)
+  rect_graphics=proteo.graphics.newRect("rect","white","",100,100,200,200)
+
+math.randomseed( os.time() )
+  
+  particle_option.frame_x=0
+  particle_option.frame_y=0
+  particle_option.frame_width=128
+  particle_option.frame_height=128
+  particle_option.startColor="#aae25822"
+  particle_option.endColor="#00bbaaff"
+
+particles={}
+  for p=1,500 do
+    particle_option.startSpeed=80.0+20*math.random()
+    particle_option.startDirection=(-3.14/2)-(math.random()-0.5)
+    particle_option.lifeTime=3000*math.random()
+    particle_option.linearAccelerationX=150.0 + 50*math.random()
+    particle_option.linearAccelerationY=50.0 + 50*math.random()
+    particle_option.angularSpeed=0 -- 1.5708
+    particle_option.spin=5.0*math.random()
+    particle_option.startSize=1.0
+    particle_option.endSize=2.0
+
+    particles[p]=proteo.graphics.newParticle("P"..p,proteo.system.document().."sparkle.png",500,200,32,32,particle_option,endLife)
+  end
+
+if SHADER==1 then
+  shader=proteo.graphics.newShader([[ 
+    void main()
+    {
+      gl_Position = ftransform();
+    }
+]],[[
+    uniform float u_time;
+
+    void main()
+    {
+      //gl_FragColor = vec4( 1.0, 0.0, 1.0, 1.0 );
+      gl_FragColor = vec4(abs(sin(u_time)),0.0,0.0,1.0);
+    }
+]])
+
+proteo.graphics.setShader(rect_graphics,shader,render)
+end
+
   graphicsForm=Form('graphicsForm')
   graphicsForm.backgroundColor='#000000'
   graphicsForm:addControl(t_graphics)
   graphicsForm:addControl(back_graphics)
   graphicsForm:addControl(farfalla)
   graphicsForm:addControl(shape)
+  graphicsForm:addControl(rect_graphics)
+  --graphicsForm:addControl(part)
+  for p=1,500 do
+    graphicsForm:addControl(particles[p])
+  end
+
   forms['graphicsForm']=graphicsForm
   forms['graphicsForm']:show()
  end

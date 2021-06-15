@@ -13,10 +13,10 @@ function decode_pose_bounds (scores, bbox, score_thresh, input_img_w, input_img_
 --print("#anchors: "..#anchors)
 --print("#bbox: "..#bbox)
 
-	for i=1,#anchors do
+	for i=1,#pose_anchors do
 		
 		region = {}
-		anchor = anchors[i]
+		anchor = pose_anchors[i]
 		score0 = scores[i]
 		score = 1.0 / (1.0 + math.exp(-score0))
 
@@ -169,7 +169,7 @@ function pack_detect_pose_result (region_list)
 
 end
 
-function create_pose_ssd_anchors(input_w,intput_h)
+function create_pose_ssd_anchors_old(input_w,intput_h)
 
 	local anchor_options = {}
 	anchor_options.num_layers = 4
@@ -191,6 +191,27 @@ function create_pose_ssd_anchors(input_w,intput_h)
 	return GenerateAnchors(anchor_options)
 end
 
+function create_pose_ssd_anchors(input_w,intput_h)
+
+    local anchor_options = {}
+    anchor_options.num_layers = 5
+    anchor_options.strides = {8,16,32,32,32}
+    anchor_options.aspect_ratios = {1.0}
+    anchor_options.feature_map_height ={}
+
+    anchor_options.min_scale = 0.1484375
+    anchor_options.max_scale = 0.75
+    anchor_options.input_size_height = 224
+    anchor_options.input_size_width  = 224
+    anchor_options.anchor_offset_x  = 0.5
+    anchor_options.anchor_offset_y  = 0.5
+
+    anchor_options.reduce_boxes_in_lowest_layer = false
+    anchor_options.interpolated_scale_aspect_ratio = 1.0
+    anchor_options.fixed_anchor_size = true
+
+    return GenerateAnchors(anchor_options)
+end
 --========= INIT
 
 kPoseDetectKeyNum=4 -- FullBody:4, UpperBody:2
@@ -200,8 +221,9 @@ kMidShoulderCenter=3
 
 POSE_JOINT_NUM=33
 
-tfl_detect_model=proteo.tflite.modelFromFile("pose/pose_detection.tflite")
-tfl_landmark_model=proteo.tflite.modelFromFile("pose/pose_landmark_full_body.tflite")
+--tfl_detect_model=proteo.tflite.modelFromFile(proteo.system.document().."dl/pose_detection_old.tflite")
+tfl_detect_model=proteo.tflite.modelFromFile(proteo.system.document().."dl/pose_detection.tflite")
+tfl_landmark_model=proteo.tflite.modelFromFile(proteo.system.document().."dl/pose_landmark_heavy.tflite")--"dl/pose_landmark_full_body.tflite")--
 
 tfl_interpreter_options=proteo.tflite.createInterpreterOptions()
 
@@ -229,7 +251,7 @@ tfl_landmark_score_outputTensorSize=proteo.tflite.getTensorSize(tfl_landmark_sco
 tfl_frame=proteo.opencv.img()
 proteo.opencv.setSize(tfl_frame,tfl_detect_inputTensorSize[2],tfl_detect_inputTensorSize[3])
 
-anchors=create_pose_ssd_anchors(tfl_detect_inputTensorSize[3],tfl_detect_inputTensorSize[2])
+pose_anchors=create_pose_ssd_anchors(tfl_detect_inputTensorSize[3],tfl_detect_inputTensorSize[2])
 
 --ocv_detect_model=proteo.opencv.readnet("pose/pose_detection_model_float32.pb","")
 --proteo.opencv.infoNet(ocv_detect_model)
@@ -257,7 +279,8 @@ function invoke_pose_detect (img)
 
     scores = proteo.tflite.tensorToTable(tfl_detect_scores_tensor)
     bbox = proteo.tflite.tensorToTable(tfl_detect_bbox_tensor)
-    score_thresh = 0.4
+    --score_thresh = 0.4
+    score_thresh = 0.5
 
     region_list = decode_pose_bounds (scores, bbox, score_thresh, tfl_detect_inputTensorSize[3], tfl_detect_inputTensorSize[2])
 

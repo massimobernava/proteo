@@ -878,7 +878,7 @@ static int graphics_changeImage (lua_State *state)
         void* mat = luaL_checkudata(L, 2, "OpenCVMat");
 
         OCVImage opencvimg=getImage(mat);
-        //if(debug) printf("graphics.changeImage OpenCV(%d,%d) Depth:%d Channels:%d Step:%lu\n",opencvimg.width, opencvimg.height,opencvimg.depth,opencvimg.channels,opencvimg.step);
+        if(verbose) printf("graphics.changeImage OpenCV(%d,%d) Depth:%d Channels:%d Step:%lu\n",opencvimg.width, opencvimg.height,opencvimg.depth,opencvimg.channels,opencvimg.step);
         if(pc->surface!=NULL) SDL_FreeSurface(pc->surface);
 
         pc->surface = SDL_CreateRGBSurfaceFrom((void*)opencvimg.data,
@@ -1035,7 +1035,7 @@ static int graphics_addFrameSource(lua_State *state) {
     const int pos_y=luaL_checkint(state,3);
     const int width=luaL_checkint(state,4);
     const int height=luaL_checkint(state,5);
-    const int tw=luaL_checkint(state,6);
+    const int tw=luaL_checkint(state,6); //Destination size
     const int th=luaL_checkint(state,7);
 
     sprite->framesSource[sprite->nFrame].x=pos_x;
@@ -2443,7 +2443,7 @@ static int graphics_bindSkeleton(lua_State *state)
               {
                   ProteoBone* nearBone=getBone(ps,current);
 
-                   int* bones=getBonesGroup(ps,nearBone,current);
+                   int* bones=getBonesGroup(ps,nearBone,current); //array of bones that impact that shape (1=yes, 0=no)
                    for(int k=0;k<ps->nbones;k++)
                    {
                       if(bones[k]==1)
@@ -2617,7 +2617,7 @@ static int graphics_addItem(lua_State *state)
     ProteoComponent* shape=toProteoComponent(state,1);
     ProteoComponent* item=toProteoComponent(state,2);
 
-    if(debug) printf("graphics.addItem %s -> %s\n",item->id,shape->id);
+    if(verbose) printf("graphics.addItem %s -> %s\n",item->id,shape->id);
 
     item->parent=shape;
     //child->child_next=NULL;
@@ -2717,6 +2717,35 @@ static int graphics_newEllipse (lua_State *state) {
 //==============================================================================
 //   RECT
 //==============================================================================
+#ifdef USEOPENGL
+static int graphics_drawRect_GL (ProteoComponent* rect)
+{
+    SDL_Rect rect_rect=rect->rect;
+
+    if(rect->parent!=NULL)
+    {
+        rect_rect.x+=rect->parent->rect.x;
+        rect_rect.y+=rect->parent->rect.y;
+    }
+    
+    if(rect->component.rect.shaderId>0)
+        glUseProgram(rect->component.rect.shaderId);
+
+    if(rect->component.rect.ref_render!=-1)
+    {
+        lua_getref(L,rect->component.rect.ref_render);
+        lua_pushinteger(L,rect->component.rect.shaderId);
+        int error = lua_pcall(L, 1, 0, 0);
+    }
+    
+    GL_SetRenderDrawColor(rect->color.r, rect->color.g, rect->color.b, rect->color.a);
+    GL_RenderFillRect(&rect_rect);
+
+    if(rect->component.rect.shaderId>0) glUseProgram(NULL);
+
+    return 1;
+}
+#endif
 
 static int graphics_drawRect (SDL_Renderer* renderer,ProteoComponent* rect)
 {
@@ -2727,16 +2756,16 @@ static int graphics_drawRect (SDL_Renderer* renderer,ProteoComponent* rect)
         rect_rect.x+=rect->parent->rect.x;
         rect_rect.y+=rect->parent->rect.y;
     }
-
+    
     rectangleRGBA(renderer, rect_rect.x, rect_rect.y, rect_rect.x+rect_rect.w, rect_rect.y+rect_rect.h, rect->color.r, rect->color.g, rect->color.b, rect->color.a);
 
     boxRGBA(renderer, rect_rect.x, rect_rect.y, rect_rect.x+rect_rect.w, rect_rect.y+rect_rect.h,rect->component.rect.color.r,
             rect->component.rect.color.g, rect->component.rect.color.b, rect->component.rect.color.a);
-
+    
     /*SDL_SetRenderDrawColor( renderer, rect->component.rect.color.r,
 		rect->component.rect.color.g, rect->component.rect.color.b, rect->component.rect.color.a );
 	SDL_RenderFillRect( renderer, & rect_rect );*/
-
+    
 	return 1;
 }
 
@@ -2776,6 +2805,8 @@ static int graphics_newRect (lua_State *state) {
 	pc->rect.w=width;
 	pc->rect.h=height;
 	pc->component.rect.color=hex2color(color);
+    pc->component.rect.shaderId=0;
+    pc->component.rect.ref_render=-1;
 	pc->color=hex2color(border_color);
 	//pc->next=NULL;
 	pc->surface=NULL;
@@ -2942,6 +2973,234 @@ static int graphics_newSprite (lua_State *state) {
         while(current->next!=NULL) current=(ProteoComponent*)current->next;
         current->next=pc;
     }*/
+    addComponent(pc,&components);
+    return 1;
+}
+
+//==============================================================================
+//   PARTICLE
+//==============================================================================
+
+static int graphics_updateParticle (ProteoComponent* particle)
+{
+    if(particle->hidden==TRUE) return 3;
+    
+    Uint32 frameTime = SDL_GetTicks() - particle->component.particle.frameTick;
+    particle->component.particle.life-=frameTime;
+    
+    if(particle->component.particle.life < 0)
+    {
+        particle->hidden=TRUE;
+        bool callback_valid=false;
+        if(particle->callback!=NULL)
+        {
+            callback_valid=true;
+            lua_getglobal(L,particle->callback);
+        }
+        else if(particle->ref_callback!=-1)
+        {
+            callback_valid=true;
+            //lua_getref(L,particle->ref_callback);
+            lua_rawgeti(L, LUA_REGISTRYINDEX,particle->ref_callback);
+        }
+        
+        if(callback_valid)
+        {
+            lua_pushlightuserdata(L, particle);
+            int error = lua_pcall(L, 1, 0, 0);
+            
+            if (error) {
+                fprintf(stderr, "ERROR particle callback: %s\n", lua_tostring(L, -1));
+                lua_pop(L, 1);
+            }
+        }
+        return 2;
+    }
+
+    particle->component.particle.frameTick = SDL_GetTicks();
+
+    //printf("Particle %s life %d\n",particle->id,particle->component.particle.life);
+    particle->component.particle.direction+=particle->component.particle.angularSpeed*(float)frameTime/1000.0f;
+    
+    float speed_x=particle->component.particle.speed * cosf(particle->component.particle.direction);
+    float speed_y=particle->component.particle.speed * sinf(particle->component.particle.direction);
+    
+    speed_x+=(1.0f-(float)particle->component.particle.life/(float)particle->component.particle.lifeTime)*particle->component.particle.linearAccelerationX;
+    speed_y+=(1.0f-(float)particle->component.particle.life/(float)particle->component.particle.lifeTime)*particle->component.particle.linearAccelerationY;
+    
+    
+    /*speed_x+=(1.0f-(float)particle->component.particle.life/(float)particle->component.particle.lifeTime) * particle->component.particle.tangentialAcceleration * cosf(particle->component.particle.direction+1.5708f);//90°
+    speed_y+=(1.0f-(float)particle->component.particle.life/(float)particle->component.particle.lifeTime) * particle->component.particle.tangentialAcceleration * sinf(particle->component.particle.direction+1.5708f);//90°*/
+    //printf("Particle %s speed_x: %f speed_y: %f\n",particle->id,speed_x,speed_y);
+    
+    particle->component.particle.position.x+=speed_x*(float)frameTime/1000.0f;
+    particle->component.particle.position.y+=speed_y*(float)frameTime/1000.0f;
+    
+    particle->component.particle.rotation+=particle->component.particle.spin;
+    
+    float t=1.0f-(float)particle->component.particle.life/(float)particle->component.particle.lifeTime;
+    particle->component.particle.size=interpolation(particle->component.particle.startSize,t,particle->component.particle.endSize);
+    
+    ProteoColor color=ColorInterpolation(particle->component.particle.startColor,t,particle->component.particle.endColor);
+    
+    SDL_SetTextureAlphaMod( particle->component.particle.image->texture,color.a);
+    SDL_SetTextureColorMod( particle->component.particle.image->texture, color.r, color.g, color.b );
+    SDL_SetTextureBlendMode(particle->component.particle.image->texture,SDL_BLENDMODE_ADD);
+    
+    return 1;
+}
+static int graphics_drawParticle (SDL_Renderer* renderer,ProteoComponent* particle)
+{
+    graphics_updateParticle (particle);
+    
+    if(particle->component.particle.image!=NULL)
+    {
+        SDL_Rect location={particle->rect.x+(int)particle->component.particle.position.x,
+            particle->rect.y+(int)particle->component.particle.position.y,
+            particle->rect.w*particle->component.particle.size,particle->rect.h*particle->component.particle.size};
+
+        
+           SDL_RenderCopyEx(renderer, particle->component.particle.image->texture, &particle->component.particle.frameRect, &location,particle->component.particle.rotation,NULL,SDL_FLIP_NONE);
+    }
+
+    return 1;
+}
+
+static int set_particle(lua_State *state,int index,_particle* prt)
+{
+    prt->frameRect.x=0;
+    prt->frameRect.y=0;
+    prt->frameRect.w=0;
+    prt->frameRect.h=0;
+    
+    prt->speed=0;
+    prt->direction=0;
+    prt->life=prt->lifeTime=0;
+    
+    prt->spin=0.0f;
+    prt->rotation=0.0f;
+    
+    prt->linearAccelerationX=0;
+    prt->linearAccelerationY=0;
+    
+    prt->angularSpeed=0.0f;
+    
+    float radialAcceleration; //TODO away from the position (rect.x,rect.y)
+    
+    prt->startSize=prt->endSize=prt->size=1.0;
+
+    char startColor[10];
+    char endColor[10];
+    //TODO third color
+    
+    SDL_BlendMode blendMode;
+    
+    prt->position.x=0;
+    prt->position.y=0;
+    
+    lua_pushvalue(state, index);
+     lua_pushnil(state);
+     while (lua_next(state, -2))
+     {
+         lua_pushvalue(state, -2);
+         const char *key = lua_tostring(state, -1);
+         if (lua_isnumber(state, -2)==1)
+         {
+             double value = lua_tonumber(state, -2);
+             if(strcmp(key,"frame_x")==0) prt->frameRect.x=(int)value;
+             if(strcmp(key,"frame_y")==0) prt->frameRect.y=(int)value;
+             if(strcmp(key,"frame_width")==0) prt->frameRect.w=(int)value;
+             if(strcmp(key,"frame_height")==0) prt->frameRect.h=(int)value;
+             if(strcmp(key,"position_x")==0) prt->position.x=(int)value;
+             if(strcmp(key,"position_y")==0) prt->position.y=(int)value;
+             
+             if(strcmp(key,"startSpeed")==0) prt->speed=(float)value;
+             if(strcmp(key,"startDirection")==0) prt->direction=(float)value;
+             if(strcmp(key,"lifeTime")==0) prt->life=prt->lifeTime=(int)value;
+             
+             if(strcmp(key,"spin")==0) prt->spin=(float)value;
+             if(strcmp(key,"startRotation")==0) prt->rotation=(float)value;
+             if(strcmp(key,"angularSpeed")==0) prt->angularSpeed=(float)value;
+             
+             if(strcmp(key,"startSize")==0) prt->startSize=prt->size=(float)value;
+             if(strcmp(key,"endSize")==0) prt->endSize=(float)value;
+             
+             if(strcmp(key,"linearAccelerationX")==0) prt->linearAccelerationX=(float)value;
+             if(strcmp(key,"linearAccelerationY")==0) prt->linearAccelerationY=(float)value;
+         }
+         else if(lua_isstring(state, -2)==1)
+         {
+             const char *value = lua_tostring(state, -2);
+
+             if(strcmp(key,"startColor")==0) strlcpy(startColor,value,10);
+             else if(strcmp(key,"endColor")==0) strlcpy(endColor,value,10);
+             
+         }
+         else printf("Key %s is type: %s\n",key,
+                     lua_typename(L, lua_type(L, -2)));
+
+         lua_pop(state, 2);
+     }
+     lua_pop(state, 1);
+    
+    prt->startColor=hex2color(startColor);
+    prt->endColor=hex2color(endColor);
+    
+    prt->frameTick = SDL_GetTicks();
+    
+    return 1;
+}
+
+static int graphics_setParticle (lua_State *state) {
+    
+    ProteoComponent* particle=toProteoComponent(state,1);
+    set_particle(state,2,&particle->component.particle);
+    particle->hidden=FALSE;
+}
+
+static int graphics_newParticle (lua_State *state) {
+    const char* id=luaL_checkstring(state,1);
+    const char* file=luaL_checkstring(state,2);
+    const int pos_x=luaL_checkint(state,3);
+    const int pos_y=luaL_checkint(state,4);
+    const int width=luaL_checkint(state,5);
+    const int height=luaL_checkint(state,6);
+    
+    _particle prt;
+    set_particle(state,7,&prt);
+
+    char* callback=NULL;
+    int ref_callback=-1;
+    if (lua_isstring(state,8)==1)
+        callback=(char*)luaL_checkstring(state,8);
+    else
+        ref_callback=lua_ref( L, TRUE );
+    
+    ProteoComponent* pc=pushProteoComponent(state);
+
+    //strcpy(pc->id,id);
+    strlcpy(pc->id,id,PROTEO_MAX_ID);
+    pc->rect.x=pos_x;
+    pc->rect.y=pos_y;
+    pc->rect.w=width;
+    pc->rect.h=height;
+    
+    pc->component.particle=prt;
+    
+    pc->component.particle.image=newTexture(gRenderer,file);
+    if(pc->component.particle.image==NULL) printf("Error newParticle: %s\n",file);
+    
+    pc->surface=NULL;
+    pc->texture=NULL;
+    pc->parent=NULL;
+    pc->hidden=FALSE;
+    pc->type=Particle;
+    pc->layer=100;
+    pc->font=NULL;
+    pc->txt=NULL;
+    pc->callback=callback;
+    pc->ref_callback=ref_callback;
+    
     addComponent(pc,&components);
     return 1;
 }
@@ -3301,6 +3560,119 @@ static int graphics_newShape(lua_State *state)
        return 1;
 }
 
+#ifdef USEOPENGL
+GLuint compileShader(const char* source, GLuint shaderType) {
+    GLuint result = glCreateShader(shaderType);
+        // Define shader text
+        glShaderSource(result, 1, &source, NULL);
+        // Compile shader
+        glCompileShader(result);
+    
+    //Check vertex shader for errors
+        GLint shaderCompiled = GL_FALSE;
+        glGetShaderiv( result, GL_COMPILE_STATUS, &shaderCompiled );
+        if( shaderCompiled != GL_TRUE ) {
+            printf("Shader compilation error!\n");
+            GLint logLength;
+            glGetShaderiv(result, GL_INFO_LOG_LENGTH, &logLength);
+            if (logLength > 0)
+            {
+                GLchar *log = (GLchar*)malloc(logLength);
+                glGetShaderInfoLog(result, logLength, &logLength, log);
+                printf("Shader compile log: %s\n",log);
+                free(log);
+            }
+            glDeleteShader(result);
+            result = 0;
+        }else {
+            
+            
+        }
+    
+    return result;
+}
+
+static int graphics_setShader (lua_State *state) {
+    ProteoComponent* pc=toProteoComponent(state,1);
+    GLuint programId=luaL_checkint(state,2);
+    int render=lua_ref(state, TRUE);
+
+    if(pc!=NULL)
+    {
+        pc->component.rect.shaderId=programId;
+        pc->component.rect.ref_render=render;
+    }
+
+      return 0;
+}
+
+static int graphics_setUniform (lua_State *state) {
+    GLuint programId=luaL_checkint(state,1);
+    char* uniformName=luaL_checkstring(state,2);
+
+    int uniformLocation=glGetUniformLocation(programId,uniformName);
+    
+    //TODO if number ....
+    float uniformValue=luaL_checknumber(state,3);
+    glUniform1f(uniformLocation,uniformValue);
+    
+    return 0;
+}
+
+//-----------------------------------------------------------------------------
+//-- newShader
+//--
+//-- @param id              component id (string, max size PROTEO_MAX_ID)
+//-- @param pos_x           position x on the screen
+//-- @param pos_y           position y on the screen
+//--
+//-----------------------------------------------------------------------------
+
+static int graphics_newShader(lua_State *state)
+{
+    const char* vertex_shader_source=luaL_checkstring(state,1);
+    const char* fragment_shader_source=luaL_checkstring(state,2);
+    
+    GLuint programId = 0;
+    GLuint vtxShaderId, fragShaderId;
+
+    programId = glCreateProgram();
+    vtxShaderId = compileShader(vertex_shader_source, GL_VERTEX_SHADER);
+    fragShaderId = compileShader(fragment_shader_source, GL_FRAGMENT_SHADER);
+    
+    if(vtxShaderId && fragShaderId) {
+            // Associate shader with program
+            glAttachShader(programId, vtxShaderId);
+            glAttachShader(programId, fragShaderId);
+            glLinkProgram(programId);
+            glValidateProgram(programId);
+
+            // Check the status of the compile/link
+            GLint logLen;
+            glGetProgramiv(programId, GL_INFO_LOG_LENGTH, &logLen);
+            if(logLen > 0) {
+                char* log = (char*) malloc(logLen * sizeof(char));
+                // Show any errors as appropriate
+                glGetProgramInfoLog(programId, logLen, &logLen, log);
+                printf("Prog Info Log: %s\n" ,log);
+                free(log);
+            }
+        }
+        if(vtxShaderId) {
+            glDeleteShader(vtxShaderId);
+        }
+        if(fragShaderId) {
+            glDeleteShader(fragShaderId);
+        }
+    
+    lua_pushinteger(state, programId);
+    
+        return 1;
+}
+
+
+#endif
+
 //==============================================================================
 //   LUA
 //==============================================================================
@@ -3311,6 +3683,8 @@ void add_graphics_proteo(lua_State* state)
     addFunction_proteo(state,"graphics","newRect",graphics_newRect);
     addFunction_proteo(state,"graphics","newEllipse",graphics_newEllipse);
     addFunction_proteo(state,"graphics","newSprite",graphics_newSprite);
+    addFunction_proteo(state,"graphics","newParticle",graphics_newParticle);
+    addFunction_proteo(state,"graphics","setParticle",graphics_setParticle);
     addFunction_proteo(state,"graphics","newIcon",graphics_newIcon);
     addFunction_proteo(state,"graphics","newPolygon",graphics_newPolygon);
     addFunction_proteo(state,"graphics","newShape",graphics_newShape);
@@ -3355,4 +3729,9 @@ void add_graphics_proteo(lua_State* state)
     addFunction_proteo(state,"graphics","saveSkeleton",graphics_saveSkeleton);
     addFunction_proteo(state,"graphics","updateSkeleton",graphics_updateSkeleton);
     addFunction_proteo(state,"graphics","hideSkeleton",graphics_hideSkeleton);
+#ifdef USEOPENGL
+    addFunction_proteo(state,"graphics","newShader",graphics_newShader);
+    addFunction_proteo(state,"graphics","setShader",graphics_setShader);
+    addFunction_proteo(state,"graphics","setUniform",graphics_setUniform);
+#endif
 }

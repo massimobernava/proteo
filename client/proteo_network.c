@@ -282,10 +282,29 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream)
 }
 
 #ifdef __EMSCRIPTEN__
+
+typedef struct ProteoDownload
+{
+    char name[256];
+    char callback[256];
+
+} ProteoDownload;
+
  void downloadSucceeded(emscripten_fetch_t *fetch)
 {
   printf("Finished downloading %llu bytes from URL %s.\n", fetch->numBytes, fetch->url);
-  // The data is now available at fetch->data[0] through fetch->data[fetch->numBytes-1];
+     if(fetch->userData!=NULL)
+     {
+         writedatafile(((ProteoDownload*)fetch->userData)->name,fetch->data,fetch->numBytes);
+
+         EM_ASM(
+             FS.syncfs(function (err) {
+                 //console.log("Download font error: "+err);
+             });
+         );
+         
+         free(fetch->userData);
+     }
   emscripten_fetch_close(fetch); // Free data associated with the fetch.
 }
 
@@ -307,15 +326,31 @@ static int network_download(lua_State *state)
 
   //TODO completamente da scrivere, vedi newFont
 
-  emscripten_fetch_attr_t attr;
+  /*emscripten_fetch_attr_t attr;
   emscripten_fetch_attr_init(&attr);
   strcpy(attr.requestMethod, "GET");
   //attr.userData callback + name
-  attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_PERSIST_FILE;
+    attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY | EMSCRIPTEN_FETCH_PERSIST_FILE;
   attr.onsuccess = downloadSucceeded;
   attr.onerror = downloadFailed;
-  emscripten_fetch(&attr, "myfile.dat");
+  emscripten_fetch(&attr, "myfile.dat");*/
 
+    emscripten_fetch_attr_t attr;
+    emscripten_fetch_attr_init(&attr);
+    strcpy(attr.requestMethod, "GET");
+    attr.attributes = EMSCRIPTEN_FETCH_LOAD_TO_MEMORY;// | EMSCRIPTEN_FETCH_PERSIST_FILE;
+    ProteoDownload* prtDownload=malloc(sizeof(ProteoDownload));
+    strcpy(prtDownload->name,name);
+    strcpy(prtDownload->callback,callback);
+    attr.userData = prtDownload;
+    attr.onsuccess = downloadSucceeded;
+    attr.onerror = downloadFailed;
+    //attr.destinationPath=path;
+    const char* full_path=concat3(config.server,"/",url);
+    if(verbose) printf("Download font: %s\n",full_path);
+    emscripten_fetch_t *fetch = emscripten_fetch(&attr, full_path);
+    free(full_path);
+    
 }
 #else
 static int network_download(lua_State *state) {
@@ -554,8 +589,12 @@ void get_lib(json_object * jobj)
                 addLib(name,scr);
 
 				//printf("Download LUA: %s\n",scr);
-				luaL_dostring(L,scr);
+                int error = luaL_dostring(L,scr);
 
+                if (error) {
+                    //printf("ERROR pcall(timer->callback,%d): %s\n",currentline(L),lua_tostring(L, -1));
+                    printf("ERROR pcall(get_lib): %s\n",lua_tostring(L, -1));
+                }
 			}
 		}
 }
@@ -592,12 +631,12 @@ void get_script(json_object * jobj)
 
 					int error = luaL_dostring(L,scr);
 					//lua_pushcfunction(L, traceback);
-                    
+
                     if (error) {
                         fprintf(stderr, "ERROR start script: %s\n", lua_tostring(L, -1));
                         lua_pop(L, 1);
                     }
-                    
+
 					lua_getglobal(L,"init");
         			//int error = lua_pcall(L, 0, 0, -2);
                     error = lua_trace_pcall(L,0,0);
@@ -636,8 +675,8 @@ void proteo_post(const char* res,const char* appkey, const char* token,const cha
 					//proteo_post_callback(const char* res,const char* data,const char* callback)
 					var result = Module.ccall('proteo_post_callback',
 					'null',
-					['string','string','string'],
-					[UTF8ToString($1),this.responseText,UTF8ToString($5)]);
+					['string','string','string','number'],
+					[UTF8ToString($1),this.responseText,UTF8ToString($5),$6]);
 				}
 
 			}
@@ -653,7 +692,7 @@ void proteo_post(const char* res,const char* appkey, const char* token,const cha
         http.send(UTF8ToString($4));
 
 
-		},config.server,res,token,appkey,post_data,callback);
+		},config.server,res,token,appkey,post_data,callback,ref_callback);
 
 		/*//console.log(data.strValues);
                     var http = new XMLHttpRequest();
@@ -682,11 +721,11 @@ void proteo_post(const char* res,const char* appkey, const char* token,const cha
 void proteo_post(const char* res,const char* appkey, const char* token,const char* post_data, const char* callback,const int ref_callback)
 {
     char* url=NULL;
-    
+
     char tmp[256];
     strcpy(tmp,res);
     char* app=strtok(tmp+1, "/");
-    
+
     /*if(strstr(res,"deepblue")!=NULL)
     {
         url=concat(getaccesspoint("deepblue"),res);
@@ -701,7 +740,7 @@ void proteo_post(const char* res,const char* appkey, const char* token,const cha
     }
     else
         url=concat(config.server,res);
-        
+
     char* data=concat(res,post_data);
 
    // if(debug) printf("HMAC \n json) %s\n",data);
@@ -768,12 +807,14 @@ void proteo_post_callback(const char* res,const char* data,const char* callback,
 {
     //printf("%lu bytes retrieved\n", (unsigned long)chunk.size);
     #ifdef PROTEO_USE_TINYJSON
-    //int count=0;
-    //for(int i=0; data[i]; i++) if(data[i]==':') count++; //Very simple estimation
-    
+    int count=0;
+    for(int i=0; data[i]; i++) if(data[i]==':') count++; //Very simple estimation
+    json_t *mem=malloc(count*2*sizeof(json_t));
+    json_t const* jobj = json_create( data, mem, count*2 );
+
     //TODO
-    json_t mem[32];
-    json_t const* jobj = json_create( data, mem, sizeof mem / sizeof *mem );
+    //json_t mem[32];
+    //json_t const* jobj = json_create( data, mem, sizeof mem / sizeof *mem );
     #else
       json_object * jobj = json_tokener_parse(data);
     #endif
@@ -811,7 +852,7 @@ void proteo_post_callback(const char* res,const char* data,const char* callback,
               }
           }
       }
-    
+
 #ifdef PROTEO_USE_TINYJSON
     free(mem);
 #endif
@@ -877,7 +918,7 @@ void proteo_get(const char* res,const char* appkey, const char* token,const char
     char tmp[256];
     strcpy(tmp,res);
     char* app=strtok(tmp+1, "/");
-    
+
     /*if(strstr(res,"deepblue")!=NULL)
     {
         url=concat(getaccesspoint("deepblue"),res);
@@ -892,7 +933,7 @@ void proteo_get(const char* res,const char* appkey, const char* token,const char
     }
     else
         url=concat(config.server,res);
-    
+
 	char* data=concat(res,token);
 
 	/*char data[2000];
@@ -973,8 +1014,14 @@ void proteo_get_callback(const char* res,const char* data,const char* callback)
 
 	//printf("%lu bytes retrieved\n", (unsigned long)chunk.size);
     #ifdef PROTEO_USE_TINYJSON
-    json_t mem[32];
-	json_t const* jobj = json_create( data, mem, sizeof mem / sizeof *mem );
+    //json_t mem[32];
+	//json_t const* jobj = json_create( data, mem, sizeof mem / sizeof *mem );
+    
+    int count=0;
+    for(int i=0; data[i]; i++) if(data[i]==':') count++; //Very simple estimation
+    json_t *mem=malloc(count*2*sizeof(json_t));
+    json_t const* jobj = json_create( data, mem, count*2 );
+    
     #else
   	json_object * jobj = json_tokener_parse(data);
 	#endif
@@ -1006,6 +1053,9 @@ void proteo_get_callback(const char* res,const char* data,const char* callback)
     		}
   		}
   	}
+#ifdef PROTEO_USE_TINYJSON
+    free(mem);
+#endif
 
 }
 static int network_proteo_get(lua_State *state) {
@@ -1178,9 +1228,9 @@ static int proteo_login_callback(char* ptr)
 		#ifdef PROTEO2
 		struct json_object *tick;
 		json_object_object_get_ex(jobj, "tickets", &tick);
-		struct array_list *tickets=json_object_get_array(tick);
-		for (int i = 0; i < array_list_length(tickets); i++) {
-			struct json_object *t = (struct json_object *) array_list_get_idx(tickets, i);
+		//struct array_list *tickets=json_object_get_array(tick);
+		for (int i = 0; i < /*array_list_length(tickets)*/ json_object_array_length(tick); i++) {
+			struct json_object *t = (struct json_object *) json_object_array_get_idx(tick, i);//array_list_get_idx(tickets, i);
 			json_object_object_foreach(t, key, val)
 			{
 				//if(strcmp(app,key)==0 && val!=NULL)
@@ -1321,7 +1371,7 @@ int em_login_function(void *ptr)
 				strcpy(get_script,"/proteo/scriptandlibs/");
 				strcat(get_script,script);
 				printf("Download LUA: %s\n",get_script);
-				proteo_get(get_script,PROTEO_APP_KEY,Token,"");
+				proteo_get(get_script,config.appkey,Token,"");
 
 			}
 			else if(res==2)
@@ -1458,14 +1508,14 @@ void proteo_login_md5(const char* username,const char* md5_hex, const char* id)
     strftime (timestamp, 100, "%Y-%m-%d %H:%M:%S", localtime (&now));
     //printf ("%s\n", timestamp);
 
-#ifdef PROTEO_USE_TINYJSON
+//#ifdef PROTEO_USE_TINYJSON
 	char json[512];
 	sprintf(json,"{"
               "\"username\":\"%s\","
               "\"scriptId\":\"%s\","
               "\"timestamp\":\"%s\""
               "}",username,id,timestamp);
-#else
+/*#else
     json_object * jobj = json_object_new_object();
     #ifndef PROTEO2
     json_object *jstring1 = json_object_new_string(id);
@@ -1490,7 +1540,7 @@ void proteo_login_md5(const char* username,const char* md5_hex, const char* id)
 
 	const char *json = json_object_to_json_string(jobj);
     //json_object_put(jobj);
-#endif
+#endif*/
 
     if(debug) printf("login json: %s\n",json);
 
@@ -1584,7 +1634,7 @@ void proteo_login_md5(const char* username,const char* md5_hex, const char* id)
 
   	curl_easy_cleanup (hnd);
     #ifndef PROTEO_USE_TINYJSON
-  	free( (void*)json );
+  	//free( (void*)json );
     #endif
 
     free(chunk.memory);

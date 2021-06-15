@@ -67,8 +67,11 @@ proteo.route.get("admin/config",
 		
 		--local conf=proteo.system.readFile(BASEDIR.."config.json") --TODO attenzione, se dentro il config "originale" il basedir punta altrove questo readfile non lo trova
 		
-		--TODO forse si popssono aggiungere anche i file nella cartella plugin in modo da poter vedere quali sono attivi e quali no
-		local conf=proteo.system.readFile("./config.json")
+		--TODO forse si possono aggiungere anche i file nella cartella plugin in modo da poter vedere quali sono attivi e quali no
+		
+		local conf=proteo.system.readFile(CONFIG_PATH)
+
+		--TODO non è possibile inviare il file di configurazione integrale, si devono togliere almeno le key
 		
 		return conf
 	end

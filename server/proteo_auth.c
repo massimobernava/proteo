@@ -1,7 +1,4 @@
 
-unsigned char *serverkey = (unsigned char *)"01234567890123456789012345678901"; //TODO va nel config
-unsigned char *clientkey = (unsigned char *)"1234567890123456789012"; //TODO va nel config
-
 struct connection_info_struct
 {
   int type;
@@ -36,7 +33,7 @@ int aes_encrypt(const unsigned char *plaintext, int plaintext_len, unsigned char
     if(!(ctx = EVP_CIPHER_CTX_new()))
         handleErrors();
 
-    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, serverkey, iv))
+    if(1 != EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, config.server_key, iv))
         handleErrors();
 
 
@@ -73,7 +70,7 @@ int aes_decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *ke
     if(!(ctx = EVP_CIPHER_CTX_new()))
         handleErrors();
 
-    if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, serverkey, iv))
+    if(1 != EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, config.server_key, iv))
         handleErrors();
 
     if(1 != EVP_DecryptUpdate(ctx, plaintext, &len, ciphertext, ciphertext_len))
@@ -212,7 +209,7 @@ int createTokenAndTicket(const char* username,const char* scriptId, char* token,
     if(debug) printf("Create Token: %s\n",json_token);
     
 	unsigned char ciphertext[512];
-    int ciphertext_len = aes_encrypt ((const unsigned char *)json_token, strlen (json_token), serverkey, iv, ciphertext);
+    int ciphertext_len = aes_encrypt ((const unsigned char *)json_token, strlen (json_token), config.server_key, iv, ciphertext);
     strcpy(ciphertext+ciphertext_len, "::");
 	strcpy(ciphertext+ciphertext_len+2,iv);
 	ciphertext_len+=18;
@@ -265,7 +262,7 @@ int verifyToken(char* username,char* permissions,const char* app,const char* tok
 	//printf("OUT %d-%d: %s\n",len,strlen(json),json);
 	//printf("IV: %s\n",iv);
 	
-	int decryptedtext_len = aes_decrypt(tmp,len-18, serverkey, iv,(unsigned char*)decryptedtext);
+	int decryptedtext_len = aes_decrypt(tmp,len-18, config.server_key, iv,(unsigned char*)decryptedtext);
 	free(tmp);
 	
 	//unsigned char *iv=tmp+len-16;

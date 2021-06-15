@@ -5,7 +5,7 @@ local inspect = require "inspect"
 
 --========= INIT
 
-local tfl_emotion_model=proteo.tflite.modelFromFile("pose/emotion_model_optimized.tflite")
+local tfl_emotion_model=proteo.tflite.modelFromFile(proteo.system.document().."dl/emotion_model_optimized.tflite")
 
 local tfl_interpreter_options=proteo.tflite.createInterpreterOptions()
 

@@ -14,7 +14,7 @@
  * Create a namespace for the application.
  */
 var Code = {};
-var appKey="1234567890123456789012";
+var appKey="}~?d1BE+\"d5?TZ(j`{+n`pfK&*2U(WPy";
 
 /**
  * Lookup for names of supported languages.  Keys should be in ISO 639 format.

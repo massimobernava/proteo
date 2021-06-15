@@ -97,6 +97,9 @@ static UMat *checkMat (lua_State *L, int index)
     return mat;
 }
 
+#ifdef __EMSCRIPTEN__
+
+#else
 static VideoCapture *checkCap (lua_State *L, int index)
 {
     VideoCapture *cap;
@@ -105,6 +108,7 @@ static VideoCapture *checkCap (lua_State *L, int index)
     if (cap == NULL) luaL_typerror(L, index, OPENCVVC);
     return cap;
 }
+#endif
 
 #ifdef OPENCVNET
 static Net *checkNet (lua_State *L, int index)
@@ -117,6 +121,9 @@ static Net *checkNet (lua_State *L, int index)
 }
 #endif
 
+#ifdef __EMSCRIPTEN__
+
+#else
 static VideoWriter *checkWriter (lua_State *L, int index)
 {
     VideoWriter *vw;
@@ -125,6 +132,7 @@ static VideoWriter *checkWriter (lua_State *L, int index)
     if (vw == NULL) luaL_typerror(L, index, OPENCVVW);
     return vw;
 }
+#endif
 
 //==============================================================================
 //   GC
@@ -143,6 +151,9 @@ static int mat_gc(lua_State *l) {
     return 0;
 }
 
+#ifdef __EMSCRIPTEN__
+
+#else
 static int vc_gc(lua_State *l) {
 
     VideoCapture* cap = checkCap(l, 1);
@@ -155,6 +166,7 @@ static int vc_gc(lua_State *l) {
 
     return 0;
 }
+#endif
 
 #ifdef OPENCVNET
 static int net_gc(lua_State *l) {
@@ -171,6 +183,9 @@ static int net_gc(lua_State *l) {
 }
 #endif
 
+#ifdef __EMSCRIPTEN__
+
+#else
 static int vw_gc(lua_State *l) {
 
     VideoWriter* vw = checkWriter(l, 1);
@@ -183,6 +198,7 @@ static int vw_gc(lua_State *l) {
 
     return 0;
 }
+#endif
 
 //==============================================================================
 //   PUSH
@@ -246,6 +262,9 @@ static Net *pushNet (lua_State *state)
 }
 #endif
 
+#ifdef __EMSCRIPTEN__
+
+#else
 static VideoWriter *pushWriter (lua_State *state)
 {
     VideoWriter *vw = new (lua_newuserdata(state, sizeof(VideoWriter))) VideoWriter();
@@ -258,7 +277,11 @@ static VideoWriter *pushWriter (lua_State *state)
 
     return vw;
 }
+#endif
 
+#ifdef __EMSCRIPTEN__
+
+#else
 static VideoCapture * pushCap (lua_State *state)
 {
 #if TARGET_OS_IPHONE
@@ -277,6 +300,7 @@ static VideoCapture * pushCap (lua_State *state)
 #endif
     return ret;
 }
+#endif
 
 //==============================================================================
 //   OPENCV
@@ -289,25 +313,38 @@ int opencv_img(lua_State *state)
 
     return 1;
 }
+
+
 int opencv_imread(lua_State *state)
 {
     const char* file=luaL_checkstring(state,1);
 
+#ifdef __EMSCRIPTEN__
+
+#else
     Mat tmp = imread( file, 1 );
     UMat *ret=pushMat(state);
     tmp.copyTo(*ret);
 
+#endif
     return 1;
 }
+
+
 
 int opencv_imwrite(lua_State* state)
 {
     const char* file=luaL_checkstring(state,1);
+#ifdef __EMSCRIPTEN__
+
+#else
     UMat* frame=checkMat(state, 2);
     if (!frame->empty()) imwrite(file, *frame);
-
+#endif
     return 0;
 }
+
+
 
 int opencv_imencode(lua_State* state)
 {
@@ -320,7 +357,9 @@ int opencv_imencode(lua_State* state)
         lua_pushnil(state);
         return 1;
     }
+#ifdef __EMSCRIPTEN__
 
+#else
     vector<uchar> buf;
     imencode(".jpg",*img,buf);
 
@@ -332,15 +371,20 @@ int opencv_imencode(lua_State* state)
 
     lua_pushstring(state, b64);
     free(b64);
-
+#endif
     return 1;
 }
+
+
 
 int opencv_imdecode(lua_State* state)
 {
     const char* img=luaL_checkstring(state, 1);
     UMat *out=checkMat(state,2);
 
+#ifdef __EMSCRIPTEN__
+
+#else
     char *tmp=(char *)malloc(Base64decode_len(img));
     int len = Base64decode(tmp, img);
 
@@ -351,12 +395,17 @@ int opencv_imdecode(lua_State* state)
     imdecode(buf, 1).copyTo(*out);
 
     free(tmp);
-
+#endif
+    
     return 0;
 }
 
+
 int opencv_videowriter(lua_State* state)
 {
+#ifdef __EMSCRIPTEN__
+
+#else
     VideoWriter *vw=pushWriter(state);
 
     const char *filename = lua_tostring(state, 1);
@@ -368,12 +417,48 @@ int opencv_videowriter(lua_State* state)
     if(fourcc==0) fourcc=VideoWriter::fourcc('M','J','P','G');
 
     vw->open(filename, fourcc, fps, Size(w,h));
-
+#endif
     return 1;
 }
 
+
+
 int opencv_videocapture(lua_State* state)
 {
+#ifdef __EMSCRIPTEN__
+    const char *value = lua_tostring(state, 1);
+    
+    //Se il valore di input è 0 potremmo non settare l'attributo src e invece richiamare il codice di avvio della camera
+    char *cap=(char*)EM_ASM_INT({
+                        let video_element_id='VideoCapture';
+                        let video = document.createElement('video');
+                        video.id=video_element_id;
+                        video.style.display = "none";
+                        //video.autoplay=true;
+        video.width=576;
+        video.height=720;
+                        video.setAttribute('src',UTF8ToString($0));
+                        
+                        document.body.insertBefore(video, null);
+        
+                        var canvas=document.createElement('canvas');
+                        canvas.width=video.width;
+                        canvas.height=video.height;
+                        var ctx=canvas.getContext('2d');
+        
+        //document.body.insertBefore(canvas, null);
+        
+                        video.ctx=ctx;
+
+                        var lengthBytes = lengthBytesUTF8(video_element_id)+1;
+                        var stringOnWasmHeap = _malloc(lengthBytes);
+                        stringToUTF8(video_element_id, stringOnWasmHeap, lengthBytes);
+                        return stringOnWasmHeap;
+    },value);
+    lua_pushstring(state, cap);
+    free(cap);
+        return 1;
+#else
     VideoCapture *cap=pushCap(state);
 
     if (lua_isnumber(state, 1)==1)
@@ -404,42 +489,55 @@ cap->set(CAP_PROP_BUFFERSIZE, 3); */
             printf("VideoCapture open error\n");
         }
     }
-
+#endif
     return 1;
 }
 
 int opencv_getFrameSize(lua_State* state)
 {
-	VideoCapture *cap=checkCap(state,1);
+#ifdef __EMSCRIPTEN__
 
+#else
+	VideoCapture *cap=checkCap(state,1);
+#endif
 	return 1;
 }
 
 int opencv_setFrameSize(lua_State* state)
 {
+#ifdef __EMSCRIPTEN__
+    //x.setAttribute("width", "320");
+    //x.setAttribute("height", "240");
+#else
 	VideoCapture *cap=checkCap(state,1);
 	int w=luaL_checkinteger(state, 2);
     int h=luaL_checkinteger(state, 3);
 
     cap->set(CAP_PROP_FRAME_WIDTH, w);
 	cap->set(CAP_PROP_FRAME_HEIGHT, h);
-
+#endif
 	return 0;
 }
 
 int opencv_setBufferSize(lua_State* state)
 {
+#ifdef __EMSCRIPTEN__
+
+#else
 	VideoCapture *cap=checkCap(state,1);
 	int s=luaL_checkinteger(state, 2);
 
     cap->set(CAP_PROP_BUFFERSIZE, s);
-
+#endif
 	return 0;
 }
 
 
 int opencv_write(lua_State* state)
 {
+#ifdef __EMSCRIPTEN__
+
+#else
     //UMat *ret=pushMat(state);
     VideoWriter *vw=checkWriter(state,1);
     UMat *ret=checkMat(state,2);
@@ -457,11 +555,63 @@ int opencv_write(lua_State* state)
         success=0;
     }
     lua_pushinteger(state, success);
+#endif
     return 1;
+}
+
+lua_State* tmp_state;
+int image_to_mat(int width, int height,uint8_t* data)
+{
+    UMat *ret=checkMat(tmp_state,2);
+    cv::Mat mat =cv::Mat(height,width,  CV_8UC4, data);
+    
+
+    mat.copyTo(*ret);
+    
+    int success=1;
+    if (ret->empty()) {
+        success=0;
+    }
+    
+    return success;
 }
 
 int opencv_frame(lua_State* state)
 {
+#ifdef __EMSCRIPTEN__
+    tmp_state=state;
+    const char *cap=luaL_checkstring(state, 1);
+    
+    //printf("VideoCapture id:%s\n",cap);
+    
+    int success=EM_ASM_INT({
+        var video=document.getElementById(UTF8ToString($0));
+        video.ctx.drawImage(video,0,0,video.width,video.height);
+        
+        //video.ctx.fillStyle = "#FF0000";
+        //video.ctx.fillRect(0, 0, 150, 75);
+        
+        var data = video.ctx.getImageData(0,0,video.width,video.height).data;
+        //const uint8ArrData=new Uint8Array(data);
+        //console.log(data.length);
+
+         var result = Module.ccall('image_to_mat',
+         'number',
+         ['number','number','array'],
+         [video.width,video.height,data]);
+         
+        return result;
+        //uint8ArrData=new Uint8Array(imgData.data);
+    },cap);
+    
+    //ret->create()
+    //printf("Data : %d %d %d\n",data[0],data[1],data[2]);
+    
+    lua_pushinteger(state, success);
+/*ctx.drawImage(video,0,0,video.width,video.height);
+ frame.data.set(ctx.getImageData(0,0,video.width,video.height).data)*/
+    
+#else
     //UMat *ret=pushMat(state);
     VideoCapture *cap=checkCap(state,1);
     UMat *ret=checkMat(state,2);
@@ -472,6 +622,7 @@ int opencv_frame(lua_State* state)
         success=0;
     }
     lua_pushinteger(state, success);
+#endif
     return 1;
 }
 
@@ -512,7 +663,11 @@ int opencv_resize(lua_State* state)
     int rows=luaL_optinteger(state, 4, -1);
     
     //
-    if(in->empty()) return 0;
+    if(in->empty())
+    {
+        printf("OpenCV Resize: Input image is empty\n");
+        return 0;
+    }
 
     /*if(rows==-1 || cols==-1)
         resize(*in, *out,out->size());
@@ -533,14 +688,17 @@ int opencv_resize(lua_State* state)
         } else {
             cv::resize( *in, *out, cv::Size(w2, rows));
         }
-
+#ifdef __EMSCRIPTEN__
+    
+#else
         int top = (rows - out->rows) / 2;
         int down = (rows - out->rows+1) / 2;
         int left = (cols - out->cols) / 2;
         int right = (cols - out->cols+1) / 2;
 
+
         cv::copyMakeBorder(*out, *out, top, down, left, right, cv::BORDER_CONSTANT, 0 );
-    
+#endif
 	return 0;
 }
 

@@ -5,15 +5,20 @@ local json=require "json"
 -- delete checkbox
 -- password mode per i textbox
 -- avvisi per passord assende, sbagliata o user che non è una mail
--- search
+-- search textbox
 -- server REBOOT
 
+-- REPOSITORY
+-- A che serve PERMISSIONS?
+
+
+admin={} --TODO una sola variabile globale
 
 form_users=nil
-form_options=nil
+--form_config=nil
 form_permissions=nil
 
-option_button=nil
+--option_button=nil
 users_button=nil
 permissions_button=nil
 
@@ -52,10 +57,10 @@ function init()
     proteo.gui.setState(username_admin,proteo.gui.FormState.WindowBar)
 
 	form_users=proteo.gui.newForm("form_users","Users",'Helvetica',20,"jet","crimson","blanchedalmond",30,proteo.gui.FormType.Fixed+proteo.gui.FormType.HideResize+proteo.gui.FormType.HideClose,"","",150,150,MAX_X-300,MAX_Y-300,"")
-    form_options=proteo.gui.newForm("form_options","Options",'Helvetica',20,"jet","crimson","blanchedalmond",30,proteo.gui.FormType.Fixed+proteo.gui.FormType.HideResize+proteo.gui.FormType.HideClose,"","",150,150,MAX_X-300,MAX_Y-300,"")
+    admin.form_config=proteo.gui.newForm("form_config","Config",'Helvetica',20,"jet","crimson","blanchedalmond",30,proteo.gui.FormType.Fixed+proteo.gui.FormType.HideResize+proteo.gui.FormType.HideClose,"","",150,150,MAX_X-300,MAX_Y-300,"")
     form_permissions=proteo.gui.newForm("form_permissions","Permissions",'Helvetica',20,"jet","crimson","blanchedalmond",30,proteo.gui.FormType.Fixed+proteo.gui.FormType.HideResize+proteo.gui.FormType.HideClose,"","",150,150,MAX_X-300,MAX_Y-300,"")
     
-    option_button=proteo.gui.newButton('option_button','Options','Helvetica',20,'jet','blanchedalmond',1,"crimson",false,MIN_X,180,150,50,open_options)
+    admin.config_button=proteo.gui.newButton('config_button','Config','Helvetica',20,'jet','blanchedalmond',1,"crimson",false,MIN_X,180,150,50,open_options)
  	users_button=proteo.gui.newButton('users_button','Users','Helvetica',20,'jet','blanchedalmond',1,"crimson",false,MIN_X,230,150,50,open_users)
  	permissions_button=proteo.gui.newButton('permissions_button','Permissions','Helvetica',20,'jet','blanchedalmond',1,"crimson",false,MIN_X,280,150,50,open_permissions)
  
@@ -106,15 +111,15 @@ function init()
  	removeplugin_button=proteo.gui.newButton('removeplugin_button',"Remove",'Helvetica',20,"jet","blanchedalmond",1,"crimson",false,175 ,425,100,25,"remove_plugin")
 
  	save_button=proteo.gui.newButton('save_button',"Save",'Helvetica',20,"jet","blanchedalmond",1,"crimson",false,MAX_X-425 ,MAX_Y-350,100,25,"save_option")
- 	proteo.gui.addItem(form_options,label_plugins)
- 	proteo.gui.addItem(form_options,list_plugins)
-	proteo.gui.addItem(form_options,addplugin_button)
-	proteo.gui.addItem(form_options,removeplugin_button)
-	proteo.gui.addItem(form_options,save_button)
+ 	proteo.gui.addItem(admin.form_config,label_plugins)
+ 	proteo.gui.addItem(admin.form_config,list_plugins)
+	proteo.gui.addItem(admin.form_config,addplugin_button)
+	proteo.gui.addItem(admin.form_config,removeplugin_button)
+	proteo.gui.addItem(admin.form_config,save_button)
 
 	proteo.network.proteo_get("/admin/config","config_callback")
 
- 	open_options(option_button)
+ 	open_options(admin.config_button)
 end
 
 --------------------
@@ -146,20 +151,20 @@ end
 
 function open_options(sender)
 	proteo.gui.setHidden(form_users,true)
-	proteo.gui.setHidden(form_options,false)
+	proteo.gui.setHidden(admin.form_config,false)
 	proteo.gui.setHidden(form_permissions,true)
 
-	proteo.gui.setColor(option_button,'blanchedalmond')
+	proteo.gui.setColor(admin.config_button,'blanchedalmond')
 	proteo.gui.setColor(users_button,'cadetgrey')
 	proteo.gui.setColor(permissions_button,'cadetgrey')
 end
 
 function open_users(sender)
 	proteo.gui.setHidden(form_users,false)
-	proteo.gui.setHidden(form_options,true)
+	proteo.gui.setHidden(admin.form_config,true)
 	proteo.gui.setHidden(form_permissions,true)
 
-	proteo.gui.setColor(option_button,'cadetgrey')
+	proteo.gui.setColor(admin.config_button,'cadetgrey')
 	proteo.gui.setColor(users_button,'blanchedalmond')
 	proteo.gui.setColor(permissions_button,'cadetgrey')
 
@@ -176,10 +181,10 @@ end
 
 function open_permissions(sender)
 	proteo.gui.setHidden(form_users,true)
-	proteo.gui.setHidden(form_options,true)
+	proteo.gui.setHidden(admin.form_config,true)
 	proteo.gui.setHidden(form_permissions,false)
 
-	proteo.gui.setColor(option_button,'cadetgrey')
+	proteo.gui.setColor(admin.config_button,'cadetgrey')
 	proteo.gui.setColor(users_button,'cadetgrey')
 	proteo.gui.setColor(permissions_button,'blanchedalmond')
 end
