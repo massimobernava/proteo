@@ -138,4 +138,4 @@ proteo.system.console()
 ![Pose](Pose.png)
 
 **How to cite:**
->Bernava, G.; Nucita, A.; Iannizzotto, G.; Caprì, T.; Fabio, R.A. Proteo: A Framework for Serious Games in Tele-rehabilitation. Preprints 2021, 2021050290 
+>Bernava, G.; Nucita, A.; Iannizzotto, G.; Caprì, T.; Fabio, R.A. Proteo: A Framework for Serious Games in Telerehabilitation. Appl. Sci. 2021, 11, 5935. https://doi.org/10.3390/app11135935
