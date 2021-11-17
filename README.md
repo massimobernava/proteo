@@ -5,7 +5,7 @@
 
 Install the required libraries:
 ```bash
-sudo apt install git cmake libluajit-5.1-dev libssl-dev libcurl4-openssl-dev libjson-c-dev libmicrohttpd-dev libsqlite3-dev libzmq3-dev libavcodec-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev libopencv-dev 
+sudo apt install build-essential git cmake libluajit-5.1-dev libssl-dev libcurl4-openssl-dev libjson-c-dev libmicrohttpd-dev libsqlite3-dev libzmq3-dev libavcodec-dev libavformat-dev libavutil-dev libswresample-dev libswscale-dev libopencv-dev 
 ```
 
 Optional install nosql ejdb2 database:
