@@ -59,11 +59,25 @@ sudo ./install.sh
 Choose, red pill and continue to compile, [blue pill](https://github.com/massimobernava/proteo/releases) and download one of the releases.
 
 ### Linux
-Test: Ubuntu ... Raspberry ...
+
+Install the required libraries:
+```bash
+sudo apt install libsdl2-dev libsdl2-ttf-dev libsdl2-image-dev libsdl2-gfx-dev
+```
+Use cmake:
+```bash
+cd ..client
+mkdir build
+cd build 
+cmake -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl .. 
+make
+```
 
 ### OSX
 
 ### iOs
+
+### Android
 
 ### Windows
 
