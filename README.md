@@ -76,9 +76,8 @@ cd ..
 ```
 Update app_key in config.json:
 ```json
-{  	...
+{  
 	"app_key":"01234567890123456789012345678901",
-	...
 }
 ```
 Start Proteo client in graphical mode:
