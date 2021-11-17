@@ -66,11 +66,24 @@ sudo apt install libsdl2-dev libsdl2-ttf-dev libsdl2-image-dev libsdl2-gfx-dev
 ```
 Use cmake:
 ```bash
-cd ..client
+cd ../client
 mkdir build
 cd build 
 cmake -DOPENSSL_ROOT_DIR=/usr/local/opt/openssl .. 
 make
+cp ./proteo ../
+cd ..
+```
+Update app_key in config.json:
+```json
+{  	...
+	"app_key":"01234567890123456789012345678901",
+	...
+}
+```
+Start Proteo client in graphical mode:
+```bash
+./proteo -g -v
 ```
 
 ### OSX
